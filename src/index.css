@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* ── Theme color tokens ───────────────────────────────────────────────────── */
+
+/* Dark mode (default) */
+:root {
+  --page-bg: #0a0a0a;
+  --page-fg: #f5f5f5;
+}
+
+/*
+ * Light mode: Override Tailwind's built-in white/black CSS custom properties.
+ * All utilities like `text-white/85`, `bg-white/[0.025]`, `border-white/10`
+ * automatically flip to black-based equivalents — no component changes needed.
+ */
+.light {
+  --page-bg: #f8f8f8;
+  --page-fg: #1a1a1a;
+  --color-white: oklch(0% 0 0);    /* white → black  */
+  --color-black: oklch(100% 0 0);  /* black → white  */
+}
+
+/* ── Smooth theme transition ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Disable transitions on page load to prevent flash */
+.no-transition, .no-transition * {
+  transition: none !important;
+}
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--page-bg);
+    color: var(--page-fg);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
