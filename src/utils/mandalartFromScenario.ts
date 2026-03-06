@@ -103,8 +103,6 @@ export function populateMandalartFromScenario(form: ScenarioFormState): Mandalar
 
 function extractBlockKeywords(form: ScenarioFormState, label: string): string[] {
   const { characters, location, motive, crimeType, clue, method } = form;
-  const perpetrator = characters.filter(c => c.role === '가해자' && c.name.trim()).map(c => c.name.trim()).join(', ');
-  const victim      = characters.filter(c => c.role === '피해자' && c.name.trim()).map(c => c.name.trim()).join(', ');
 
   switch (label) {
     case '범행동기': {

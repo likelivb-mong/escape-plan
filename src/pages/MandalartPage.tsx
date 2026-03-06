@@ -388,7 +388,7 @@ function SourceBreadcrumb({
   const config = source ? SOURCE_CONFIG[source] : null;
 
   // All flows now go through /story, so always use source config
-  const effectiveConfig = config;
+  const effectiveConfig = config; // hasSelectedStory is kept for future use when flows differ
 
   return (
     <div className="flex items-center gap-2">

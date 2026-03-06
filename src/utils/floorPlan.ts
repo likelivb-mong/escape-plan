@@ -9,7 +9,7 @@ function snap(value: number, grid: number = 5): number {
 }
 
 export function generateInitialLayout(rooms: string[]): FloorPlanData {
-  if (rooms.length === 0) return { rooms: [] };
+  if (rooms.length === 0) return { rooms: [], doors: [], stepPositions: {} };
 
   const cols = Math.ceil(Math.sqrt(rooms.length));
   const rows = Math.ceil(rooms.length / cols);
