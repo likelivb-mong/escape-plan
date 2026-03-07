@@ -1,4 +1,5 @@
 // ── Story types ───────────────────────────────────────────────────────────────
+import type { NarrativeAnalysis } from './narrative';
 
 export type TwistIntensity = 'low' | 'medium' | 'high';
 
@@ -42,6 +43,8 @@ export interface StoryProposal {
   };
   /** XCAPE 수사 프레임워크 (AI 분석 시 생성, optional) */
   investigation?: InvestigationFramework;
+  /** YouTube 서사 구조 분석 결과 (YouTube 분석 시 생성, optional) */
+  narrative?: NarrativeAnalysis;
 }
 
 // ── Keyword category (for summary strip) ─────────────────────────────────────

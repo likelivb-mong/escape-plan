@@ -99,11 +99,8 @@ export default function HomePage() {
     setYoutubeLoading(true);
     setYoutubeError('');
     try {
-      setYoutubeStep('영상 정보 가져오는 중...');
-      await new Promise((r) => setTimeout(r, 300));
-      setYoutubeStep('AI가 방탈출 테마를 분석 중...');
-      const result = await analyzeYoutube(url);
-      setYoutubeStep('만다라트 보드 생성 중...');
+      const result = await analyzeYoutube(url, setYoutubeStep);
+      setYoutubeStep('보드 생성 중...');
       await new Promise((r) => setTimeout(r, 200));
       setCtxProjectName(result.projectName);
       setCells(result.cells);

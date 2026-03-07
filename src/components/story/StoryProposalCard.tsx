@@ -1,4 +1,5 @@
 import type { StoryProposal, TwistIntensity, InvestigationFramework } from '../../types/story';
+import { SUMMARY_MODE_BADGE } from '../../types/narrative';
 import StoryStructurePreview from './StoryStructurePreview';
 
 interface StoryProposalCardProps {
@@ -53,7 +54,7 @@ export default function StoryProposalCard({
 
       {/* ── Header ── */}
       <div className="px-5 pt-5 pb-4 border-b border-white/[0.05]">
-        {/* Genre + Tone badges */}
+        {/* Genre + Tone badges + Quality badge */}
         <div className="flex items-center gap-1.5 mb-3 flex-wrap">
           <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-[9px] text-white/40 bg-white/[0.03]">
             {genre}
@@ -61,6 +62,11 @@ export default function StoryProposalCard({
           <span className="px-2 py-0.5 rounded-md border border-white/[0.08] text-[9px] text-white/30 bg-transparent">
             {tone}
           </span>
+          {proposal.narrative && (
+            <span className={`px-2 py-0.5 rounded-md border text-[9px] ${SUMMARY_MODE_BADGE[proposal.narrative.quality.summaryMode].style}`}>
+              {SUMMARY_MODE_BADGE[proposal.narrative.quality.summaryMode].label}
+            </span>
+          )}
         </div>
 
         <h3 className="text-sm font-semibold text-white/90 mb-2 leading-snug">{title}</h3>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { StoryProposal, TwistIntensity, InvestigationFramework } from '../../types/story';
 import StoryStructurePreview from './StoryStructurePreview';
+import NarrativeSection from './NarrativeSection';
 
 interface StoryDetailModalProps {
   proposal: StoryProposal;
@@ -141,6 +142,13 @@ export default function StoryDetailModal({
                   );
                 })}
               </div>
+            </section>
+          )}
+
+          {/* 원본 서사 분석 (YouTube 분석 시에만 표시) */}
+          {proposal.narrative && (
+            <section>
+              <NarrativeSection narrative={proposal.narrative} />
             </section>
           )}
 
