@@ -160,7 +160,7 @@ export default function FloorPlanDoor({
           <button
             data-door-handle="true"
             onClick={(e) => { e.stopPropagation(); onDelete(door.id); }}
-            className="absolute -top-2.5 -left-2.5 w-4 h-4 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white/40 hover:bg-rose-500/40 hover:text-rose-300 hover:border-rose-400/50 transition-colors leading-none text-[10px]"
+            className="absolute -top-2.5 -left-2.5 w-4 h-4 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white/40 hover:bg-rose-500/40 hover:text-rose-300 hover:border-rose-400/50 transition-colors leading-none text-caption"
           >
             ×
           </button>
@@ -170,7 +170,7 @@ export default function FloorPlanDoor({
             data-door-handle="true"
             onClick={(e) => { e.stopPropagation(); onChangeType(door.id, nextType()); }}
             title="문 종류 변경"
-            className="absolute -bottom-2.5 -left-2.5 px-1 h-4 rounded-full bg-black/60 border border-white/20 text-[8px] text-white/40 hover:text-white/70 hover:border-white/30 transition-colors whitespace-nowrap"
+            className="absolute -bottom-2.5 -left-2.5 px-1 h-4 rounded-full bg-black/60 border border-white/20 text-micro text-white/40 hover:text-white/70 hover:border-white/30 transition-colors whitespace-nowrap"
           >
             {DOOR_TYPE_LABELS[door.type ?? 'swing']}
           </button>

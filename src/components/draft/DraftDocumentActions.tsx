@@ -14,7 +14,7 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
       {/* Left */}
       <button
         onClick={() => navigate('/puzzle-recommendations')}
-        className="text-[11px] text-white/35 hover:text-white/60 transition-colors"
+        className="text-footnote text-white/35 hover:text-white/60 transition-colors"
       >
         ← Back to Puzzle Recommendations
       </button>
@@ -35,7 +35,7 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
         <button
           onClick={() => doc && mockExportPDF(doc)}
           disabled={!doc}
-          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-[11px] text-white/35 hover:border-white/20 hover:text-white/55 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-footnote text-white/35 hover:border-white/20 hover:text-white/55 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
         >
           Export PDF
         </button>
@@ -43,7 +43,7 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
         <button
           onClick={() => doc && mockExportNotion(doc)}
           disabled={!doc}
-          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-[11px] text-white/35 hover:border-white/20 hover:text-white/55 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-footnote text-white/35 hover:border-white/20 hover:text-white/55 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
         >
           Export Notion
         </button>
@@ -51,7 +51,7 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
         <button
           onClick={() => doc && mockSaveDraft(doc)}
           disabled={!doc}
-          className="px-4 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 active:bg-white/80 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
+          className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
         >
           Save Draft
         </button>
@@ -66,8 +66,8 @@ function ActionStat({ label, value, accent }: { label: string; value: string; ac
   const valCls = accent === 'emerald' ? 'text-emerald-300/70' : 'text-white/55';
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] text-white/25">{label}</span>
-      <span className={`text-sm font-bold tabular-nums ${valCls}`}>{value}</span>
+      <span className="text-caption text-white/35">{label}</span>
+      <span className={`text-body font-bold tabular-nums ${valCls}`}>{value}</span>
     </div>
   );
 }

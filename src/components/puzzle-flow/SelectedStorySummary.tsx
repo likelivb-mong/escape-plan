@@ -23,15 +23,15 @@ export default function SelectedStorySummary({ story }: SelectedStorySummaryProp
         {/* Story identity */}
         <div className="flex flex-col gap-1.5 min-w-[220px]">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-[9px] text-white/40 bg-white/[0.03]">
+            <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-micro text-white/40 bg-white/[0.03]">
               {genre}
             </span>
-            <span className="px-2 py-0.5 rounded-md border border-white/[0.07] text-[9px] text-white/30">
+            <span className="px-2 py-0.5 rounded-md border border-white/[0.07] text-micro text-white/30">
               {tone}
             </span>
           </div>
-          <h2 className="text-sm font-semibold text-white/90 leading-snug">{title}</h2>
-          <p className="text-[11px] text-white/40 italic leading-relaxed">"{logline}"</p>
+          <h2 className="text-body font-semibold text-white/90 leading-snug">{title}</h2>
+          <p className="text-footnote text-white/40 italic leading-relaxed">"{logline}"</p>
         </div>
 
         {/* Divider */}
@@ -42,12 +42,12 @@ export default function SelectedStorySummary({ story }: SelectedStorySummaryProp
           <MetaStat icon="⏱" label="플레이타임" value={meta.playtime} />
           <MetaStat icon="👥" label="인원" value={meta.playerCount} />
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] font-semibold text-white/20 uppercase tracking-widest">
+            <span className="text-micro font-semibold text-white/20 uppercase tracking-widest">
               반전 강도
             </span>
             <span
               className={[
-                'px-2 py-0.5 rounded-md border text-[10px]',
+                'px-2 py-0.5 rounded-md border text-caption',
                 TWIST_STYLES[meta.twistIntensity],
               ].join(' ')}
             >
@@ -61,7 +61,7 @@ export default function SelectedStorySummary({ story }: SelectedStorySummaryProp
 
         {/* Context label */}
         <div className="flex items-center self-center ml-auto flex-shrink-0">
-          <span className="flex items-center gap-1.5 text-[10px] text-white/20">
+          <span className="flex items-center gap-1.5 text-caption text-white/30">
             <span className="w-1.5 h-1.5 rounded-full bg-white/25" />
             현재 기준 스토리
           </span>
@@ -76,10 +76,10 @@ export default function SelectedStorySummary({ story }: SelectedStorySummaryProp
 function MetaStat({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[9px] font-semibold text-white/20 uppercase tracking-widest">
+      <span className="text-micro font-semibold text-white/20 uppercase tracking-widest">
         {label}
       </span>
-      <span className="flex items-center gap-1 text-[11px] text-white/60">
+      <span className="flex items-center gap-1 text-footnote text-white/60">
         <span>{icon}</span>
         {value}
       </span>

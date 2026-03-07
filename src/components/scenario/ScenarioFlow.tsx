@@ -39,22 +39,22 @@ export default function ScenarioFlow({ blocks }: ScenarioFlowProps) {
               <div className="flex items-center gap-1.5 mb-1">
                 <span
                   className={`
-                    inline-flex items-center justify-center w-5 h-5 rounded-md border text-[9px] font-bold
+                    inline-flex items-center justify-center w-5 h-5 rounded-md border text-micro font-bold
                     ${block.isEmpty ? 'border-white/10 bg-white/5 text-white/20' : colors.badge}
                   `}
                 >
                   {block.badge}
                 </span>
-                <span className={`text-[10px] font-medium tracking-wide ${block.isEmpty ? 'text-white/20' : 'text-white/40'}`}>
+                <span className={`text-caption font-medium tracking-wide ${block.isEmpty ? 'text-white/20' : 'text-white/40'}`}>
                   {block.label}
                 </span>
               </div>
 
               {/* 값 표시 */}
               {block.isEmpty ? (
-                <p className="text-[11px] text-white/15 italic">미입력</p>
+                <p className="text-footnote text-white/15 italic">미입력</p>
               ) : (
-                <p className={`text-[12px] font-medium leading-snug ${colors.text}`}>
+                <p className={`text-subhead font-medium leading-snug ${colors.text}`}>
                   {block.displayText}
                 </p>
               )}

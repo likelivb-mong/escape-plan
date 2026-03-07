@@ -79,7 +79,7 @@ function Editable({
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={e => e.key === 'Escape' && (setDraft(value), setEditing(false))}
-        className={`${inputBase} resize-none text-[12px] ${className ?? ''}`}
+        className={`${inputBase} resize-none text-subhead ${className ?? ''}`}
         rows={3}
       />
     ) : (
@@ -105,7 +105,7 @@ function Editable({
       title="클릭하여 편집"
     >
       {value}
-      <span className="opacity-0 group-hover/edit:opacity-60 text-[9px] text-white/30 ml-1 transition-opacity">✎</span>
+      <span className="opacity-0 group-hover/edit:opacity-60 text-micro text-white/30 ml-1 transition-opacity">✎</span>
     </span>
   );
 }
@@ -147,7 +147,7 @@ function EditableNum({
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') { setDraft(String(value)); setEditing(false); }
         }}
-        className="w-8 bg-white/[0.06] border border-white/20 rounded px-1 text-[10px] text-white/70 outline-none text-center"
+        className="w-8 bg-white/[0.06] border border-white/20 rounded px-1 text-caption text-white/70 outline-none text-center"
       />
     );
   }
@@ -192,7 +192,7 @@ function EditableNotes({
   return (
     <ul className="flex flex-col gap-1.5">
       {notes.map((note, i) => (
-        <li key={i} className="flex items-start gap-2 text-[11px] leading-relaxed group/note">
+        <li key={i} className="flex items-start gap-2 text-footnote leading-relaxed group/note">
           <span className="flex-shrink-0 mt-[3px] text-white/20">•</span>
           {editingIdx === i ? (
             <input
@@ -204,7 +204,7 @@ function EditableNotes({
                 if (e.key === 'Enter') commit(i);
                 if (e.key === 'Escape') setEditingIdx(null);
               }}
-              className="flex-1 bg-white/[0.06] border border-white/20 rounded px-2 py-0.5 text-[11px] text-white/70 outline-none"
+              className="flex-1 bg-white/[0.06] border border-white/20 rounded px-2 py-0.5 text-footnote text-white/70 outline-none"
             />
           ) : (
             <>
@@ -216,7 +216,7 @@ function EditableNotes({
               </span>
               <button
                 onClick={() => deleteNote(i)}
-                className="opacity-0 group-hover/note:opacity-100 text-white/20 hover:text-rose-400/60 text-[11px] transition-all flex-shrink-0 leading-none"
+                className="opacity-0 group-hover/note:opacity-100 text-white/20 hover:text-rose-400/60 text-footnote transition-all flex-shrink-0 leading-none"
               >
                 ×
               </button>
@@ -227,7 +227,7 @@ function EditableNotes({
       <li>
         <button
           onClick={addNote}
-          className="ml-4 text-[10px] text-white/20 hover:text-white/45 transition-colors"
+          className="ml-4 text-caption text-white/30 hover:text-white/45 transition-colors"
         >
           + 연출 포인트 추가
         </button>
@@ -265,26 +265,26 @@ export default function PuzzleFlowStageCard({ stage, index, isLast, onUpdate }: 
         {/* Card header */}
         <div className="px-5 pt-4 pb-3 border-b border-white/[0.05] flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-[10px] text-white/20 font-medium tabular-nums w-4 flex-shrink-0">
+            <span className="text-caption text-white/30 font-medium tabular-nums w-4 flex-shrink-0">
               {String(index + 1).padStart(2, '0')}
             </span>
-            <span className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold leading-none ${tokens.badge}`}>
+            <span className={`px-2.5 py-1 rounded-lg border text-footnote font-bold leading-none ${tokens.badge}`}>
               {label}
             </span>
             {upd ? (
               <Editable
                 value={title}
                 onSave={v => upd({ title: v })}
-                className="text-sm font-semibold text-white/85 leading-snug"
+                className="text-body font-semibold text-white/85 leading-snug"
               />
             ) : (
-              <h3 className="text-sm font-semibold text-white/85 leading-snug">{title}</h3>
+              <h3 className="text-body font-semibold text-white/85 leading-snug">{title}</h3>
             )}
           </div>
 
           {/* Right meta badges */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="flex items-center gap-1 text-[10px] text-white/35">
+            <span className="flex items-center gap-1 text-caption text-white/35">
               <span>⏱</span>
               {upd ? (
                 <EditableNum value={estimatedMinutes} onSave={v => upd({ estimatedMinutes: v })} min={1} max={120} />
@@ -293,7 +293,7 @@ export default function PuzzleFlowStageCard({ stage, index, isLast, onUpdate }: 
               )}
               분
             </span>
-            <span className={`px-2 py-0.5 rounded-md border text-[10px] font-medium flex items-center gap-1 ${tokens.puzzleBadge}`}>
+            <span className={`px-2 py-0.5 rounded-md border text-caption font-medium flex items-center gap-1 ${tokens.puzzleBadge}`}>
               퍼즐{' '}
               {upd ? (
                 <EditableNum value={suggestedPuzzleSlots} onSave={v => upd({ suggestedPuzzleSlots: v })} min={0} max={10} />
@@ -314,17 +314,17 @@ export default function PuzzleFlowStageCard({ stage, index, isLast, onUpdate }: 
               value={description}
               onSave={v => upd({ description: v })}
               multiline
-              className="text-[12px] text-white/55 leading-relaxed"
+              className="text-subhead text-white/55 leading-relaxed"
             />
           ) : (
-            <p className="text-[12px] text-white/55 leading-relaxed">{description}</p>
+            <p className="text-subhead text-white/55 leading-relaxed">{description}</p>
           )}
 
           {/* Objective */}
           <div className="flex items-start gap-2.5">
-            <span className="text-[11px] flex-shrink-0 mt-[1px]">🎯</span>
+            <span className="text-footnote flex-shrink-0 mt-[1px]">🎯</span>
             <div className="flex-1">
-              <span className={`text-[9px] font-bold uppercase tracking-wider block mb-0.5 ${tokens.accent}`}>
+              <span className={`text-micro font-bold uppercase tracking-wider block mb-0.5 ${tokens.accent}`}>
                 플레이 목표
               </span>
               {upd ? (
@@ -332,17 +332,17 @@ export default function PuzzleFlowStageCard({ stage, index, isLast, onUpdate }: 
                   value={objective}
                   onSave={v => upd({ objective: v })}
                   multiline
-                  className="text-[11px] text-white/50 leading-relaxed"
+                  className="text-footnote text-white/50 leading-relaxed"
                 />
               ) : (
-                <p className="text-[11px] text-white/50 leading-relaxed">{objective}</p>
+                <p className="text-footnote text-white/50 leading-relaxed">{objective}</p>
               )}
             </div>
           </div>
 
           {/* Effects notes */}
           <div>
-            <p className={`text-[9px] font-bold uppercase tracking-wider mb-2 ${tokens.accent}`}>
+            <p className={`text-micro font-bold uppercase tracking-wider mb-2 ${tokens.accent}`}>
               연출 포인트
             </p>
             {upd ? (
@@ -350,7 +350,7 @@ export default function PuzzleFlowStageCard({ stage, index, isLast, onUpdate }: 
             ) : effectsNotes.length > 0 ? (
               <ul className="flex flex-col gap-1.5">
                 {effectsNotes.map((note, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[11px] text-white/40 leading-relaxed">
+                  <li key={i} className="flex items-start gap-2 text-footnote text-white/40 leading-relaxed">
                     <span className="flex-shrink-0 mt-[3px] text-white/20">•</span>
                     {note}
                   </li>
@@ -362,13 +362,13 @@ export default function PuzzleFlowStageCard({ stage, index, isLast, onUpdate }: 
           {/* Related keywords (derived from mandalart — read-only) */}
           {relatedKeywords.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-white/[0.04]">
-              <span className={`text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${tokens.accent}`}>
+              <span className={`text-micro font-bold uppercase tracking-wider flex-shrink-0 ${tokens.accent}`}>
                 키워드
               </span>
               {relatedKeywords.map((kw) => (
                 <span
                   key={kw}
-                  className="px-2 py-0.5 rounded-md border border-white/[0.08] text-[10px] text-white/40 bg-white/[0.02]"
+                  className="px-2 py-0.5 rounded-md border border-white/[0.08] text-caption text-white/40 bg-white/[0.02]"
                 >
                   {kw}
                 </span>

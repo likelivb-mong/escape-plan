@@ -36,11 +36,11 @@ export default function DraftFlowSection({ doc }: DraftFlowSectionProps) {
 
       {/* Summary row */}
       <div className="mt-4 mb-4 flex items-center gap-4 px-1 flex-wrap">
-        <p className="text-[11px] text-white/25">
+        <p className="text-footnote text-white/35">
           총 <span className="text-white/50 font-semibold">{doc.beats.length}단계</span>
         </p>
         <span className="w-px h-3 bg-white/[0.08]" />
-        <p className="text-[11px] text-white/25">
+        <p className="text-footnote text-white/35">
           예상 시간{' '}
           <span className="text-white/50 font-semibold">{doc.totalPlayTime}분</span>
         </p>
@@ -89,30 +89,30 @@ function BeatBlock({
 
         {/* Header */}
         <div className="px-6 pt-4 pb-3 border-b border-white/[0.05] flex items-center gap-3 flex-wrap">
-          <span className="text-[10px] text-white/20 font-medium tabular-nums w-5 flex-shrink-0">
+          <span className="text-caption text-white/30 font-medium tabular-nums w-5 flex-shrink-0">
             {String(index + 1).padStart(2, '0')}
           </span>
-          <span className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold leading-none ${tok.badge}`}>
+          <span className={`px-2.5 py-1 rounded-lg border text-footnote font-bold leading-none ${tok.badge}`}>
             {beat.label}
           </span>
-          <h4 className="text-sm font-semibold text-white/85">{beat.title}</h4>
-          <span className="ml-auto flex items-center gap-1 text-[10px] text-white/30 flex-shrink-0">
+          <h4 className="text-body font-semibold text-white/85">{beat.title}</h4>
+          <span className="ml-auto flex items-center gap-1 text-caption text-white/30 flex-shrink-0">
             <span>⏱</span>{beat.estimatedMinutes}분
           </span>
         </div>
 
         {/* Body */}
         <div className="px-6 py-4 flex flex-col gap-3">
-          <p className="text-[12px] text-white/50 leading-relaxed">{beat.description}</p>
+          <p className="text-subhead text-white/50 leading-relaxed">{beat.description}</p>
 
           {beat.objective && (
             <div className="flex items-start gap-2">
-              <span className="text-[11px] flex-shrink-0 mt-[1px]">🎯</span>
+              <span className="text-footnote flex-shrink-0 mt-[1px]">🎯</span>
               <div>
-                <span className={`text-[9px] font-bold uppercase tracking-wider block mb-0.5 ${tok.accent}`}>
+                <span className={`text-micro font-bold uppercase tracking-wider block mb-0.5 ${tok.accent}`}>
                   플레이 목표
                 </span>
-                <p className="text-[11px] text-white/45 leading-relaxed">{beat.objective}</p>
+                <p className="text-footnote text-white/45 leading-relaxed">{beat.objective}</p>
               </div>
             </div>
           )}

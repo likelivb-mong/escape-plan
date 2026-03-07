@@ -25,30 +25,30 @@ export default function DraftStorySection({ doc }: DraftStorySectionProps) {
         {/* Story header */}
         <div className="px-8 pt-7 pb-5 border-b border-white/[0.06]">
           <div className="flex items-start gap-3 flex-wrap">
-            <span className="px-2.5 py-1 rounded-lg border border-white/[0.10] text-[10px] text-white/40 bg-white/[0.02] flex-shrink-0">
+            <span className="px-2.5 py-1 rounded-lg border border-white/[0.10] text-caption text-white/40 bg-white/[0.02] flex-shrink-0">
               {doc.genre}
             </span>
-            <span className="px-2.5 py-1 rounded-lg border border-white/[0.07] text-[10px] text-white/30 flex-shrink-0">
+            <span className="px-2.5 py-1 rounded-lg border border-white/[0.07] text-caption text-white/30 flex-shrink-0">
               {doc.tone}
             </span>
-            <span className={`px-2.5 py-1 rounded-lg border text-[10px] flex-shrink-0 ${TWIST_STYLES[doc.twistIntensity]}`}>
+            <span className={`px-2.5 py-1 rounded-lg border text-caption flex-shrink-0 ${TWIST_STYLES[doc.twistIntensity]}`}>
               {TWIST_LABELS[doc.twistIntensity]}
             </span>
           </div>
 
-          <h3 className="text-xl font-bold text-white/90 mt-3 leading-tight tracking-tight">
+          <h3 className="text-title2 font-bold text-white/90 mt-3 leading-tight tracking-tight">
             {doc.storyTitle}
           </h3>
 
           <blockquote className="mt-3 border-l-2 border-white/[0.15] pl-4">
-            <p className="text-[12px] text-white/50 italic leading-relaxed">"{doc.logline}"</p>
+            <p className="text-subhead text-white/50 italic leading-relaxed">"{doc.logline}"</p>
           </blockquote>
         </div>
 
         {/* Synopsis */}
         <div className="px-8 py-6 border-b border-white/[0.06]">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-3">Synopsis</p>
-          <p className="text-[12px] text-white/55 leading-relaxed">{doc.synopsis}</p>
+          <p className="text-micro font-bold uppercase tracking-widest text-white/20 mb-3">Synopsis</p>
+          <p className="text-subhead text-white/55 leading-relaxed">{doc.synopsis}</p>
         </div>
 
         {/* Meta stats */}
@@ -68,8 +68,8 @@ export default function DraftStorySection({ doc }: DraftStorySectionProps) {
 function StoryMeta({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col px-6 py-3.5 border-t border-r border-white/[0.05]">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1">{label}</span>
-      <span className="text-[12px] font-semibold text-white/60">{value}</span>
+      <span className="text-micro font-bold uppercase tracking-widest text-white/20 mb-1">{label}</span>
+      <span className="text-subhead font-semibold text-white/60">{value}</span>
     </div>
   );
 }

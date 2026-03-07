@@ -143,18 +143,18 @@ export default function PuzzleFlowPage() {
   if (!selectedStory) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 px-6">
-        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-title2">
           📋
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-white/70 mb-1">스토리가 선택되지 않았습니다.</p>
-          <p className="text-[12px] text-white/35 leading-relaxed">
+          <p className="text-body font-semibold text-white/70 mb-1">스토리가 선택되지 않았습니다.</p>
+          <p className="text-subhead text-white/35 leading-relaxed">
             스토리 선택 후 만다라트를 먼저 완성해 주세요.
           </p>
         </div>
         <button
           onClick={() => navigate('/mandalart')}
-          className="mt-2 px-4 py-2 rounded-full border border-white/[0.12] text-xs text-white/50 hover:border-white/25 hover:text-white/70 transition-all"
+          className="mt-2 px-4 py-2 rounded-full border border-white/[0.12] text-subhead text-white/50 hover:border-white/25 hover:text-white/70 transition-all"
         >
           ← 만다라트로
         </button>
@@ -166,18 +166,18 @@ export default function PuzzleFlowPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
 
       {/* ── Page header ── */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => navigate('/mandalart')}
-            className="text-white/30 hover:text-white/60 transition-colors text-xs"
+            className="text-white/30 hover:text-white/60 transition-colors text-subhead"
           >
             ← 만다라트
           </button>
           <span className="h-3.5 w-px bg-white/10" />
-          <h1 className="text-sm font-semibold text-white/85">{projectName}</h1>
+          <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
           <span className="h-3.5 w-px bg-white/10" />
-          <span className="text-[11px] text-white/25 font-medium tracking-wide">
+          <span className="text-footnote text-white/35 font-medium tracking-wide">
             Game Flow Design
           </span>
         </div>
@@ -200,7 +200,7 @@ export default function PuzzleFlowPage() {
               onClick={handleUndo}
               disabled={!canUndo}
               title="실행 취소"
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/[0.08] text-white/30 hover:text-white/65 hover:border-white/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed text-sm"
+              className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/[0.08] text-white/30 hover:text-white/65 hover:border-white/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed text-body"
             >
               ↩
             </button>
@@ -208,7 +208,7 @@ export default function PuzzleFlowPage() {
               onClick={handleRedo}
               disabled={!canRedo}
               title="다시 실행"
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/[0.08] text-white/30 hover:text-white/65 hover:border-white/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed text-sm"
+              className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/[0.08] text-white/30 hover:text-white/65 hover:border-white/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed text-body"
             >
               ↪
             </button>
@@ -220,7 +220,7 @@ export default function PuzzleFlowPage() {
           <button
             onClick={handleSave}
             className={[
-              'px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 border',
+              'px-3 py-1.5 rounded-lg text-footnote font-medium transition-all duration-200 border',
               saved
                 ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300/80'
                 : 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70',
@@ -233,7 +233,7 @@ export default function PuzzleFlowPage() {
 
           <button
             onClick={() => navigate('/draft')}
-            className="text-[11px] text-white/25 hover:text-white/50 transition-colors"
+            className="text-footnote text-white/35 hover:text-white/50 transition-colors"
           >
             Draft 보기 →
           </button>
@@ -246,7 +246,7 @@ export default function PuzzleFlowPage() {
       {/* ── Tab content ── */}
       {activeTab === 'story' ? (
         <div className="flex flex-col flex-1 overflow-hidden min-h-0">
-          <div className="flex flex-1 gap-5 px-6 py-5 overflow-hidden min-h-0">
+          <div className="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-5 px-4 sm:px-6 py-4 sm:py-5 overflow-hidden min-h-0">
             <div className="flex-1 overflow-y-auto min-w-0 pr-1">
               {storyPlan ? (
                 <PuzzleFlowTimeline plan={storyPlan} onUpdateStage={handleUpdateStage} />
@@ -254,22 +254,22 @@ export default function PuzzleFlowPage() {
                 <LoadingPlaceholder text="스토리 플로우 생성 중…" />
               )}
             </div>
-            <div className="w-72 flex-shrink-0">
+            <div className="w-full lg:w-72 flex-shrink-0">
               {storyPlan && <PuzzleFlowSidebar plan={storyPlan} cells={cells} />}
             </div>
           </div>
 
-          <div className="flex-shrink-0 px-6 py-4 border-t border-white/[0.06] flex items-center justify-between gap-3">
+          <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-t border-white/[0.06] flex items-center justify-between gap-3">
             <button
               onClick={() => navigate('/mandalart')}
-              className="text-[11px] text-white/35 hover:text-white/60 transition-colors"
+              className="text-footnote text-white/35 hover:text-white/60 transition-colors"
             >
               ← Back to 만다라트
             </button>
             <button
               onClick={handleRegenStory}
               disabled={isRegenStory}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/[0.10] text-[11px] text-white/40 hover:border-white/20 hover:text-white/60 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/[0.10] text-footnote text-white/40 hover:border-white/20 hover:text-white/60 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {isRegenStory ? (
                 <><span className="w-3 h-3 border border-white/25 border-t-white/60 rounded-full animate-spin" /> 재생성 중…</>
@@ -280,7 +280,7 @@ export default function PuzzleFlowPage() {
             <button
               disabled={!storyPlan}
               onClick={handleContinueToGame}
-              className="px-4 py-2 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 active:bg-white/80 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Game Flow 설계 →
             </button>
@@ -314,7 +314,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={[
-        'px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-150',
+        'px-3 py-1 rounded-full text-footnote font-medium transition-all duration-150',
         active ? 'bg-white text-black' : 'text-white/40 hover:text-white/65',
       ].join(' ')}
     >
@@ -326,7 +326,7 @@ function TabButton({
 function LoadingPlaceholder({ text }: { text: string }) {
   return (
     <div className="flex items-center justify-center h-32">
-      <span className="text-[11px] text-white/25">{text}</span>
+      <span className="text-footnote text-white/35">{text}</span>
     </div>
   );
 }

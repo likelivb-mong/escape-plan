@@ -162,22 +162,22 @@ export default function HomePage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-start px-6 py-16">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-start px-4 sm:px-6 py-10 sm:py-16">
       {/* Header */}
       <div className="text-center mb-10">
-        <p className="text-xs font-semibold tracking-[0.2em] uppercase text-white/30 mb-3">
+        <p className="text-subhead font-semibold tracking-[0.2em] uppercase text-white/30 mb-3">
           XCAPE Internal Tool
         </p>
-        <h1 className="text-4xl font-semibold tracking-tight text-white mb-3">
+        <h1 className="text-display font-semibold tracking-tight text-white mb-3">
           방탈출 테마 기획 AI
         </h1>
-        <p className="text-white/40 text-sm leading-relaxed">
+        <p className="text-white/40 text-body leading-relaxed">
           YouTube 영상, 직접 입력 또는 사건 구성으로 새 테마를 시작하세요
         </p>
       </div>
 
       {/* Main card */}
-      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+      <div className="w-full max-w-lg sm:max-w-xl lg:max-w-2xl rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
         {/* Tab bar */}
         <div className="flex border-b border-white/10">
           <TabButton active={activeTab === 'youtube'} onClick={() => setActiveTab('youtube')}>
@@ -234,7 +234,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`flex-1 py-3.5 text-sm font-medium transition-all duration-200 ${
+      className={`flex-1 py-3.5 text-body font-medium transition-all duration-200 ${
         active
           ? 'text-white border-b-2 border-white bg-white/[0.03]'
           : 'text-white/35 hover:text-white/55 hover:bg-white/[0.02]'
@@ -260,7 +260,7 @@ interface YouTubeTabProps {
 function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtubeStep, youtubeError, onGenerate }: YouTubeTabProps) {
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-xs text-white/40 font-medium tracking-wide uppercase">
+      <label className="text-subhead text-white/40 font-medium tracking-wide uppercase">
         YouTube URL
       </label>
       <input
@@ -268,7 +268,7 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
         value={youtubeUrl}
         onChange={(e) => setYoutubeUrl(e.target.value)}
         placeholder="https://youtube.com/watch?v=..."
-        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
+        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
       />
 
       {/* Preview */}
@@ -289,11 +289,11 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
               </>
             ) : (
               <>
-                <p className="text-[12px] font-medium text-white/80 leading-snug line-clamp-2 mb-1">
+                <p className="text-subhead font-medium text-white/80 leading-snug line-clamp-2 mb-1">
                   {preview.title ?? '제목을 불러올 수 없습니다'}
                 </p>
                 {preview.channel && (
-                  <p className="text-[10px] text-white/35 truncate">{preview.channel}</p>
+                  <p className="text-caption text-white/35 truncate">{preview.channel}</p>
                 )}
               </>
             )}
@@ -304,7 +304,7 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
       <button
         onClick={onGenerate}
         disabled={!youtubeUrl.trim() || youtubeLoading}
-        className="mt-2 w-full py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="mt-2 w-full py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {youtubeLoading ? (
           <>
@@ -317,10 +317,10 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
       </button>
 
       {youtubeLoading && youtubeStep && (
-        <p className="text-[11px] text-white/30 text-center animate-pulse">{youtubeStep}</p>
+        <p className="text-footnote text-white/30 text-center animate-pulse">{youtubeStep}</p>
       )}
       {youtubeError && (
-        <p className="text-[11px] text-red-400/70 leading-relaxed bg-red-500/[0.06] border border-red-500/20 rounded-lg px-3 py-2">
+        <p className="text-footnote text-red-400/70 leading-relaxed bg-red-500/[0.06] border border-red-500/20 rounded-lg px-3 py-2">
           {youtubeError}
         </p>
       )}
@@ -364,7 +364,7 @@ function ManualTab({
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
           placeholder="테마 이름을 입력하세요"
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
         />
       </Field>
 
@@ -376,7 +376,7 @@ function ManualTab({
               key={t}
               type="button"
               onClick={() => togglePlayTime(t)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${
+              className={`flex-1 py-2.5 rounded-xl text-body font-medium transition-all duration-200 border ${
                 playTimes.includes(t)
                   ? 'bg-white text-black border-white'
                   : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
@@ -396,7 +396,7 @@ function ManualTab({
               key={g.value}
               type="button"
               onClick={() => toggleGenre(g.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
+              className={`px-3 py-1.5 rounded-full text-subhead font-medium transition-all duration-200 border ${
                 genres.includes(g.value)
                   ? 'bg-white text-black border-white'
                   : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
@@ -420,7 +420,7 @@ function ManualTab({
           onChange={(e) => setSynopsis(e.target.value)}
           placeholder="생성하려는 스토리의 핵심 주제와 방향을 입력하세요"
           rows={3}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200 resize-none"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200 resize-none"
         />
       </Field>
 
@@ -433,7 +433,7 @@ function ManualTab({
       <button
         onClick={onSubmit}
         disabled={!projectName.trim()}
-        className="mt-1 w-full py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="mt-1 w-full py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed"
       >
         프로젝트 생성
       </button>
@@ -447,18 +447,18 @@ function ScenarioEntryTab({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-col gap-5 items-center py-6">
       <div className="w-14 h-14 rounded-2xl bg-amber-500/[0.08] border border-amber-400/20 flex items-center justify-center">
-        <span className="text-2xl">🔍</span>
+        <span className="text-title1">🔍</span>
       </div>
       <div className="text-center max-w-sm">
-        <h3 className="text-sm font-semibold text-white/80 mb-2">사건 구성으로 시작</h3>
-        <p className="text-[12px] text-white/35 leading-relaxed">
+        <h3 className="text-body font-semibold text-white/80 mb-2">사건 구성으로 시작</h3>
+        <p className="text-subhead text-white/35 leading-relaxed">
           가해자, 피해자, 범행 동기, 수사 단서 등 사건 요소를 조합하여
           방탈출 시나리오를 구성하고 스토리를 생성합니다.
         </p>
       </div>
       <button
         onClick={onStart}
-        className="mt-1 w-full max-w-xs py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-white text-black hover:bg-white/90"
+        className="mt-1 w-full max-w-xs py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90"
       >
         사건 구성 시작
       </button>
@@ -471,7 +471,7 @@ function ScenarioEntryTab({ onStart }: { onStart: () => void }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-xs text-white/40 font-medium tracking-wide uppercase block mb-1.5">
+      <label className="text-subhead text-white/40 font-medium tracking-wide uppercase block mb-1.5">
         {label}
       </label>
       {children}

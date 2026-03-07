@@ -36,13 +36,13 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 border-b border-white/10 backdrop-blur-xl bg-black/60">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-white/10 backdrop-blur-xl bg-black/60">
       {/* Brand */}
       <div className="flex items-center gap-2">
         <div className="w-6 h-6 rounded-md bg-white/90 flex items-center justify-center">
-          <span className="text-black text-xs font-bold">X</span>
+          <span className="text-black text-subhead font-bold">X</span>
         </div>
-        <span className="text-sm font-semibold tracking-wide text-white/90">XCAPE AI</span>
+        <span className="text-body font-semibold tracking-wide text-white/90">XCAPE AI</span>
       </div>
 
       {/* Nav links + theme toggle */}
@@ -53,7 +53,7 @@ export default function Navbar() {
             <Link
               key={item.path}
               to={item.path}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-1.5 rounded-full text-body font-medium transition-all duration-200 ${
                 isActive
                   ? 'bg-white text-black'
                   : 'text-white/50 hover:text-white/80 hover:bg-white/10'

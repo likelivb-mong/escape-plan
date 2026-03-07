@@ -109,10 +109,10 @@ export default function FloorPlanRoom({
     >
       {/* Room header */}
       <div className={`px-2.5 py-1.5 ${colors.header} flex items-center justify-between flex-shrink-0`}>
-        <span className={`text-[10px] font-semibold ${colors.text} truncate`}>
+        <span className={`text-caption font-semibold ${colors.text} truncate`}>
           {layout.roomName}
         </span>
-        <span className="text-[9px] text-white/25">
+        <span className="text-micro text-white/35">
           {steps.length}스텝
         </span>
       </div>
@@ -135,18 +135,18 @@ export default function FloorPlanRoom({
               }}
               onPointerDown={(e) => handleStepPointerDown(step, i, e)}
             >
-              <span className="text-[9px] text-white/30 font-mono tabular-nums flex-shrink-0">
+              <span className="text-micro text-white/30 font-mono tabular-nums flex-shrink-0">
                 {String(step.stepNumber).padStart(2, '0')}
               </span>
               <AnswerTypeBadge type={step.answerType} size="xs" />
-              <span className="text-[9px] text-white/45 font-mono truncate">
+              <span className="text-micro text-white/45 font-mono truncate">
                 {step.answer}
               </span>
             </div>
           );
         })}
         {steps.length === 0 && (
-          <span className="absolute top-2 left-3 text-[9px] text-white/15 italic">스텝 없음</span>
+          <span className="absolute top-2 left-3 text-micro text-white/15 italic">스텝 없음</span>
         )}
       </div>
 

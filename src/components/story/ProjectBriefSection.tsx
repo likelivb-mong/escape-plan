@@ -33,16 +33,16 @@ export default function ProjectBriefSection({ brief }: ProjectBriefSectionProps)
     <div className="flex-shrink-0 mx-6 mt-3 mb-1 rounded-xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
       {/* Top row: source badge + meta */}
       <div className="px-4 py-3 flex items-center gap-2 flex-wrap border-b border-white/[0.05]">
-        <span className={`px-2 py-0.5 rounded-full border text-[9px] font-medium ${badgeStyle}`}>
+        <span className={`px-2 py-0.5 rounded-full border text-micro font-medium ${badgeStyle}`}>
           {badgeLabel}
         </span>
         {brief.playTimes.length > 0 && (
-          <span className="text-[10px] text-white/30">
+          <span className="text-caption text-white/30">
             {brief.playTimes.map((t) => `${t}m`).join(' / ')}
           </span>
         )}
         {brief.genres.length > 0 && (
-          <span className="text-[10px] text-white/35">
+          <span className="text-caption text-white/35">
             {brief.genres.map((g) => GENRE_LABELS[g] ?? g).join(' · ')}
           </span>
         )}
@@ -59,11 +59,11 @@ export default function ProjectBriefSection({ brief }: ProjectBriefSectionProps)
             />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-medium text-white/60 truncate leading-snug">
+            <p className="text-footnote font-medium text-white/60 truncate leading-snug">
               {brief.videoTitle || 'YouTube 영상'}
             </p>
             {brief.videoChannel && (
-              <p className="text-[10px] text-white/30 truncate mt-0.5">{brief.videoChannel}</p>
+              <p className="text-caption text-white/30 truncate mt-0.5">{brief.videoChannel}</p>
             )}
           </div>
         </div>
@@ -72,17 +72,17 @@ export default function ProjectBriefSection({ brief }: ProjectBriefSectionProps)
       {/* Synopsis */}
       {brief.synopsis && (
         <div className="px-4 py-3 border-b border-white/[0.05]">
-          <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-2">
+          <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-2">
             {isYoutube ? '영상 내용 요약' : isScenario ? '사건 시나리오' : '스토리 핵심 흐름'}
           </p>
-          <p className="text-[11px] text-white/50 leading-relaxed">{brief.synopsis}</p>
+          <p className="text-footnote text-white/50 leading-relaxed">{brief.synopsis}</p>
         </div>
       )}
 
       {/* Beats */}
       {brief.beats.length > 0 && (
         <div className="px-4 py-3 border-b border-white/[0.05]">
-          <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-3">
+          <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-3">
             스토리 구조
           </p>
           <StoryStructurePreview beats={brief.beats} />
@@ -107,7 +107,7 @@ function InvestigationChips({ investigation }: { investigation: ProjectBrief['in
 
   return (
     <div className="px-4 py-3">
-      <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-2">
+      <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-2">
         수사 키워드
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -115,7 +115,7 @@ function InvestigationChips({ investigation }: { investigation: ProjectBrief['in
           e.items.map((item) => (
             <span
               key={`${e.label}-${item}`}
-              className={`px-2 py-0.5 rounded-md border text-[9px] ${e.color}`}
+              className={`px-2 py-0.5 rounded-md border text-micro ${e.color}`}
             >
               {e.label}: {item}
             </span>

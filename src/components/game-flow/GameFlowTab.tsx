@@ -90,7 +90,7 @@ export default function GameFlowTab({
       {/* ── Filter bar ── */}
       <div className="flex items-center gap-3 px-5 py-2.5 border-b border-white/[0.06] flex-shrink-0 flex-wrap">
         {/* Stats */}
-        <span className="text-[10px] text-white/25 mr-1">
+        <span className="text-caption text-white/35 mr-1">
           {filtered.length} / {plan.steps.length} 스텝
         </span>
 
@@ -138,7 +138,7 @@ export default function GameFlowTab({
         <button
           onClick={onRegenerate}
           disabled={isRegenerating}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/[0.09] text-[10px] text-white/35 hover:text-white/60 hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/[0.09] text-caption text-white/35 hover:text-white/60 hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         >
           {isRegenerating ? (
             <><span className="w-2.5 h-2.5 border border-white/25 border-t-white/60 rounded-full animate-spin" /> 재생성 중…</>
@@ -229,7 +229,7 @@ function RoomFilterChips({
       {/* "All" chip */}
       <button
         onClick={() => onFilterChange('all')}
-        className={`px-2.5 py-0.5 rounded-full border text-[10px] font-medium transition-all duration-150 ${
+        className={`px-2.5 py-0.5 rounded-full border text-caption font-medium transition-all duration-150 ${
           filterRoom === 'all'
             ? 'bg-white/10 text-white/75 border-white/15'
             : 'text-white/30 border-white/[0.07] hover:text-white/55 hover:border-white/12'
@@ -255,7 +255,7 @@ function RoomFilterChips({
                 if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
                 if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
               }}
-              className="px-2 py-0.5 rounded-full border border-white/30 bg-white/10 text-[10px] text-white/80 outline-none min-w-0"
+              className="px-2 py-0.5 rounded-full border border-white/30 bg-white/10 text-caption text-white/80 outline-none min-w-0"
               style={{ width: `${Math.max(editValue.length * 9 + 16, 48)}px` }}
             />
           );
@@ -267,7 +267,7 @@ function RoomFilterChips({
             onClick={() => onFilterChange(isActive ? 'all' : room)}
             onDoubleClick={() => startEdit(room)}
             title="더블클릭으로 공간 이름 수정"
-            className={`px-2.5 py-0.5 rounded-full border text-[10px] font-medium transition-all duration-150 ${
+            className={`px-2.5 py-0.5 rounded-full border text-caption font-medium transition-all duration-150 ${
               isActive ? color.active : color.idle
             }`}
           >
@@ -296,7 +296,7 @@ function FilterSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="px-2 py-1 rounded-lg border border-white/[0.09] bg-transparent text-[10px] text-white/50 hover:border-white/20 transition-colors cursor-pointer appearance-none"
+      className="px-2 py-1 rounded-lg border border-white/[0.09] bg-transparent text-caption text-white/50 hover:border-white/20 transition-colors cursor-pointer appearance-none"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value} className="bg-[#111] text-white/70">
@@ -335,13 +335,13 @@ function GameFlowSummaryBar({
 
       <button
         onClick={onGoToFloorPlan}
-        className="px-4 py-2 rounded-full border border-white/[0.10] text-xs text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
+        className="px-4 py-2 rounded-full border border-white/[0.10] text-subhead text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
       >
         도면 / PassMap →
       </button>
       <button
         onClick={onSaveToDraft}
-        className="px-4 py-2 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
+        className="px-4 py-2 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
       >
         Draft로 보내기 →
       </button>
@@ -352,8 +352,8 @@ function GameFlowSummaryBar({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] text-white/25">{label}</span>
-      <span className="text-[11px] font-semibold text-white/60">{value}</span>
+      <span className="text-caption text-white/35">{label}</span>
+      <span className="text-footnote font-semibold text-white/60">{value}</span>
     </div>
   );
 }

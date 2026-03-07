@@ -150,18 +150,18 @@ export default function PuzzleRecommendationsPage() {
   if (!selectedStory || !puzzleFlowPlan) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 px-6">
-        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-title2">
           🧩
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-white/70 mb-1">퍼즐 플로우가 없습니다.</p>
-          <p className="text-[12px] text-white/35 leading-relaxed">
+          <p className="text-body font-semibold text-white/70 mb-1">퍼즐 플로우가 없습니다.</p>
+          <p className="text-subhead text-white/35 leading-relaxed">
             먼저 스토리를 선택하고 퍼즐 플로우를 설계해주세요.
           </p>
         </div>
         <button
           onClick={() => navigate('/puzzle-flow')}
-          className="mt-2 px-4 py-2 rounded-full border border-white/[0.12] text-xs text-white/50 hover:border-white/25 hover:text-white/70 transition-all"
+          className="mt-2 px-4 py-2 rounded-full border border-white/[0.12] text-subhead text-white/50 hover:border-white/25 hover:text-white/70 transition-all"
         >
           ← Puzzle Flow로 돌아가기
         </button>
@@ -195,13 +195,13 @@ export default function PuzzleRecommendationsPage() {
       />
 
       {/* ── Main content ── */}
-      <div className="flex flex-1 gap-5 px-6 py-5 overflow-hidden min-h-0">
+      <div className="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-5 px-4 sm:px-6 py-4 sm:py-5 overflow-hidden min-h-0">
 
         {/* Stage sections (scrollable) */}
         <div className="flex-1 overflow-y-auto min-w-0 pr-1 flex flex-col gap-8">
           {groups.length === 0 ? (
             <div className="flex items-center justify-center h-32">
-              <span className="text-[11px] text-white/25">추천 퍼즐 생성 중…</span>
+              <span className="text-footnote text-white/35">추천 퍼즐 생성 중…</span>
             </div>
           ) : (
             groups.map((group) => (
@@ -221,16 +221,16 @@ export default function PuzzleRecommendationsPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="w-72 flex-shrink-0 flex flex-col">
+        <div className="w-full lg:w-72 flex-shrink-0 flex flex-col">
           <PuzzleRecommendationSidebar stats={stats} />
         </div>
       </div>
 
       {/* ── Bottom bar ── */}
-      <div className="flex-shrink-0 px-6 py-4 border-t border-white/[0.06] flex items-center justify-between gap-3">
+      <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-t border-white/[0.06] flex items-center justify-between gap-3">
         <button
           onClick={() => navigate('/puzzle-flow')}
-          className="text-[11px] text-white/35 hover:text-white/60 transition-colors"
+          className="text-footnote text-white/35 hover:text-white/60 transition-colors"
         >
           ← Back to Puzzle Flow
         </button>
@@ -246,7 +246,7 @@ export default function PuzzleRecommendationsPage() {
 
         <button
           onClick={handleFinalize}
-          className="px-4 py-2 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
+          className="px-4 py-2 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
         >
           Finalize Current Draft →
         </button>
@@ -273,8 +273,8 @@ function BottomStat({
       : 'text-white/60';
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] text-white/25">{label}</span>
-      <span className={`text-sm font-bold tabular-nums ${cls}`}>{value}</span>
+      <span className="text-caption text-white/35">{label}</span>
+      <span className={`text-body font-bold tabular-nums ${cls}`}>{value}</span>
     </div>
   );
 }

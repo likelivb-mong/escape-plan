@@ -77,30 +77,30 @@ export default function ScenarioPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-4 border-b border-white/10 flex items-center justify-between">
+      <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-b border-white/10 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-white">사건 구성 생성하기</h1>
-          <p className="text-[11px] text-white/35 mt-0.5">
+          <h1 className="text-title2 font-semibold text-white">사건 구성 생성하기</h1>
+          <p className="text-footnote text-white/35 mt-0.5">
             범행동기, 범행방법, 수사단서, 수사기법을 조합해 사건 개요를 만듭니다
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleRandom}
-            className="px-4 py-2 rounded-xl border border-white/10 text-xs font-medium text-white/50 hover:text-white/80 hover:border-white/25 transition-all"
+            className="px-4 py-2 rounded-xl border border-white/10 text-subhead font-medium text-white/50 hover:text-white/80 hover:border-white/25 transition-all"
           >
             랜덤 생성
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 rounded-xl border border-white/10 text-xs font-medium text-white/50 hover:text-white/80 hover:border-white/25 transition-all"
+            className="px-4 py-2 rounded-xl border border-white/10 text-subhead font-medium text-white/50 hover:text-white/80 hover:border-white/25 transition-all"
           >
             초기화
           </button>
           <button
             onClick={handleContinue}
             disabled={!result}
-            className="px-5 py-2 rounded-xl text-xs font-semibold bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="px-5 py-2 rounded-xl text-subhead font-semibold bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             스토리 제안 보기 &rarr;
           </button>
@@ -108,11 +108,11 @@ export default function ScenarioPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Form */}
           <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
-            <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-4">
+            <p className="text-caption font-semibold text-white/25 uppercase tracking-widest mb-4">
               사건 요소 입력
             </p>
             <ScenarioForm form={form} onChange={setForm} />

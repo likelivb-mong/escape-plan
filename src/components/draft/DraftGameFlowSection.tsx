@@ -15,7 +15,7 @@ type ViewMode = 'room' | 'stage';
 
 function DocSectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-xs font-bold uppercase tracking-widest text-white/30 mb-4 mt-7 pt-4 border-t border-white/[0.05]">
+    <h3 className="text-subhead font-bold uppercase tracking-widest text-white/30 mb-4 mt-7 pt-4 border-t border-white/[0.05]">
       {children}
     </h3>
   );
@@ -97,7 +97,7 @@ export default function DraftGameFlowSection({ plan, onUpdatePlan }: DraftGameFl
           return (
             <div key={stage} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02]">
               <StageBadge label={stage} />
-              <span className="text-[10px] text-white/40">{count}스텝</span>
+              <span className="text-caption text-white/40">{count}스텝</span>
             </div>
           );
         })}
@@ -159,7 +159,7 @@ export default function DraftGameFlowSection({ plan, onUpdatePlan }: DraftGameFl
         )}
 
         {/* Filtered count */}
-        <span className="text-[10px] text-white/25 ml-auto">
+        <span className="text-caption text-white/35 ml-auto">
           {filtered.length} / {steps.length} 스텝
         </span>
       </div>
@@ -171,7 +171,7 @@ export default function DraftGameFlowSection({ plan, onUpdatePlan }: DraftGameFl
             <div key={room}>
               <div className="flex items-center gap-2 mb-2">
                 <RoomBadge room={room} rooms={rooms} />
-                <span className="text-[10px] text-white/25">{roomSteps.length}개 스텝</span>
+                <span className="text-caption text-white/35">{roomSteps.length}개 스텝</span>
               </div>
               <div className="flex flex-col gap-1 pl-2 border-l border-white/[0.06]">
                 {roomSteps.map((step) => (
@@ -195,7 +195,7 @@ export default function DraftGameFlowSection({ plan, onUpdatePlan }: DraftGameFl
             <div key={stage}>
               <div className="flex items-center gap-2 mb-2">
                 <StageBadge label={stage} />
-                <span className="text-[10px] text-white/25">{stageSteps.length}개 스텝</span>
+                <span className="text-caption text-white/35">{stageSteps.length}개 스텝</span>
               </div>
               <div className="flex flex-col gap-1 pl-2 border-l border-white/[0.06]">
                 {stageSteps.map((step) => (
@@ -227,8 +227,8 @@ export default function DraftGameFlowSection({ plan, onUpdatePlan }: DraftGameFl
                 style={{ width: `${(count / filtered.length) * 100}%` }}
               />
             </div>
-            <span className="text-[10px] text-white/35 tabular-nums w-5 text-right">{count}</span>
-            <span className="text-[9px] text-white/20 w-24">{ANSWER_TYPE_LABELS[type]}</span>
+            <span className="text-caption text-white/35 tabular-nums w-5 text-right">{count}</span>
+            <span className="text-micro text-white/30 w-24">{ANSWER_TYPE_LABELS[type]}</span>
           </div>
         ))}
       </div>
@@ -244,24 +244,24 @@ export default function DraftGameFlowSection({ plan, onUpdatePlan }: DraftGameFl
                 className="px-3.5 py-3 rounded-xl border border-purple-400/15 bg-purple-500/[0.05]"
               >
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[9px] font-mono text-white/25">
+                  <span className="text-micro font-mono text-white/25">
                     STEP {String(step.stepNumber).padStart(2, '0')}
                   </span>
                   <StageBadge label={step.stageLabel} />
-                  <span className="text-[10px] text-white/50 font-medium">{step.clueTitle}</span>
+                  <span className="text-caption text-white/50 font-medium">{step.clueTitle}</span>
                 </div>
                 {step.xkitPrompt && (
-                  <p className="text-[10px] text-white/35 mb-1">
+                  <p className="text-caption text-white/35 mb-1">
                     <span className="text-white/20">프롬프트: </span>{step.xkitPrompt}
                   </p>
                 )}
                 {step.xkitAnswer && (
-                  <p className="text-[10px] text-purple-300/75 font-mono font-semibold mb-1">
+                  <p className="text-caption text-purple-300/75 font-mono font-semibold mb-1">
                     → {step.xkitAnswer}
                   </p>
                 )}
                 {step.xkitNextGuide && (
-                  <p className="text-[10px] text-white/30 italic">
+                  <p className="text-caption text-white/30 italic">
                     다음 가이드: {step.xkitNextGuide}
                   </p>
                 )}
@@ -278,15 +278,15 @@ export default function DraftGameFlowSection({ plan, onUpdatePlan }: DraftGameFl
           <div className="flex flex-col gap-2 mb-2">
             {deviceSteps.map((step) => (
               <div key={step.id} className="flex items-start gap-3 py-2 border-b border-white/[0.04]">
-                <span className="text-[9px] font-mono text-white/20 mt-0.5 w-6">
+                <span className="text-micro font-mono text-white/20 mt-0.5 w-6">
                   {String(step.stepNumber).padStart(2, '0')}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] text-white/65 font-medium mb-1">{step.clueTitle}</p>
+                  <p className="text-footnote text-white/65 font-medium mb-1">{step.clueTitle}</p>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <ProblemModeBadge mode={step.problemMode} size="xs" />
                     {step.deviceSubtype && (
-                      <span className="px-1.5 py-0.5 rounded border border-amber-400/15 text-[8px] text-amber-300/60">
+                      <span className="px-1.5 py-0.5 rounded border border-amber-400/15 text-micro text-amber-300/60">
                         {step.deviceSubtype.replace(/_/g, ' ')}
                       </span>
                     )}
@@ -324,7 +324,7 @@ function EditableStepRow({
       <div className="px-3 py-3 rounded-xl border border-white/[0.12] bg-white/[0.04] mb-1">
         {/* Edit header */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[9px] font-mono text-white/25 w-4 text-right">
+          <span className="text-micro font-mono text-white/25 w-4 text-right">
             {String(step.stepNumber).padStart(2, '0')}
           </span>
           <StageBadge label={step.stageLabel} />
@@ -332,7 +332,7 @@ function EditableStepRow({
           <div className="flex-1" />
           <button
             onClick={onToggleEdit}
-            className="text-[9px] text-white/30 hover:text-white/60 transition-colors px-2 py-0.5 rounded border border-white/[0.08]"
+            className="text-micro text-white/30 hover:text-white/60 transition-colors px-2 py-0.5 rounded border border-white/[0.08]"
           >
             접기
           </button>
@@ -373,16 +373,16 @@ function EditableStepRow({
       className={`flex items-center gap-2.5 py-1.5 group ${canEdit ? 'cursor-pointer hover:bg-white/[0.02] rounded-lg px-1 -mx-1' : ''}`}
       onClick={canEdit ? onToggleEdit : undefined}
     >
-      <span className="text-[9px] font-mono text-white/20 w-4 text-right">
+      <span className="text-micro font-mono text-white/20 w-4 text-right">
         {String(step.stepNumber).padStart(2, '0')}
       </span>
       <StageBadge label={step.stageLabel} />
-      <span className="text-[11px] text-white/60 flex-1 truncate">{step.clueTitle}</span>
+      <span className="text-footnote text-white/60 flex-1 truncate">{step.clueTitle}</span>
       <ProblemModeBadge mode={step.problemMode} size="xs" />
       <AnswerTypeBadge type={step.answerType} size="xs" />
       <OutputBadge output={step.output} />
       {canEdit && (
-        <span className="text-[9px] text-white/15 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+        <span className="text-micro text-white/15 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
           ✎
         </span>
       )}
@@ -405,20 +405,20 @@ function EditField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[9px] text-white/25 font-medium uppercase tracking-wider">{label}</label>
+      <label className="text-micro text-white/35 font-medium uppercase tracking-wider">{label}</label>
       {multiline ? (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={2}
-          className="px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/[0.03] text-[11px] text-white/70 outline-none focus:border-white/25 transition-colors resize-none"
+          className="px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/[0.03] text-footnote text-white/70 outline-none focus:border-white/25 transition-colors resize-none"
         />
       ) : (
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/[0.03] text-[11px] text-white/70 outline-none focus:border-white/25 transition-colors"
+          className="px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/[0.03] text-footnote text-white/70 outline-none focus:border-white/25 transition-colors"
         />
       )}
     </div>
@@ -440,7 +440,7 @@ function ViewModeButton({
     <button
       onClick={onClick}
       className={[
-        'px-3 py-1 rounded-full text-[10px] font-medium transition-all duration-150',
+        'px-3 py-1 rounded-full text-caption font-medium transition-all duration-150',
         active ? 'bg-white text-black' : 'text-white/40 hover:text-white/65',
       ].join(' ')}
     >
@@ -464,7 +464,7 @@ function FilterChip({
     <button
       onClick={onClick}
       className={[
-        'px-2.5 py-0.5 rounded-full border text-[10px] font-medium transition-all duration-150',
+        'px-2.5 py-0.5 rounded-full border text-caption font-medium transition-all duration-150',
         active
           ? 'bg-white/10 text-white/75 border-white/15'
           : 'text-white/30 border-white/[0.07] hover:text-white/55 hover:border-white/12',
@@ -480,8 +480,8 @@ function FilterChip({
 function SummaryStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-3 py-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02] text-center">
-      <p className="text-xl font-bold text-white/75 mb-0.5">{value}</p>
-      <p className="text-[9px] text-white/25 font-medium">{label}</p>
+      <p className="text-title2 font-bold text-white/75 mb-0.5">{value}</p>
+      <p className="text-micro text-white/35 font-medium">{label}</p>
     </div>
   );
 }

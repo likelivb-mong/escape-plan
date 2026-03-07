@@ -21,22 +21,22 @@ export default function PuzzleRecommendationsHeader({
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/puzzle-flow')}
-            className="text-white/30 hover:text-white/60 transition-colors text-xs"
+            className="text-white/30 hover:text-white/60 transition-colors text-subhead"
           >
             ← Puzzle Flow
           </button>
           <span className="h-3 w-px bg-white/10" />
-          <span className="text-[11px] text-white/20">{projectName}</span>
+          <span className="text-footnote text-white/30">{projectName}</span>
           <span className="h-3 w-px bg-white/10" />
-          <span className="text-[11px] text-white/45 font-medium">Puzzle Recommendations</span>
+          <span className="text-footnote text-white/45 font-medium">Puzzle Recommendations</span>
         </div>
 
         {/* Title block */}
         <div className="mt-0.5">
-          <h1 className="text-base font-semibold text-white/90 leading-tight">
+          <h1 className="text-title3 font-semibold text-white/90 leading-tight">
             AI Puzzle Recommendations
           </h1>
-          <p className="text-[11px] text-white/30 mt-0.5 leading-relaxed max-w-sm">
+          <p className="text-footnote text-white/30 mt-0.5 leading-relaxed max-w-sm">
             AI-suggested puzzles for each stage. Adopt, edit, or discard to finalize your design.
           </p>
         </div>
@@ -46,7 +46,7 @@ export default function PuzzleRecommendationsHeader({
       <div className="flex items-center gap-3 flex-shrink-0 pt-0.5">
         <button
           onClick={() => navigate('/puzzle-flow')}
-          className="px-3 py-1.5 rounded-full border border-white/[0.12] text-[11px] text-white/45 hover:border-white/25 hover:text-white/65 transition-all duration-150"
+          className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote text-white/45 hover:border-white/25 hover:text-white/65 transition-all duration-150"
         >
           ← Puzzle Flow
         </button>
@@ -54,7 +54,7 @@ export default function PuzzleRecommendationsHeader({
         <button
           onClick={onRegenerateAll}
           disabled={isRegenerating}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.12] text-[11px] text-white/45 hover:border-white/25 hover:text-white/65 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote text-white/45 hover:border-white/25 hover:text-white/65 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         >
           {isRegenerating ? (
             <>
@@ -67,7 +67,7 @@ export default function PuzzleRecommendationsHeader({
         </button>
 
         <button
-          className="px-4 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
+          className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
         >
           Export Plan →
         </button>

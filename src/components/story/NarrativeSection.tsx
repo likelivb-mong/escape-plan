@@ -33,18 +33,18 @@ export default function NarrativeSection({ narrative }: NarrativeSectionProps) {
       <div>
         <div className="flex items-center gap-2 mb-2.5 flex-wrap">
           <NarrLabel>원본 서사 분석</NarrLabel>
-          <span className={`px-2 py-0.5 rounded-md border text-[9px] ${modeBadge.style}`}>
+          <span className={`px-2 py-0.5 rounded-md border text-micro ${modeBadge.style}`}>
             {modeBadge.label}
           </span>
           {quality.warning && (
-            <span className="text-[9px] text-white/25 italic">{quality.warning}</span>
+            <span className="text-micro text-white/35 italic">{quality.warning}</span>
           )}
         </div>
         {summaryShort && (
-          <p className="text-[12px] text-white/55 leading-relaxed mb-1.5">{summaryShort}</p>
+          <p className="text-subhead text-white/55 leading-relaxed mb-1.5">{summaryShort}</p>
         )}
         {storyLogline && (
-          <p className="text-[11px] text-white/30 italic">→ {storyLogline}</p>
+          <p className="text-footnote text-white/30 italic">→ {storyLogline}</p>
         )}
       </div>
 
@@ -60,16 +60,16 @@ export default function NarrativeSection({ narrative }: NarrativeSectionProps) {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[11px] font-medium text-white/70">{char.name}</span>
-                    <span className="text-[9px] text-white/30 border border-white/[0.08] rounded px-1 py-0.5">
+                    <span className="text-footnote font-medium text-white/70">{char.name}</span>
+                    <span className="text-micro text-white/30 border border-white/[0.08] rounded px-1 py-0.5">
                       {char.role}
                     </span>
                   </div>
                   {char.desire && (
-                    <p className="text-[10px] text-white/40 leading-relaxed">욕망: {char.desire}</p>
+                    <p className="text-caption text-white/40 leading-relaxed">욕망: {char.desire}</p>
                   )}
                   {char.conflict && (
-                    <p className="text-[10px] text-white/30 leading-relaxed">갈등: {char.conflict}</p>
+                    <p className="text-caption text-white/30 leading-relaxed">갈등: {char.conflict}</p>
                   )}
                 </div>
               </div>
@@ -93,37 +93,37 @@ export default function NarrativeSection({ narrative }: NarrativeSectionProps) {
                 >
                   {/* Phase label + time */}
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className={`px-2 py-0.5 rounded border text-[9px] font-medium ${ps.badge}`}>
+                    <span className={`px-2 py-0.5 rounded border text-micro font-medium ${ps.badge}`}>
                       {pl}
                     </span>
                     {entry.timeRange && entry.timeRange !== '알 수 없음' && (
-                      <span className="text-[9px] text-white/25 font-mono">{entry.timeRange}</span>
+                      <span className="text-micro text-white/35 font-mono">{entry.timeRange}</span>
                     )}
                   </div>
 
                   {/* Event */}
-                  <p className="text-[12px] text-white/65 leading-relaxed mb-1">{entry.event}</p>
+                  <p className="text-subhead text-white/65 leading-relaxed mb-1">{entry.event}</p>
 
                   {/* Detail */}
                   {entry.detail && (
-                    <p className="text-[10px] text-white/35 leading-relaxed mb-1.5">{entry.detail}</p>
+                    <p className="text-caption text-white/35 leading-relaxed mb-1.5">{entry.detail}</p>
                   )}
 
                   {/* Metadata row */}
                   {(entry.emotion || entry.clueOrObject || entry.spaceChange) && (
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 pt-1.5 border-t border-white/[0.05]">
                       {entry.emotion && (
-                        <span className="text-[9px] text-white/30">
+                        <span className="text-micro text-white/30">
                           <span className="opacity-60">감정</span> {entry.emotion}
                         </span>
                       )}
                       {entry.clueOrObject && (
-                        <span className="text-[9px] text-amber-300/50">
+                        <span className="text-micro text-amber-300/50">
                           🔍 {entry.clueOrObject}
                         </span>
                       )}
                       {entry.spaceChange && (
-                        <span className="text-[9px] text-sky-300/50">
+                        <span className="text-micro text-sky-300/50">
                           📍 {entry.spaceChange}
                         </span>
                       )}
@@ -147,7 +147,7 @@ export default function NarrativeSection({ narrative }: NarrativeSectionProps) {
               {ep.tags.map((tag) => (
                 <span
                   key={tag}
-                  className={`px-2 py-0.5 rounded-md border text-[9px] ${TAG_STYLES[tag] ?? 'text-white/40 border-white/15 bg-white/[0.03]'}`}
+                  className={`px-2 py-0.5 rounded-md border text-micro ${TAG_STYLES[tag] ?? 'text-white/40 border-white/15 bg-white/[0.03]'}`}
                 >
                   {tag}
                 </span>
@@ -158,16 +158,16 @@ export default function NarrativeSection({ narrative }: NarrativeSectionProps) {
           {/* Core conflict */}
           {ep.coreConflict && (
             <div className="flex items-start gap-2 mb-1.5">
-              <span className="text-[10px] text-white/25 shrink-0 mt-0.5">⚡</span>
-              <p className="text-[11px] text-white/55 leading-relaxed">{ep.coreConflict}</p>
+              <span className="text-caption text-white/35 shrink-0 mt-0.5">⚡</span>
+              <p className="text-footnote text-white/55 leading-relaxed">{ep.coreConflict}</p>
             </div>
           )}
 
           {/* Hidden secret */}
           {ep.hiddenSecret && (
             <div className="flex items-start gap-2 mb-3">
-              <span className="text-[10px] text-white/25 shrink-0 mt-0.5">🔐</span>
-              <p className="text-[11px] text-white/40 italic leading-relaxed">{ep.hiddenSecret}</p>
+              <span className="text-caption text-white/35 shrink-0 mt-0.5">🔐</span>
+              <p className="text-footnote text-white/40 italic leading-relaxed">{ep.hiddenSecret}</p>
             </div>
           )}
 
@@ -196,7 +196,7 @@ export default function NarrativeSection({ narrative }: NarrativeSectionProps) {
 
 function NarrLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest">
+    <p className="text-micro font-semibold text-white/20 uppercase tracking-widest">
       {children}
     </p>
   );
@@ -213,12 +213,12 @@ function IdeaGroup({
 }) {
   return (
     <div className="mb-2.5">
-      <p className="text-[9px] text-white/20 uppercase tracking-widest mb-1.5">{label}</p>
+      <p className="text-micro text-white/30 uppercase tracking-widest mb-1.5">{label}</p>
       <div className="flex flex-col gap-1">
         {items.map((item, i) => (
           <div key={i} className="flex items-start gap-2">
             <span className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${dotColor}`} />
-            <p className="text-[10px] text-white/45 leading-relaxed">{item}</p>
+            <p className="text-caption text-white/45 leading-relaxed">{item}</p>
           </div>
         ))}
       </div>

@@ -33,7 +33,7 @@ export default function StoryBeatsInput({ beats, onChange }: StoryBeatsInputProp
           {/* Color dot + label */}
           <div className="flex items-center gap-1.5 flex-shrink-0 pt-2.5 w-12">
             <div className={`w-[7px] h-[7px] rounded-full ${BEAT_COLORS[label]}`} />
-            <span className="text-[11px] font-semibold text-white/40">{label}</span>
+            <span className="text-footnote font-semibold text-white/40">{label}</span>
           </div>
           {/* Textarea */}
           <textarea
@@ -41,7 +41,7 @@ export default function StoryBeatsInput({ beats, onChange }: StoryBeatsInputProp
             onChange={(e) => update(label, e.target.value)}
             placeholder={BEAT_PLACEHOLDERS[label]}
             rows={2}
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[11px] text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200 resize-none leading-relaxed"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-footnote text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200 resize-none leading-relaxed"
           />
         </div>
       ))}

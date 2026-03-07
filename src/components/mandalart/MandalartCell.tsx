@@ -211,7 +211,7 @@ export default function MandalartCell({
       {/* Main Theme badge — center cell only */}
       {isCenter && (
         <div className="absolute top-[3px] left-0 right-0 flex justify-center pointer-events-none z-10">
-          <span className="text-[6px] font-bold tracking-[0.18em] uppercase text-white/30 select-none">
+          <span className="text-micro font-bold tracking-[0.18em] uppercase text-white/30 select-none">
             메인 테마
           </span>
         </div>

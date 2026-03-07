@@ -55,12 +55,12 @@ function EditableField({
 
   return (
     <div>
-      <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+      <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-1 flex items-center gap-1.5">
         {label}
         {onSave && !editing && (
           <button
             onClick={() => { setDraft(value); setEditing(true); }}
-            className="text-white/15 hover:text-white/45 transition-colors text-[10px]"
+            className="text-white/15 hover:text-white/45 transition-colors text-caption"
           >
             ✎
           </button>
@@ -74,7 +74,7 @@ function EditableField({
             onChange={e => setDraft(e.target.value)}
             onBlur={commit}
             onKeyDown={e => e.key === 'Escape' && (setDraft(value), setEditing(false))}
-            className={`${inputBase} resize-none text-[11px] text-white/60`}
+            className={`${inputBase} resize-none text-footnote text-white/60`}
             rows={3}
           />
         ) : (
@@ -88,13 +88,13 @@ function EditableField({
               if (e.key === 'Enter') commit();
               if (e.key === 'Escape') { setDraft(value); setEditing(false); }
             }}
-            className={`${inputBase} text-[11px] ${mono ? 'font-mono text-white/75' : 'text-white/60'}`}
+            className={`${inputBase} text-footnote ${mono ? 'font-mono text-white/75' : 'text-white/60'}`}
           />
         )
       ) : (
         <p
           className={[
-            'text-[11px] leading-snug',
+            'text-footnote leading-snug',
             mono ? 'font-mono text-white/75' : 'text-white/60',
             onSave ? 'cursor-text hover:bg-white/[0.03] rounded px-1 -ml-1 transition-colors' : '',
           ].join(' ')}
@@ -127,13 +127,13 @@ function EditableSelect<T extends string>({
   if (editing) {
     return (
       <div>
-        <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-1">{label}</p>
         <select
           autoFocus
           value={value}
           onChange={e => { onSave?.(e.target.value as T); setEditing(false); }}
           onBlur={() => setEditing(false)}
-          className="px-2 py-1 rounded-lg border border-white/20 bg-[#111] text-[11px] text-white/70 outline-none cursor-pointer"
+          className="px-2 py-1 rounded-lg border border-white/20 bg-[#111] text-footnote text-white/70 outline-none cursor-pointer"
         >
           {options.map(o => (
             <option key={o.value} value={o.value} className="bg-[#111]">{o.label}</option>
@@ -149,10 +149,10 @@ function EditableSelect<T extends string>({
       onClick={onSave ? () => setEditing(true) : undefined}
       title={onSave ? '클릭하여 변경' : undefined}
     >
-      <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+      <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-1 flex items-center gap-1.5">
         {label}
         {onSave && (
-          <span className="text-white/15 group-hover/sel:text-white/40 text-[10px] transition-colors">✎</span>
+          <span className="text-white/15 group-hover/sel:text-white/40 text-caption transition-colors">✎</span>
         )}
       </p>
       {renderBadge(value)}
@@ -188,12 +188,12 @@ function EditableTags({
 
   return (
     <div>
-      <p className="text-[9px] font-semibold text-white/15 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+      <p className="text-micro font-semibold text-white/15 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
         {label}
         {onSave && !editing && (
           <button
             onClick={() => { setDraft(tags.join(', ')); setEditing(true); }}
-            className="text-white/15 hover:text-white/40 text-[10px] transition-colors"
+            className="text-white/15 hover:text-white/40 text-caption transition-colors"
           >
             ✎
           </button>
@@ -210,7 +210,7 @@ function EditableTags({
             if (e.key === 'Escape') { setDraft(tags.join(', ')); setEditing(false); }
           }}
           placeholder="쉼표로 구분 (예: 혈흔, 지문)"
-          className="w-full bg-white/[0.06] border border-white/20 rounded-lg px-2 py-1.5 text-[11px] text-white/60 outline-none placeholder:text-white/20"
+          className="w-full bg-white/[0.06] border border-white/20 rounded-lg px-2 py-1.5 text-footnote text-white/60 outline-none placeholder:text-white/20"
         />
       ) : tags.length > 0 ? (
         <div
@@ -220,7 +220,7 @@ function EditableTags({
           {tags.map((tag) => (
             <span
               key={tag}
-              className={`px-2 py-0.5 rounded border text-[9px] font-medium ${badgeClass}`}
+              className={`px-2 py-0.5 rounded border text-micro font-medium ${badgeClass}`}
             >
               {tag}
             </span>
@@ -229,7 +229,7 @@ function EditableTags({
       ) : onSave ? (
         <button
           onClick={() => { setDraft(''); setEditing(true); }}
-          className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
+          className="text-caption text-white/30 hover:text-white/40 transition-colors"
         >
           + 태그 추가
         </button>
@@ -251,10 +251,10 @@ export default function StepDetailPanel({
   if (!step) {
     return (
       <div className="flex flex-col flex-1 items-center justify-center gap-3 text-center px-8">
-        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-xl">
+        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-title2">
           🎲
         </div>
-        <p className="text-[12px] text-white/35 leading-relaxed">
+        <p className="text-subhead text-white/35 leading-relaxed">
           좌측에서 스텝을 선택하면<br />상세 설계 내용이 표시됩니다.
         </p>
       </div>
@@ -269,7 +269,7 @@ export default function StepDetailPanel({
       <div className="px-6 pt-5 pb-4 border-b border-white/[0.06] flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-white/25">
+            <span className="text-caption font-mono text-white/25">
               STEP {String(step.stepNumber).padStart(2, '0')} / {String(totalSteps).padStart(2, '0')}
             </span>
             <StageBadge label={step.stageLabel} />
@@ -278,7 +278,7 @@ export default function StepDetailPanel({
               <select
                 value={step.room}
                 onChange={e => upd({ room: e.target.value })}
-                className="px-2 py-0.5 rounded border border-white/[0.09] bg-transparent text-[10px] text-white/45 cursor-pointer appearance-none hover:border-white/20 transition-colors outline-none"
+                className="px-2 py-0.5 rounded border border-white/[0.09] bg-transparent text-caption text-white/45 cursor-pointer appearance-none hover:border-white/20 transition-colors outline-none"
               >
                 {rooms.map(r => (
                   <option key={r} value={r} className="bg-[#111] text-white/70">{r}</option>
@@ -293,14 +293,14 @@ export default function StepDetailPanel({
             <button
               onClick={onPrev}
               disabled={step.stepNumber <= 1}
-              className="w-6 h-6 flex items-center justify-center rounded border border-white/[0.08] text-white/30 hover:text-white/60 hover:border-white/20 transition-all disabled:opacity-20 text-xs"
+              className="w-6 h-6 flex items-center justify-center rounded border border-white/[0.08] text-white/30 hover:text-white/60 hover:border-white/20 transition-all disabled:opacity-20 text-subhead"
             >
               ‹
             </button>
             <button
               onClick={onNext}
               disabled={step.stepNumber >= totalSteps}
-              className="w-6 h-6 flex items-center justify-center rounded border border-white/[0.08] text-white/30 hover:text-white/60 hover:border-white/20 transition-all disabled:opacity-20 text-xs"
+              className="w-6 h-6 flex items-center justify-center rounded border border-white/[0.08] text-white/30 hover:text-white/60 hover:border-white/20 transition-all disabled:opacity-20 text-subhead"
             >
               ›
             </button>
@@ -315,9 +315,9 @@ export default function StepDetailPanel({
             mono={false}
           />
         ) : (
-          <h2 className="text-sm font-semibold text-white/90 leading-snug">{step.clueTitle}</h2>
+          <h2 className="text-body font-semibold text-white/90 leading-snug">{step.clueTitle}</h2>
         )}
-        <p className="text-[10px] text-white/30 mt-0.5">{STAGE_LABELS[step.stageLabel]}</p>
+        <p className="text-caption text-white/30 mt-0.5">{STAGE_LABELS[step.stageLabel]}</p>
       </div>
 
       {/* ── Scrollable body ── */}
@@ -419,7 +419,7 @@ export default function StepDetailPanel({
               )}
               {(step.xkitNextGuide !== undefined || upd) && (
                 <div>
-                  <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                  <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                     NEXT GUIDE
                     {upd && (
                       <button
@@ -491,7 +491,7 @@ export default function StepDetailPanel({
               multiline
             />
           ) : step.notes ? (
-            <p className="text-[11px] text-white/45 leading-relaxed italic border-l-2 border-white/[0.08] pl-3">
+            <p className="text-footnote text-white/45 leading-relaxed italic border-l-2 border-white/[0.08] pl-3">
               {step.notes}
             </p>
           ) : null}
@@ -513,7 +513,7 @@ function Section({
   return (
     <div className="px-6 py-4 border-b border-white/[0.05]">
       {label && (
-        <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-2.5">
+        <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-2.5">
           {label}
         </p>
       )}

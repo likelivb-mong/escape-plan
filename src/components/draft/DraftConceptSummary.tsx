@@ -43,8 +43,8 @@ export default function DraftConceptSummary({ doc }: DraftConceptSummaryProps) {
           </div>
         ) : (
           <div className="px-8 py-10 text-center">
-            <p className="text-[12px] text-white/30 font-medium">Not enough keywords yet.</p>
-            <p className="text-[11px] text-white/20 mt-1 leading-relaxed">
+            <p className="text-subhead text-white/30 font-medium">Not enough keywords yet.</p>
+            <p className="text-footnote text-white/30 mt-1 leading-relaxed">
               Mandalart 페이지에서 키워드에 색상(분홍·하늘·주황)을 지정하면 여기에 표시됩니다.
             </p>
           </div>
@@ -77,10 +77,10 @@ function KeywordColumn({
       <div className="flex items-center gap-2 mb-4">
         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotCls}`} />
         <div>
-          <p className="text-[11px] font-semibold text-white/65 leading-tight">{label}</p>
-          <p className="text-[9px] text-white/25 font-medium">{sublabel}</p>
+          <p className="text-footnote font-semibold text-white/65 leading-tight">{label}</p>
+          <p className="text-micro text-white/35 font-medium">{sublabel}</p>
         </div>
-        <span className="ml-auto text-[10px] text-white/20 tabular-nums">{keywords.length}</span>
+        <span className="ml-auto text-caption text-white/30 tabular-nums">{keywords.length}</span>
       </div>
 
       {/* Chips */}
@@ -89,14 +89,14 @@ function KeywordColumn({
           {keywords.map((kw) => (
             <span
               key={kw}
-              className={`px-2 py-0.5 rounded-md border text-[10px] leading-snug ${chipCls}`}
+              className={`px-2 py-0.5 rounded-md border text-caption leading-snug ${chipCls}`}
             >
               {kw}
             </span>
           ))}
         </div>
       ) : (
-        <p className="text-[10px] text-white/20 italic">{emptyMsg}</p>
+        <p className="text-caption text-white/30 italic">{emptyMsg}</p>
       )}
     </div>
   );

@@ -73,11 +73,11 @@ export default function PuzzleStageSection({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${accent.dot}`} />
-          <span className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold leading-none ${accent.badge}`}>
+          <span className={`px-2.5 py-1 rounded-lg border text-footnote font-bold leading-none ${accent.badge}`}>
             {group.stageLabel}
           </span>
-          <h3 className={`text-sm font-semibold ${accent.label}`}>{group.stageTitle}</h3>
-          <span className="text-[10px] text-white/25">
+          <h3 className={`text-body font-semibold ${accent.label}`}>{group.stageTitle}</h3>
+          <span className="text-caption text-white/35">
             {adoptedCount}/{totalCount} 채택
           </span>
         </div>
@@ -86,7 +86,7 @@ export default function PuzzleStageSection({
         <button
           onClick={() => onRegenerateStage(group.stageId)}
           disabled={isStageRegenerating}
-          className="text-[10px] text-white/25 hover:text-white/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 flex-shrink-0"
+          className="text-caption text-white/35 hover:text-white/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 flex-shrink-0"
         >
           {isStageRegenerating ? (
             <span className="w-2.5 h-2.5 border border-white/20 border-t-white/50 rounded-full animate-spin" />
@@ -113,7 +113,7 @@ export default function PuzzleStageSection({
         </div>
       ) : (
         <div className="rounded-xl border border-white/[0.05] bg-white/[0.01] px-4 py-6 text-center">
-          <p className="text-[11px] text-white/20 italic">이 단계에 표시할 퍼즐이 없습니다.</p>
+          <p className="text-footnote text-white/30 italic">이 단계에 표시할 퍼즐이 없습니다.</p>
         </div>
       )}
     </div>

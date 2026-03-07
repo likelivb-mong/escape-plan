@@ -71,23 +71,23 @@ export default function StoryDetailModal({
           {/* 닫기 버튼 */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-all duration-150 text-lg"
+            className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-all duration-150 text-title2"
           >
             ×
           </button>
 
           {/* Genre + Tone */}
           <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-            <span className="px-2 py-0.5 rounded-md border border-white/[0.12] text-[10px] text-white/50 bg-white/[0.04]">
+            <span className="px-2 py-0.5 rounded-md border border-white/[0.12] text-caption text-white/50 bg-white/[0.04]">
               {genre}
             </span>
-            <span className="px-2 py-0.5 rounded-md border border-white/[0.08] text-[10px] text-white/35">
+            <span className="px-2 py-0.5 rounded-md border border-white/[0.08] text-caption text-white/35">
               {tone}
             </span>
           </div>
 
-          <h2 className="text-lg font-semibold text-white/95 mb-2 leading-snug pr-8">{title}</h2>
-          <p className="text-sm text-white/45 italic leading-relaxed">"{logline}"</p>
+          <h2 className="text-title2 font-semibold text-white/95 mb-2 leading-snug pr-8">{title}</h2>
+          <p className="text-body text-white/45 italic leading-relaxed">"{logline}"</p>
         </div>
 
         {/* ── Scrollable body ── */}
@@ -96,7 +96,7 @@ export default function StoryDetailModal({
           {/* 시놉시스 */}
           <section>
             <SectionLabel>시놉시스</SectionLabel>
-            <p className="text-sm text-white/60 leading-relaxed">{synopsis}</p>
+            <p className="text-body text-white/60 leading-relaxed">{synopsis}</p>
           </section>
 
           {/* 기승전반전결 */}
@@ -112,11 +112,11 @@ export default function StoryDetailModal({
             <section>
               <SectionLabel>수사 프레임워크</SectionLabel>
               {investigation.formula && (
-                <p className="text-[12px] text-white/40 italic leading-relaxed mb-3 pl-3 border-l-2 border-white/10">
+                <p className="text-subhead text-white/40 italic leading-relaxed mb-3 pl-3 border-l-2 border-white/10">
                   {investigation.formula}
                 </p>
               )}
-              <div className="flex items-center gap-2 mb-3 text-[11px] text-white/50">
+              <div className="flex items-center gap-2 mb-3 text-footnote text-white/50">
                 <span className="px-2 py-1 rounded-lg border border-white/[0.10] bg-white/[0.03]">
                   {investigation.perpetrator}
                 </span>
@@ -136,7 +136,7 @@ export default function StoryDetailModal({
                   const value = investigation[key];
                   if (!value) return null;
                   return (
-                    <span key={key} className={`px-2.5 py-1 rounded-lg border text-[11px] ${color}`}>
+                    <span key={key} className={`px-2.5 py-1 rounded-lg border text-footnote ${color}`}>
                       <span className="opacity-60 mr-1">{label}</span>{value}
                     </span>
                   );
@@ -156,7 +156,7 @@ export default function StoryDetailModal({
           <section className="flex items-center gap-4 pb-1">
             <MetaItem icon="⏱" value={meta.playtime} />
             <MetaItem icon="👥" value={meta.playerCount} />
-            <span className={`px-2.5 py-1 rounded-lg border text-[11px] ${TWIST_COLOR[meta.twistIntensity]}`}>
+            <span className={`px-2.5 py-1 rounded-lg border text-footnote ${TWIST_COLOR[meta.twistIntensity]}`}>
               {TWIST_LABEL[meta.twistIntensity]}
             </span>
           </section>
@@ -167,7 +167,7 @@ export default function StoryDetailModal({
           <button
             onClick={() => { onSelect(); onClose(); }}
             className={[
-              'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150',
+              'flex-1 py-2.5 rounded-xl text-body font-semibold transition-all duration-150',
               isSelected
                 ? 'bg-white/10 text-white/60 hover:bg-white/15 border border-white/20'
                 : 'bg-white text-black hover:bg-white/90',
@@ -177,7 +177,7 @@ export default function StoryDetailModal({
           </button>
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-white/[0.10] text-sm text-white/40 hover:text-white/65 hover:border-white/20 transition-all duration-150"
+            className="px-5 py-2.5 rounded-xl border border-white/[0.10] text-body text-white/40 hover:text-white/65 hover:border-white/20 transition-all duration-150"
           >
             닫기
           </button>
@@ -189,7 +189,7 @@ export default function StoryDetailModal({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold text-white/20 uppercase tracking-widest mb-2">
+    <p className="text-caption font-semibold text-white/20 uppercase tracking-widest mb-2">
       {children}
     </p>
   );
@@ -197,7 +197,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function MetaItem({ icon, value }: { icon: string; value: string }) {
   return (
-    <span className="flex items-center gap-1.5 text-[12px] text-white/45">
+    <span className="flex items-center gap-1.5 text-subhead text-white/45">
       <span>{icon}</span>{value}
     </span>
   );

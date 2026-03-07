@@ -57,7 +57,7 @@ export default function MandalartToolbar({
           title={`선택한 칸에 '${label}' 색상 적용`}
           className={[
             'flex items-center gap-1.5 px-3 py-1.5 rounded-full border',
-            'text-[11px] font-medium transition-all duration-150',
+            'text-footnote font-medium transition-all duration-150',
             'disabled:opacity-25 disabled:cursor-not-allowed',
             style,
           ].join(' ')}
@@ -74,7 +74,7 @@ export default function MandalartToolbar({
       <button
         onClick={onClearTheme}
         disabled={!hasSelection}
-        className="px-3 py-1.5 rounded-full border border-white/[0.12] text-[11px] font-medium text-white/35 hover:text-white/55 hover:border-white/20 transition-all duration-150 disabled:opacity-25 disabled:cursor-not-allowed"
+        className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/35 hover:text-white/55 hover:border-white/20 transition-all duration-150 disabled:opacity-25 disabled:cursor-not-allowed"
       >
         색상 초기화
       </button>
@@ -83,14 +83,14 @@ export default function MandalartToolbar({
       <button
         onClick={onClearSelection}
         disabled={!hasSelection}
-        className="px-3 py-1.5 rounded-full border border-white/[0.12] text-[11px] font-medium text-white/35 hover:text-white/55 hover:border-white/20 transition-all duration-150 disabled:opacity-25 disabled:cursor-not-allowed"
+        className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/35 hover:text-white/55 hover:border-white/20 transition-all duration-150 disabled:opacity-25 disabled:cursor-not-allowed"
       >
         선택 해제
       </button>
 
       {/* Selection count indicator */}
       {hasSelection && (
-        <span className="text-[11px] text-white/25 ml-0.5 tabular-nums">
+        <span className="text-footnote text-white/35 ml-0.5 tabular-nums">
           {selectedCount}칸 선택됨
         </span>
       )}
@@ -105,7 +105,7 @@ export default function MandalartToolbar({
       <button
         onClick={onClearAll}
         title="메인 테마를 제외한 모든 키워드 삭제"
-        className="px-3 py-1.5 rounded-full border border-red-500/25 text-[11px] font-medium text-red-400/50 hover:bg-red-500/10 hover:border-red-400/45 hover:text-red-400/80 transition-all duration-150"
+        className="px-3 py-1.5 rounded-full border border-red-500/25 text-footnote font-medium text-red-400/50 hover:bg-red-500/10 hover:border-red-400/45 hover:text-red-400/80 transition-all duration-150"
       >
         전체 삭제
       </button>

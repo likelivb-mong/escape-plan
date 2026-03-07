@@ -34,13 +34,13 @@ export default function StoryStructurePreview({ beats }: StoryStructurePreviewPr
             <div className="flex-1 pb-2">
               <div className="flex items-center gap-1.5 mb-0.5">
                 <span
-                  className={`text-[10px] font-bold tracking-wide flex-shrink-0 ${s.label}`}
+                  className={`text-caption font-bold tracking-wide flex-shrink-0 ${s.label}`}
                 >
                   {beat.label}
                 </span>
                 <div className={`flex-1 h-px ${s.bar}`} />
               </div>
-              <p className="text-[10px] text-white/38 leading-relaxed">{beat.description}</p>
+              <p className="text-caption text-white/38 leading-relaxed">{beat.description}</p>
             </div>
           </div>
         );

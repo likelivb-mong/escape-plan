@@ -25,15 +25,15 @@ export default function DraftOverviewSection({ doc }: DraftOverviewSectionProps)
         <div className="px-8 pt-8 pb-6 border-b border-white/[0.06]">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h2 className="text-2xl font-bold text-white/90 leading-tight tracking-tight">
+              <h2 className="text-title1 font-bold text-white/90 leading-tight tracking-tight">
                 {doc.projectName}
               </h2>
               {doc.mainTheme && doc.mainTheme !== doc.projectName && (
-                <p className="text-base text-white/45 mt-1 font-medium">{doc.mainTheme}</p>
+                <p className="text-title3 text-white/45 mt-1 font-medium">{doc.mainTheme}</p>
               )}
             </div>
             {/* Generated timestamp */}
-            <span className="text-[10px] text-white/20 tabular-nums flex-shrink-0 mt-1">
+            <span className="text-caption text-white/30 tabular-nums flex-shrink-0 mt-1">
               {new Date(doc.generatedAt).toLocaleDateString('ko-KR', {
                 year: 'numeric', month: 'long', day: 'numeric',
               })}
@@ -42,7 +42,7 @@ export default function DraftOverviewSection({ doc }: DraftOverviewSectionProps)
 
           {/* Logline */}
           <blockquote className="mt-5 border-l-2 border-white/20 pl-4">
-            <p className="text-[13px] text-white/55 italic leading-relaxed">"{doc.logline}"</p>
+            <p className="text-subhead text-white/55 italic leading-relaxed">"{doc.logline}"</p>
           </blockquote>
         </div>
 
@@ -54,8 +54,8 @@ export default function DraftOverviewSection({ doc }: DraftOverviewSectionProps)
           <MetaCell label="인원" value={doc.playerCount} />
           <MetaCell label="추천 퍼즐" value={`${doc.totalAdoptedCount}개 채택됨`} accent={doc.totalAdoptedCount > 0 ? 'emerald' : undefined} />
           <div className="flex flex-col justify-center px-5 py-3.5 border-t border-r border-white/[0.05] last:border-r-0">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1">반전 강도</span>
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border self-start ${TWIST_COLORS[doc.twistIntensity]}`}>
+            <span className="text-micro font-bold uppercase tracking-widest text-white/20 mb-1">반전 강도</span>
+            <span className={`text-footnote font-semibold px-2 py-0.5 rounded border self-start ${TWIST_COLORS[doc.twistIntensity]}`}>
               {TWIST_LABELS[doc.twistIntensity]}
             </span>
           </div>
@@ -70,9 +70,9 @@ export default function DraftOverviewSection({ doc }: DraftOverviewSectionProps)
 function SectionMeta({ index, label }: { index: string; label: string }) {
   return (
     <div className="flex items-center gap-3 mb-1">
-      <span className="text-[10px] font-bold text-white/15 tabular-nums">{index}</span>
+      <span className="text-caption font-bold text-white/15 tabular-nums">{index}</span>
       <div className="h-px flex-1 bg-white/[0.06]" />
-      <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">{label}</span>
+      <span className="text-micro font-bold uppercase tracking-widest text-white/25">{label}</span>
     </div>
   );
 }
@@ -89,8 +89,8 @@ function MetaCell({
   const valueCls = accent === 'emerald' ? 'text-emerald-300/70' : 'text-white/65';
   return (
     <div className="flex flex-col px-5 py-3.5 border-t border-r border-white/[0.05] last:border-r-0">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1">{label}</span>
-      <span className={`text-[12px] font-semibold ${valueCls}`}>{value}</span>
+      <span className="text-micro font-bold uppercase tracking-widest text-white/20 mb-1">{label}</span>
+      <span className={`text-subhead font-semibold ${valueCls}`}>{value}</span>
     </div>
   );
 }

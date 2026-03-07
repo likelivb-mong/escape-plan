@@ -22,8 +22,8 @@ export function ProblemModeBadge({
   size?: 'xs' | 'sm';
 }) {
   const base = size === 'xs'
-    ? 'px-1.5 py-0.5 rounded text-[8px]'
-    : 'px-2 py-0.5 rounded-md text-[10px]';
+    ? 'px-1.5 py-0.5 rounded text-micro'
+    : 'px-2 py-0.5 rounded-md text-caption';
   return (
     <span className={`${base} border font-medium ${PROBLEM_MODE_STYLES[mode]}`}>
       {PROBLEM_MODE_LABELS[mode]}
@@ -51,8 +51,8 @@ export function AnswerTypeBadge({
   size?: 'xs' | 'sm';
 }) {
   const base = size === 'xs'
-    ? 'px-1.5 py-0.5 rounded text-[8px]'
-    : 'px-2 py-0.5 rounded-md text-[10px]';
+    ? 'px-1.5 py-0.5 rounded text-micro'
+    : 'px-2 py-0.5 rounded-md text-caption';
   return (
     <span className={`${base} border font-medium ${ANSWER_TYPE_STYLES[type]}`}>
       {ANSWER_TYPE_LABELS[type]}
@@ -76,7 +76,7 @@ export function AnswerTypeVisual({
         {digits.map((d, i) => (
           <div
             key={i}
-            className="w-8 h-9 flex items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-base font-mono font-bold text-white/70"
+            className="w-8 h-9 flex items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-title3 font-mono font-bold text-white/70"
           >
             {d}
           </div>
@@ -92,7 +92,7 @@ export function AnswerTypeVisual({
         {digits.map((d, i) => (
           <div
             key={i}
-            className="w-9 h-10 flex items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-lg font-mono font-bold text-white/70"
+            className="w-9 h-10 flex items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-title2 font-mono font-bold text-white/70"
           >
             {d}
           </div>
@@ -108,7 +108,7 @@ export function AnswerTypeVisual({
         {chars.map((c, i) => (
           <div
             key={i}
-            className="w-8 h-9 flex items-center justify-center rounded-lg border border-green-400/20 bg-green-500/[0.06] text-sm font-mono font-bold text-green-300/80"
+            className="w-8 h-9 flex items-center justify-center rounded-lg border border-green-400/20 bg-green-500/[0.06] text-body font-mono font-bold text-green-300/80"
           >
             {c}
           </div>
@@ -123,7 +123,7 @@ export function AnswerTypeVisual({
         {['1','2','3','4','5','6','7','8','9','*','0','#'].map((k) => (
           <div
             key={k}
-            className="w-6 h-6 flex items-center justify-center rounded border border-cyan-400/15 bg-cyan-500/[0.05] text-[9px] text-cyan-300/60 font-mono"
+            className="w-6 h-6 flex items-center justify-center rounded border border-cyan-400/15 bg-cyan-500/[0.05] text-micro text-cyan-300/60 font-mono"
           >
             {k}
           </div>
@@ -135,8 +135,8 @@ export function AnswerTypeVisual({
   if (type === 'xkit') {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-400/25 bg-purple-500/[0.07]">
-        <span className="text-base">📱</span>
-        <span className="text-[11px] text-purple-300/70 font-medium">X-KIT 앱 입력</span>
+        <span className="text-title3">📱</span>
+        <span className="text-footnote text-purple-300/70 font-medium">X-KIT 앱 입력</span>
       </div>
     );
   }
@@ -144,8 +144,8 @@ export function AnswerTypeVisual({
   if (type === 'key') {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-rose-400/20 bg-rose-500/[0.06]">
-        <span className="text-base">🗝</span>
-        <span className="text-[11px] text-rose-300/70 font-medium">열쇠 슬롯</span>
+        <span className="text-title3">🗝</span>
+        <span className="text-footnote text-rose-300/70 font-medium">열쇠 슬롯</span>
       </div>
     );
   }
@@ -153,8 +153,8 @@ export function AnswerTypeVisual({
   if (type === 'auto') {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-orange-400/20 bg-orange-500/[0.06]">
-        <span className="text-base">⚡</span>
-        <span className="text-[11px] text-orange-300/70 font-medium">자동 트리거</span>
+        <span className="text-title3">⚡</span>
+        <span className="text-footnote text-orange-300/70 font-medium">자동 트리거</span>
       </div>
     );
   }
@@ -190,7 +190,7 @@ const OUTPUT_ICONS: Record<OutputType, string> = {
 
 export function OutputBadge({ output }: { output: OutputType }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium ${OUTPUT_STYLES[output]}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-footnote font-medium ${OUTPUT_STYLES[output]}`}>
       <span>{OUTPUT_ICONS[output]}</span>
       {OUTPUT_LABELS[output]}
     </span>
@@ -209,7 +209,7 @@ const STAGE_STYLES: Record<StageLabel, string> = {
 
 export function StageBadge({ label }: { label: StageLabel }) {
   return (
-    <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold tracking-wider ${STAGE_STYLES[label]}`}>
+    <span className={`px-1.5 py-0.5 rounded border text-micro font-bold tracking-wider ${STAGE_STYLES[label]}`}>
       {label}
     </span>
   );
@@ -229,7 +229,7 @@ export function RoomBadge({ room, rooms }: { room: string; rooms?: string[] }) {
   const idx = rooms ? rooms.indexOf(room) : 0;
   const color = ROOM_COLORS[idx % ROOM_COLORS.length];
   return (
-    <span className={`px-1.5 py-0.5 rounded border text-[9px] font-medium ${color}`}>
+    <span className={`px-1.5 py-0.5 rounded border text-micro font-medium ${color}`}>
       {room}
     </span>
   );
@@ -239,7 +239,7 @@ export function RoomBadge({ room, rooms }: { room: string; rooms?: string[] }) {
 
 export function DeviceSubtypeBadge({ subtype }: { subtype: DeviceSubtype }) {
   return (
-    <span className="px-2 py-0.5 rounded border border-amber-400/20 bg-amber-500/[0.06] text-[9px] text-amber-300/70 font-medium">
+    <span className="px-2 py-0.5 rounded border border-amber-400/20 bg-amber-500/[0.06] text-micro text-amber-300/70 font-medium">
       ⚙ {DEVICE_SUBTYPE_LABELS[subtype]}
     </span>
   );

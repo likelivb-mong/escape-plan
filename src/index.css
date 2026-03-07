@@ -1,33 +1,60 @@
 @import "tailwindcss";
 
+/* ── Fluid Typography Scale (Apple SF-inspired) ────────────────────────── */
+/*
+ * Scale: ~75% on mobile (375px) → 100% on desktop (1280px)
+ * Each step uses clamp(min, preferred, max)
+ * Named tokens follow Apple's type roles
+ */
+
+@theme {
+  /* ── Typography tokens ── */
+  --font-size-micro:    clamp(0.5625rem, 0.50rem + 0.14vw, 0.6875rem);   /* 9px → 11px */
+  --font-size-caption:  clamp(0.625rem,  0.56rem + 0.18vw, 0.75rem);     /* 10px → 12px */
+  --font-size-footnote: clamp(0.6875rem, 0.61rem + 0.22vw, 0.8125rem);   /* 11px → 13px */
+  --font-size-subhead:  clamp(0.75rem,   0.66rem + 0.26vw, 0.9375rem);   /* 12px → 15px */
+  --font-size-body:     clamp(0.8125rem, 0.71rem + 0.28vw, 1.0625rem);   /* 13px → 17px */
+  --font-size-title3:   clamp(0.9375rem, 0.82rem + 0.33vw, 1.25rem);     /* 15px → 20px */
+  --font-size-title2:   clamp(1.0625rem, 0.93rem + 0.37vw, 1.375rem);    /* 17px → 22px */
+  --font-size-title1:   clamp(1.25rem,   1.08rem + 0.46vw, 1.75rem);     /* 20px → 28px */
+  --font-size-display:  clamp(1.5rem,    1.29rem + 0.59vw, 2.125rem);    /* 24px → 34px */
+
+  /* ── Line heights ── */
+  --line-height-micro:    1.2;
+  --line-height-caption:  1.3;
+  --line-height-footnote: 1.35;
+  --line-height-subhead:  1.4;
+  --line-height-body:     1.5;
+  --line-height-title:    1.2;
+  --line-height-display:  1.1;
+
+  /* ── Shadows (Apple-style layered) ── */
+  --shadow-subtle:   0 1px 2px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.15);
+  --shadow-card:     0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.04);
+  --shadow-elevated: 0 8px 24px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.06);
+}
+
 /* ── Theme color tokens ───────────────────────────────────────────────────── */
 
-/* Dark mode (default) */
 :root {
   --page-bg: #0a0a0a;
   --page-fg: #f5f5f5;
 }
 
-/*
- * Light mode: Override Tailwind's built-in white/black CSS custom properties.
- * All utilities like `text-white/85`, `bg-white/[0.025]`, `border-white/10`
- * automatically flip to black-based equivalents — no component changes needed.
- */
 .light {
   --page-bg: #f8f8f8;
   --page-fg: #1a1a1a;
-  --color-white: oklch(0% 0 0);    /* white → black  */
-  --color-black: oklch(100% 0 0);  /* black → white  */
+  --color-white: oklch(0% 0 0);
+  --color-black: oklch(100% 0 0);
 }
 
-/* ── Smooth theme transition ─────────────────────────────────────────────── */
+/* ── Smooth theme transition (Apple ease-out curve) ──────────────────────── */
 *, *::before, *::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 0.15s;
-  transition-timing-function: ease;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Disable transitions on page load to prevent flash */
 .no-transition, .no-transition * {
   transition: none !important;
 }
@@ -43,10 +70,34 @@
     min-height: 100vh;
     background-color: var(--page-bg);
     color: var(--page-fg);
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    letter-spacing: -0.011em;
   }
 
   #root {
     min-height: 100vh;
+  }
+
+  /* Improved selection highlight */
+  ::selection {
+    background: rgba(52, 211, 153, 0.25);
+  }
+
+  /* Apple-style thin scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.15);
   }
 }

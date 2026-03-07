@@ -30,7 +30,7 @@ export default function StepListPanel({
           {/* Stage divider */}
           <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0a] border-b border-white/[0.05]">
             <StageBadge label={stage} />
-            <span className="text-[9px] text-white/20 font-medium">
+            <span className="text-micro text-white/30 font-medium">
               {stageSteps.length}개 스텝
             </span>
           </div>
@@ -50,9 +50,9 @@ export default function StepListPanel({
           {onAddStep && (
             <button
               onClick={() => onAddStep(stage)}
-              className="w-full px-3 py-2 text-[10px] text-white/25 hover:text-white/50 hover:bg-white/[0.03] transition-all duration-150 border-b border-white/[0.04] flex items-center justify-center gap-1"
+              className="w-full px-3 py-2 text-caption text-white/35 hover:text-white/50 hover:bg-white/[0.03] transition-all duration-150 border-b border-white/[0.04] flex items-center justify-center gap-1"
             >
-              <span className="text-xs">+</span> 스텝 추가
+              <span className="text-subhead">+</span> 스텝 추가
             </button>
           )}
         </div>
@@ -86,7 +86,7 @@ function StepCard({
     >
       <div className="flex items-start gap-2">
         {/* Step number */}
-        <span className="text-[9px] text-white/20 font-mono mt-0.5 w-4 text-right flex-shrink-0">
+        <span className="text-micro text-white/30 font-mono mt-0.5 w-4 text-right flex-shrink-0">
           {String(step.stepNumber).padStart(2, '0')}
         </span>
 
@@ -98,7 +98,7 @@ function StepCard({
 
           {/* Clue title */}
           <p className={[
-            'text-[11px] font-medium leading-snug truncate',
+            'text-footnote font-medium leading-snug truncate',
             isSelected ? 'text-white/90' : 'text-white/65',
           ].join(' ')}>
             {step.clueTitle}

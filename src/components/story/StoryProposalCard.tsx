@@ -60,31 +60,31 @@ export default function StoryProposalCard({
       <div className="px-5 pt-5 pb-4 border-b border-white/[0.05]">
         {/* Genre + Tone badges + Quality badge */}
         <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-          <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-[9px] text-white/40 bg-white/[0.03]">
+          <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-micro text-white/40 bg-white/[0.03]">
             {genre}
           </span>
-          <span className="px-2 py-0.5 rounded-md border border-white/[0.08] text-[9px] text-white/30 bg-transparent">
+          <span className="px-2 py-0.5 rounded-md border border-white/[0.08] text-micro text-white/30 bg-transparent">
             {tone}
           </span>
           {proposal.narrative && (
-            <span className={`px-2 py-0.5 rounded-md border text-[9px] ${SUMMARY_MODE_BADGE[proposal.narrative.quality.summaryMode].style}`}>
+            <span className={`px-2 py-0.5 rounded-md border text-micro ${SUMMARY_MODE_BADGE[proposal.narrative.quality.summaryMode].style}`}>
               {SUMMARY_MODE_BADGE[proposal.narrative.quality.summaryMode].label}
             </span>
           )}
         </div>
 
-        <h3 className={`text-sm font-semibold mb-2 leading-snug ${isSelected ? 'text-emerald-200/95' : 'text-white/90'}`}>{title}</h3>
-        <p className="text-[11px] text-white/40 leading-relaxed italic">"{logline}"</p>
+        <h3 className={`text-body font-semibold mb-2 leading-snug ${isSelected ? 'text-emerald-200/95' : 'text-white/90'}`}>{title}</h3>
+        <p className="text-footnote text-white/40 leading-relaxed italic">"{logline}"</p>
       </div>
 
       {/* ── Synopsis ── */}
       <div className="px-5 py-4 border-b border-white/[0.05]">
-        <p className="text-[11px] text-white/50 leading-relaxed">{synopsis}</p>
+        <p className="text-footnote text-white/50 leading-relaxed">{synopsis}</p>
       </div>
 
       {/* ── 기승전반전결 ── */}
       <div className="px-5 py-4 border-b border-white/[0.05] flex-1">
-        <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-3">
+        <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-3">
           스토리 구조
         </p>
         <StoryStructurePreview beats={beats} />
@@ -99,7 +99,7 @@ export default function StoryProposalCard({
         <MetaChip icon="👥" value={meta.playerCount} />
         <span
           className={[
-            'px-2 py-0.5 rounded-md border text-[9px]',
+            'px-2 py-0.5 rounded-md border text-micro',
             TWIST_COLOR[meta.twistIntensity],
           ].join(' ')}
         >
@@ -114,7 +114,7 @@ export default function StoryProposalCard({
         <button
           onClick={(e) => { e.stopPropagation(); onSelect(); }}
           className={[
-            'flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+            'flex-1 py-2 rounded-xl text-subhead font-semibold transition-all duration-200',
             isSelected
               ? 'bg-emerald-400/90 text-black hover:bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.25)]'
               : 'bg-white/[0.07] text-white/55 hover:bg-white/[0.12] hover:text-white/80',
@@ -135,7 +135,7 @@ export default function StoryProposalCard({
           {isRegenerating ? (
             <span className="w-3.5 h-3.5 border border-white/25 border-t-white/60 rounded-full animate-spin" />
           ) : (
-            <span className="text-sm">↺</span>
+            <span className="text-body">↺</span>
           )}
         </button>
       </div>
@@ -147,8 +147,8 @@ export default function StoryProposalCard({
 
 function MetaChip({ icon, value }: { icon: string; value: string }) {
   return (
-    <span className="flex items-center gap-1 text-[10px] text-white/35">
-      <span className="text-[11px]">{icon}</span>
+    <span className="flex items-center gap-1 text-caption text-white/35">
+      <span className="text-footnote">{icon}</span>
       {value}
     </span>
   );
@@ -170,19 +170,19 @@ const INVEST_BADGES: {
 function InvestigationSection({ data }: { data: InvestigationFramework }) {
   return (
     <div className="px-5 py-4 border-b border-white/[0.05]">
-      <p className="text-[9px] font-semibold text-white/20 uppercase tracking-widest mb-3">
+      <p className="text-micro font-semibold text-white/20 uppercase tracking-widest mb-3">
         수사 프레임워크
       </p>
 
       {/* 조합 공식 문장 */}
       {data.formula && (
-        <p className="text-[11px] text-white/35 italic leading-relaxed mb-3 pl-3 border-l-2 border-white/10">
+        <p className="text-footnote text-white/35 italic leading-relaxed mb-3 pl-3 border-l-2 border-white/10">
           {data.formula}
         </p>
       )}
 
       {/* 가해자 → 피해자 */}
-      <div className="flex items-center gap-2 mb-2.5 text-[10px] text-white/45">
+      <div className="flex items-center gap-2 mb-2.5 text-caption text-white/45">
         <span className="px-1.5 py-0.5 rounded border border-white/10 bg-white/[0.03]">
           {data.perpetrator || '?'}
         </span>
@@ -206,7 +206,7 @@ function InvestigationSection({ data }: { data: InvestigationFramework }) {
           return (
             <span
               key={key}
-              className={`px-2 py-0.5 rounded-md border text-[9px] ${color}`}
+              className={`px-2 py-0.5 rounded-md border text-micro ${color}`}
             >
               {label}: {value}
             </span>

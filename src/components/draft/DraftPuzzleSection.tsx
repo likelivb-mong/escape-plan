@@ -47,12 +47,12 @@ export default function DraftPuzzleSection({ doc }: DraftPuzzleSectionProps) {
 
       {/* Summary row */}
       <div className="mt-4 mb-5 flex items-center gap-3 px-1">
-        <p className="text-[11px] text-white/25">
+        <p className="text-footnote text-white/35">
           채택된 퍼즐{' '}
           <span className="text-white/55 font-semibold">{totalAdoptedCount}개</span>
         </p>
         {totalAdoptedCount === 0 && (
-          <span className="text-[10px] text-white/20 italic">
+          <span className="text-caption text-white/30 italic">
             — 아직 채택된 퍼즐이 없습니다
           </span>
         )}
@@ -76,11 +76,11 @@ export default function DraftPuzzleSection({ doc }: DraftPuzzleSectionProps) {
 function EmptyPuzzleGuidance() {
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.01] px-8 py-10 text-center">
-      <div className="w-8 h-8 rounded-xl border border-white/[0.10] flex items-center justify-center text-base mx-auto mb-3">
+      <div className="w-8 h-8 rounded-xl border border-white/[0.10] flex items-center justify-center text-title3 mx-auto mb-3">
         🧩
       </div>
-      <p className="text-[12px] text-white/40 font-medium mb-1">채택된 퍼즐이 없습니다.</p>
-      <p className="text-[11px] text-white/25 leading-relaxed">
+      <p className="text-subhead text-white/40 font-medium mb-1">채택된 퍼즐이 없습니다.</p>
+      <p className="text-footnote text-white/35 leading-relaxed">
         Puzzle Recommendations 페이지로 돌아가<br />퍼즐을 채택하면 이 문서에 포함됩니다.
       </p>
     </div>
@@ -97,11 +97,11 @@ function StageGroup({ group }: { group: DraftAdoptedPuzzlesByStage }) {
       {/* Stage sub-header */}
       <div className="flex items-center gap-2.5 mb-3">
         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tok.dot}`} />
-        <span className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold leading-none ${tok.badge}`}>
+        <span className={`px-2.5 py-1 rounded-lg border text-footnote font-bold leading-none ${tok.badge}`}>
           {group.stageLabel}
         </span>
-        <span className={`text-sm font-semibold ${tok.accent}`}>{group.stageTitle}</span>
-        <span className="text-[10px] text-white/20">{group.puzzles.length}개</span>
+        <span className={`text-body font-semibold ${tok.accent}`}>{group.stageTitle}</span>
+        <span className="text-caption text-white/30">{group.puzzles.length}개</span>
       </div>
 
       {/* Puzzle entries */}
@@ -129,24 +129,24 @@ function PuzzleEntry({
     <div className="rounded-xl border border-white/[0.07] bg-white/[0.018] overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-3.5 pb-2.5 border-b border-white/[0.05] flex items-center gap-3 flex-wrap">
-        <span className="text-[10px] text-white/20 tabular-nums w-4 flex-shrink-0">
+        <span className="text-caption text-white/30 tabular-nums w-4 flex-shrink-0">
           {String(index + 1).padStart(2, '0')}
         </span>
 
         {/* Type badge */}
-        <span className={`px-2 py-0.5 rounded-md border text-[10px] font-medium ${TYPE_COLORS[puzzle.type] ?? 'border-white/[0.10] text-white/40'}`}>
+        <span className={`px-2 py-0.5 rounded-md border text-caption font-medium ${TYPE_COLORS[puzzle.type] ?? 'border-white/[0.10] text-white/40'}`}>
           {TYPE_LABELS[puzzle.type] ?? puzzle.type}
         </span>
 
         {/* Title */}
-        <span className="text-[13px] font-semibold text-white/85 flex-1 min-w-0">{puzzle.title}</span>
+        <span className="text-subhead font-semibold text-white/85 flex-1 min-w-0">{puzzle.title}</span>
 
         {/* Difficulty + time */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          <span className={`text-[10px] font-semibold ${DIFF_COLORS[puzzle.difficulty] ?? 'text-white/40'}`}>
+          <span className={`text-caption font-semibold ${DIFF_COLORS[puzzle.difficulty] ?? 'text-white/40'}`}>
             {DIFF_LABELS[puzzle.difficulty] ?? puzzle.difficulty}
           </span>
-          <span className="text-[10px] text-white/30 flex items-center gap-0.5">
+          <span className="text-caption text-white/30 flex items-center gap-0.5">
             <span>⏱</span>{puzzle.estimatedMinutes}분
           </span>
         </div>
@@ -155,12 +155,12 @@ function PuzzleEntry({
       {/* Body */}
       <div className="px-5 py-4 flex flex-col gap-3">
         {/* Description */}
-        <p className="text-[11px] text-white/50 leading-relaxed">{puzzle.description}</p>
+        <p className="text-footnote text-white/50 leading-relaxed">{puzzle.description}</p>
 
         {/* Why recommended */}
         <div className="flex items-start gap-2">
-          <span className="text-[10px] flex-shrink-0 mt-[1px]">💡</span>
-          <p className="text-[10px] text-white/35 italic leading-relaxed">{puzzle.recommendedBecause}</p>
+          <span className="text-caption flex-shrink-0 mt-[1px]">💡</span>
+          <p className="text-caption text-white/35 italic leading-relaxed">{puzzle.recommendedBecause}</p>
         </div>
 
         {/* Keywords row */}
@@ -173,8 +173,8 @@ function PuzzleEntry({
           )}
           {puzzle.expectedOutput && (
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-white/20">획득</span>
-              <span className="text-[10px] text-white/50 font-medium">{puzzle.expectedOutput}</span>
+              <span className="text-micro font-bold uppercase tracking-wider text-white/20">획득</span>
+              <span className="text-caption text-white/50 font-medium">{puzzle.expectedOutput}</span>
             </div>
           )}
         </div>
@@ -188,9 +188,9 @@ function PuzzleEntry({
 function KeywordRow({ label, keywords, chipCls }: { label: string; keywords: string[]; chipCls: string }) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <span className="text-[9px] font-bold uppercase tracking-wider text-white/20 flex-shrink-0">{label}</span>
+      <span className="text-micro font-bold uppercase tracking-wider text-white/20 flex-shrink-0">{label}</span>
       {keywords.map((kw) => (
-        <span key={kw} className={`px-1.5 py-0.5 rounded border text-[9px] ${chipCls}`}>{kw}</span>
+        <span key={kw} className={`px-1.5 py-0.5 rounded border text-micro ${chipCls}`}>{kw}</span>
       ))}
     </div>
   );

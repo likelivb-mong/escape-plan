@@ -40,10 +40,10 @@ export default function InvestigationPicker({ selection, onChange }: Investigati
               className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors"
               onClick={() => setOpenKey(isOpen ? null : cat.key)}
             >
-              <span className="text-xs font-medium text-white/50">{cat.label}</span>
+              <span className="text-subhead font-medium text-white/50">{cat.label}</span>
               <div className="flex items-center gap-2">
                 {count > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-white/10 text-[9px] text-white/50 font-medium">
+                  <span className="px-1.5 py-0.5 rounded-full bg-white/10 text-micro text-white/50 font-medium">
                     {count}개
                   </span>
                 )}
@@ -64,7 +64,7 @@ export default function InvestigationPicker({ selection, onChange }: Investigati
               <div className="px-4 pb-4 max-h-[300px] overflow-y-auto">
                 {Object.entries(cat.data).map(([subKey, items]) => (
                   <div key={subKey} className="mb-3 last:mb-0">
-                    <p className="text-[10px] text-white/25 font-medium mb-1.5">
+                    <p className="text-caption text-white/35 font-medium mb-1.5">
                       {subCatLabel(subKey)}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -75,7 +75,7 @@ export default function InvestigationPicker({ selection, onChange }: Investigati
                             key={item}
                             type="button"
                             onClick={() => toggle(cat.key, item)}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-150 border ${
+                            className={`px-2.5 py-1 rounded-lg text-footnote font-medium transition-all duration-150 border ${
                               selected
                                 ? 'bg-white text-black border-white'
                                 : 'bg-transparent text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'

@@ -202,21 +202,21 @@ export default function FloorPlanCanvas({
     <div className="flex flex-col gap-3 flex-1 min-h-0">
       {/* Canvas info */}
       <div className="flex items-center gap-3 px-1 flex-shrink-0">
-        <span className="text-[10px] text-white/25">
+        <span className="text-caption text-white/35">
           {floorPlan.rooms.length}개 공간 배치
         </span>
         {doors.length > 0 && (
-          <span className="text-[10px] text-white/20">
+          <span className="text-caption text-white/30">
             · 문 {doors.length}개
           </span>
         )}
-        <span className="text-[9px] text-white/15">
+        <span className="text-micro text-white/15">
           드래그로 이동 · 우하단 핸들로 크기 조절
         </span>
         {isEditing && (
           <button
             onClick={handleAddDoor}
-            className="ml-auto px-2.5 py-1 rounded-full border border-white/[0.15] text-[10px] text-white/50 hover:text-white/75 hover:border-white/30 transition-all"
+            className="ml-auto px-2.5 py-1 rounded-full border border-white/[0.15] text-caption text-white/50 hover:text-white/75 hover:border-white/30 transition-all"
           >
             + 문 추가
           </button>

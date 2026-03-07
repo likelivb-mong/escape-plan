@@ -30,12 +30,12 @@ export default function SelectedKeywordSummary({
     <div className="flex-shrink-0 px-6 py-3 border-b border-white/[0.05] flex items-start gap-5 flex-wrap">
       {/* Theme label */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="text-[10px] font-semibold text-white/25 uppercase tracking-wider">
+        <span className="text-caption font-semibold text-white/25 uppercase tracking-wider">
           테마
         </span>
-        <span className="text-[11px] font-semibold text-white/60">{themeTitle}</span>
-        <span className="text-[10px] text-white/20">·</span>
-        <span className="text-[10px] text-white/25">{totalCount} 키워드</span>
+        <span className="text-footnote font-semibold text-white/60">{themeTitle}</span>
+        <span className="text-caption text-white/30">·</span>
+        <span className="text-caption text-white/35">{totalCount} 키워드</span>
       </div>
 
       {/* Divider */}
@@ -47,7 +47,7 @@ export default function SelectedKeywordSummary({
           <div key={cat.label} className="flex items-center gap-2 flex-wrap">
             <span
               className={[
-                'text-[9px] font-bold uppercase tracking-widest flex-shrink-0',
+                'text-micro font-bold uppercase tracking-widest flex-shrink-0',
                 cat.theme ? LABEL_COLOR[cat.theme] : 'text-white/25',
               ].join(' ')}
             >
@@ -58,7 +58,7 @@ export default function SelectedKeywordSummary({
                 <span
                   key={kw.id}
                   className={[
-                    'px-2 py-0.5 rounded-md border text-[10px] leading-snug',
+                    'px-2 py-0.5 rounded-md border text-caption leading-snug',
                     kw.theme ? THEME_CHIP[kw.theme] : DEFAULT_CHIP,
                   ].join(' ')}
                 >

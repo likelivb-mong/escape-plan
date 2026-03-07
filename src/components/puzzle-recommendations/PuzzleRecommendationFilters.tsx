@@ -82,7 +82,7 @@ export default function PuzzleRecommendationFilters({
       <button
         onClick={() => set('showAdoptedOnly', !filters.showAdoptedOnly)}
         className={[
-          'flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] transition-all',
+          'flex items-center gap-1.5 px-3 py-1 rounded-full border text-caption transition-all',
           filters.showAdoptedOnly
             ? 'border-emerald-400/30 text-emerald-300/70 bg-emerald-500/[0.08]'
             : 'border-white/[0.10] text-white/35 hover:border-white/20 hover:text-white/55',
@@ -95,7 +95,7 @@ export default function PuzzleRecommendationFilters({
       {(filters.stage !== 'all' || filters.type !== 'all' || filters.difficulty !== 'all' || filters.showAdoptedOnly) && (
         <button
           onClick={() => onChange({ stage: 'all', type: 'all', difficulty: 'all', showAdoptedOnly: false })}
-          className="text-[10px] text-white/25 hover:text-white/50 transition-colors ml-auto"
+          className="text-caption text-white/35 hover:text-white/50 transition-colors ml-auto"
         >
           초기화
         </button>
@@ -109,7 +109,7 @@ export default function PuzzleRecommendationFilters({
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-white/20 flex-shrink-0">
+      <span className="text-micro font-bold uppercase tracking-widest text-white/20 flex-shrink-0">
         {label}
       </span>
       {children}
@@ -137,7 +137,7 @@ function PillGroup({
           key={o.value}
           onClick={() => onChange(o.value)}
           className={[
-            'px-2.5 py-1 rounded-full text-[10px] transition-all',
+            'px-2.5 py-1 rounded-full text-caption transition-all',
             value === o.value
               ? 'bg-white/[0.08] text-white/75 border border-white/[0.15]'
               : 'text-white/30 hover:text-white/55 border border-transparent hover:border-white/[0.08]',
@@ -163,7 +163,7 @@ function SelectPill({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-transparent border border-white/[0.10] rounded-full px-2.5 py-1 text-[10px] text-white/45 hover:border-white/20 transition-all cursor-pointer outline-none appearance-none pr-5"
+      className="bg-transparent border border-white/[0.10] rounded-full px-2.5 py-1 text-caption text-white/45 hover:border-white/20 transition-all cursor-pointer outline-none appearance-none pr-5"
       style={{ backgroundImage: 'none' }}
     >
       {options.map((o) => (

@@ -65,8 +65,8 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
 
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-white/[0.06]">
-        <h2 className="text-xs font-semibold text-white/75 mb-1">AI Flow Notes</h2>
-        <p className="text-[11px] text-white/28 leading-relaxed">
+        <h2 className="text-subhead font-semibold text-white/75 mb-1">AI Flow Notes</h2>
+        <p className="text-footnote text-white/28 leading-relaxed">
           These recommendations are derived from the selected story structure and concept keywords.
         </p>
       </div>
@@ -90,7 +90,7 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
               ))}
             </div>
           ) : (
-            <p className="text-[11px] text-white/20 italic mt-2 leading-relaxed">
+            <p className="text-footnote text-white/30 italic mt-2 leading-relaxed">
               No tagged keywords found. Go back to Mandalart to tag cells with theme colors.
             </p>
           )}
@@ -104,7 +104,7 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
               const value = TENSION_CURVE[key];
               return (
                 <div key={key} className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-white/30 w-6 flex-shrink-0 text-right">
+                  <span className="text-caption font-bold text-white/30 w-6 flex-shrink-0 text-right">
                     {TENSION_LABELS[key]}
                   </span>
                   <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
@@ -113,7 +113,7 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
                       style={{ width: `${value}%` }}
                     />
                   </div>
-                  <span className="text-[9px] text-white/25 w-14 flex-shrink-0">
+                  <span className="text-micro text-white/35 w-14 flex-shrink-0">
                     {tensionLabel(value)}
                   </span>
                 </div>
@@ -127,22 +127,22 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
           <SectionLabel>Estimated Puzzle Count</SectionLabel>
           <div className="mt-2 flex flex-col gap-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white/80">
+              <span className="text-title1 font-bold text-white/80">
                 {plan.totalSuggestedPuzzleCount}
               </span>
-              <span className="text-[11px] text-white/30">개 권장</span>
+              <span className="text-footnote text-white/30">개 권장</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {plan.stages.map((s) => (
                 <div key={s.id} className="flex flex-col items-center gap-0.5">
-                  <span className="text-[9px] text-white/25">{s.label}</span>
-                  <span className="text-[11px] font-semibold text-white/55">
+                  <span className="text-micro text-white/35">{s.label}</span>
+                  <span className="text-footnote font-semibold text-white/55">
                     {s.suggestedPuzzleSlots}
                   </span>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-white/20 leading-relaxed">
+            <p className="text-caption text-white/30 leading-relaxed">
               플레이타임 {plan.totalPlayTime}분 기준 추천값입니다.
             </p>
           </div>
@@ -156,7 +156,7 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
             // TODO: navigate to /puzzle-recommendations when ready
             console.log('[PuzzleFlow] Generate Puzzle Recommendations →');
           }}
-          className="w-full py-2.5 rounded-xl bg-white/90 text-black text-xs font-semibold hover:bg-white active:bg-white/80 transition-colors"
+          className="w-full py-2.5 rounded-xl bg-white/90 text-black text-subhead font-semibold hover:bg-white active:bg-white/80 transition-colors"
         >
           Generate Puzzle Recommendations
         </button>
@@ -169,7 +169,7 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[9px] font-bold uppercase tracking-widest text-white/25">{children}</p>
+    <p className="text-micro font-bold uppercase tracking-widest text-white/25">{children}</p>
   );
 }
 
@@ -182,7 +182,7 @@ const CHIP_STYLES: Record<ChipColor, string> = {
 
 function Chip({ children, color }: { children: React.ReactNode; color: ChipColor }) {
   return (
-    <span className={`px-2 py-0.5 rounded-md border text-[10px] leading-snug ${CHIP_STYLES[color]}`}>
+    <span className={`px-2 py-0.5 rounded-md border text-caption leading-snug ${CHIP_STYLES[color]}`}>
       {children}
     </span>
   );

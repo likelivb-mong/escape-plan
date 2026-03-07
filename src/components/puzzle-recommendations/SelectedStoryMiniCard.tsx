@@ -12,11 +12,11 @@ export default function SelectedStoryMiniCard({ story, plan }: SelectedStoryMini
       <div className="flex items-center gap-4 flex-wrap">
         {/* Story identity */}
         <div className="flex items-center gap-2.5">
-          <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-[9px] text-white/40 bg-white/[0.03]">
+          <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-micro text-white/40 bg-white/[0.03]">
             {story.genre}
           </span>
-          <span className="text-xs font-semibold text-white/80">{story.title}</span>
-          <span className="text-[11px] text-white/30 italic">"{story.logline}"</span>
+          <span className="text-subhead font-semibold text-white/80">{story.title}</span>
+          <span className="text-footnote text-white/30 italic">"{story.logline}"</span>
         </div>
 
         {/* Divider */}
@@ -32,7 +32,7 @@ export default function SelectedStoryMiniCard({ story, plan }: SelectedStoryMini
         {/* Context label */}
         <div className="ml-auto flex-shrink-0 flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/50" />
-          <span className="text-[10px] text-white/25">현재 기준 플로우</span>
+          <span className="text-caption text-white/35">현재 기준 플로우</span>
         </div>
       </div>
     </div>
@@ -42,8 +42,8 @@ export default function SelectedStoryMiniCard({ story, plan }: SelectedStoryMini
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[9px] text-white/25 uppercase tracking-widest font-semibold">{label}</span>
-      <span className="text-[11px] text-white/55 font-semibold">{value}</span>
+      <span className="text-micro text-white/35 uppercase tracking-widest font-semibold">{label}</span>
+      <span className="text-footnote text-white/55 font-semibold">{value}</span>
     </div>
   );
 }

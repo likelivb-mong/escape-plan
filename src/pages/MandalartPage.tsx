@@ -227,7 +227,7 @@ export default function MandalartPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
 
       {/* ── Page Header ── */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <SourceBreadcrumb
             projectBrief={projectBrief}
@@ -237,7 +237,7 @@ export default function MandalartPage() {
           />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[11px] text-white/20">임시 저장됨</span>
+          <span className="text-footnote text-white/30">임시 저장됨</span>
           <button
             onMouseDown={handleExamplePressStart}
             onMouseUp={handleExamplePressEnd}
@@ -245,13 +245,13 @@ export default function MandalartPage() {
             onTouchStart={handleExamplePressStart}
             onTouchEnd={handleExamplePressEnd}
             title="누르는 동안 예시 미리보기"
-            className="px-3 py-1.5 rounded-full border border-white/[0.12] text-[11px] font-medium text-white/35 hover:text-white/60 hover:border-white/25 hover:bg-white/[0.04] active:border-white/40 active:text-white/70 transition-all duration-150 select-none"
+            className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/25 hover:bg-white/[0.04] active:border-white/40 active:text-white/70 transition-all duration-150 select-none"
           >
             예시 보기
           </button>
           <button
             onClick={() => navigate('/puzzle-flow')}
-            className="px-4 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
+            className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
           >
             퍼즐 설계로 →
           </button>
@@ -274,11 +274,11 @@ export default function MandalartPage() {
               onClearAll={handleClearAllKeywords}
             />
             {editingCellId ? (
-              <span className="text-[10px] text-white/20 ml-1">
+              <span className="text-caption text-white/30 ml-1">
                 편집 중 — Enter로 저장 · ESC로 취소
               </span>
             ) : (
-              <span className="text-[10px] text-white/15">
+              <span className="text-caption text-white/15">
                 더블클릭으로 편집 · Delete/Backspace로 선택 삭제 · 드래그로 위치 교환
               </span>
             )}
@@ -312,19 +312,19 @@ export default function MandalartPage() {
         </div>
 
         {/* ── Right: AI Expansion Panel ── */}
-        <div className="w-60 flex-shrink-0 flex flex-col rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+        <div className="hidden lg:flex w-60 flex-shrink-0 flex-col rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
 
           <div className="px-4 pt-4 pb-3 border-b border-white/[0.06]">
-            <h2 className="text-xs font-semibold text-white/75 mb-1">AI 확장</h2>
-            <p className="text-[11px] text-white/30 leading-relaxed">
+            <h2 className="text-subhead font-semibold text-white/75 mb-1">AI 확장</h2>
+            <p className="text-footnote text-white/30 leading-relaxed">
               선택한 키워드를 기반으로 스토리 제안을 생성합니다.
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2 min-h-0">
             <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[11px] text-white/30">선택</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-white/[0.08] text-[10px] text-white/50 font-medium tabular-nums">
+              <span className="text-footnote text-white/30">선택</span>
+              <span className="px-1.5 py-0.5 rounded-full bg-white/[0.08] text-caption text-white/50 font-medium tabular-nums">
                 {selectedCellIds.size}
               </span>
             </div>
@@ -334,7 +334,7 @@ export default function MandalartPage() {
                 <div
                   key={id}
                   className={[
-                    'px-2.5 py-2 rounded-lg border text-[11px] text-white/60 break-words leading-snug',
+                    'px-2.5 py-2 rounded-lg border text-footnote text-white/60 break-words leading-snug',
                     theme === 'rose'
                       ? 'bg-rose-500/[0.06] border-rose-400/20'
                       : theme === 'sky'
@@ -348,14 +348,14 @@ export default function MandalartPage() {
                 </div>
               ))
             ) : (
-              <p className="text-[11px] text-white/20 italic leading-relaxed mt-1">
+              <p className="text-footnote text-white/30 italic leading-relaxed mt-1">
                 셀을 클릭해 키워드를 선택하세요. ⌘/Ctrl+클릭으로 다중 선택 가능합니다.
               </p>
             )}
           </div>
 
           <div className="px-4 pt-3 pb-4 border-t border-white/[0.06] flex-shrink-0">
-            <p className="text-[10px] text-white/20 leading-relaxed">
+            <p className="text-caption text-white/30 leading-relaxed">
               선택한 키워드는 스토리 생성, 사건 설계, 퍼즐 제안에 활용됩니다.
             </p>
           </div>
@@ -396,19 +396,19 @@ function SourceBreadcrumb({
         <>
           <button
             onClick={() => onNavigateBack(effectiveConfig.backPath)}
-            className="text-[11px] text-white/30 hover:text-white/60 transition-colors"
+            className="text-footnote text-white/30 hover:text-white/60 transition-colors"
           >
             &larr; {effectiveConfig.label}
           </button>
           <span className="text-white/15">/</span>
-          <span className={`px-1.5 py-0.5 rounded-md border text-[9px] font-medium ${effectiveConfig.badgeStyle}`}>
+          <span className={`px-1.5 py-0.5 rounded-md border text-micro font-medium ${effectiveConfig.badgeStyle}`}>
             {effectiveConfig.badge}
           </span>
         </>
       )}
-      <h1 className="text-sm font-semibold text-white/85">{projectName}</h1>
+      <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
       <span className="h-3.5 w-px bg-white/10" />
-      <span className="text-[11px] text-white/25 font-medium tracking-wide">만다라트</span>
+      <span className="text-footnote text-white/35 font-medium tracking-wide">만다라트</span>
     </div>
   );
 }

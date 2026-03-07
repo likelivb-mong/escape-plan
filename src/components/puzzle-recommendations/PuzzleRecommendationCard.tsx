@@ -80,22 +80,22 @@ export default function PuzzleRecommendationCard({
       <div className="px-4 pt-3.5 pb-2.5 border-b border-white/[0.05] flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5 flex-wrap min-w-0">
           {/* Type badge */}
-          <span className={`flex-shrink-0 px-2 py-0.5 rounded-md border text-[10px] font-medium leading-snug ${TYPE_COLORS[puzzle.type]}`}>
+          <span className={`flex-shrink-0 px-2 py-0.5 rounded-md border text-caption font-medium leading-snug ${TYPE_COLORS[puzzle.type]}`}>
             {TYPE_LABELS[puzzle.type]}
           </span>
 
           {/* Title */}
-          <h4 className={`text-[13px] font-semibold leading-snug min-w-0 ${isDiscarded ? 'text-white/30 line-through' : 'text-white/85'}`}>
+          <h4 className={`text-subhead font-semibold leading-snug min-w-0 ${isDiscarded ? 'text-white/30 line-through' : 'text-white/85'}`}>
             {puzzle.title}
           </h4>
         </div>
 
         {/* Meta: difficulty + time */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          <span className={`text-[10px] font-semibold ${DIFFICULTY_COLORS[puzzle.difficulty]}`}>
+          <span className={`text-caption font-semibold ${DIFFICULTY_COLORS[puzzle.difficulty]}`}>
             {DIFFICULTY_LABELS[puzzle.difficulty]}
           </span>
-          <span className="text-[10px] text-white/30 flex items-center gap-0.5">
+          <span className="text-caption text-white/30 flex items-center gap-0.5">
             <span>⏱</span>{puzzle.estimatedMinutes}분
           </span>
         </div>
@@ -105,24 +105,24 @@ export default function PuzzleRecommendationCard({
       {!isDiscarded && (
         <div className="px-4 py-3.5 flex flex-col gap-3">
           {/* Description */}
-          <p className="text-[11px] text-white/50 leading-relaxed">{puzzle.description}</p>
+          <p className="text-footnote text-white/50 leading-relaxed">{puzzle.description}</p>
 
           {/* Why recommended */}
           <div className="flex items-start gap-2">
-            <span className="text-[10px] flex-shrink-0 mt-[1px]">💡</span>
-            <p className="text-[10px] text-white/35 leading-relaxed italic">{puzzle.recommendedBecause}</p>
+            <span className="text-caption flex-shrink-0 mt-[1px]">💡</span>
+            <p className="text-caption text-white/35 leading-relaxed italic">{puzzle.recommendedBecause}</p>
           </div>
 
           {/* Clue + Device usage */}
           <div className="flex gap-4 flex-wrap">
             {puzzle.clueUsage.length > 0 && (
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1.5">단서 활용</p>
+                <p className="text-micro font-bold uppercase tracking-widest text-white/20 mb-1.5">단서 활용</p>
                 <div className="flex flex-wrap gap-1">
                   {puzzle.clueUsage.map((kw) => (
                     <span
                       key={kw}
-                      className="px-1.5 py-0.5 rounded border border-amber-400/15 text-amber-300/50 text-[9px] bg-amber-500/[0.04]"
+                      className="px-1.5 py-0.5 rounded border border-amber-400/15 text-amber-300/50 text-micro bg-amber-500/[0.04]"
                     >
                       {kw}
                     </span>
@@ -132,12 +132,12 @@ export default function PuzzleRecommendationCard({
             )}
             {puzzle.deviceUsage.length > 0 && (
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1.5">연출 장치</p>
+                <p className="text-micro font-bold uppercase tracking-widest text-white/20 mb-1.5">연출 장치</p>
                 <div className="flex flex-wrap gap-1">
                   {puzzle.deviceUsage.map((kw) => (
                     <span
                       key={kw}
-                      className="px-1.5 py-0.5 rounded border border-sky-400/15 text-sky-300/50 text-[9px] bg-sky-500/[0.04]"
+                      className="px-1.5 py-0.5 rounded border border-sky-400/15 text-sky-300/50 text-micro bg-sky-500/[0.04]"
                     >
                       {kw}
                     </span>
@@ -149,8 +149,8 @@ export default function PuzzleRecommendationCard({
 
           {/* Expected output */}
           <div className="flex items-center gap-2 pt-0.5 border-t border-white/[0.04]">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-white/20">플레이어 획득</span>
-            <span className="text-[10px] text-white/50 font-medium">{puzzle.expectedOutput}</span>
+            <span className="text-micro font-bold uppercase tracking-widest text-white/20">플레이어 획득</span>
+            <span className="text-caption text-white/50 font-medium">{puzzle.expectedOutput}</span>
           </div>
         </div>
       )}
@@ -166,7 +166,7 @@ export default function PuzzleRecommendationCard({
         <button
           onClick={() => onRegenerate(puzzle.id)}
           disabled={isRegenerating}
-          className="text-[10px] text-white/25 hover:text-white/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+          className="text-caption text-white/35 hover:text-white/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
         >
           {isRegenerating ? (
             <span className="w-2.5 h-2.5 border border-white/20 border-t-white/50 rounded-full animate-spin" />
@@ -180,14 +180,14 @@ export default function PuzzleRecommendationCard({
         {isDiscarded ? (
           <button
             onClick={() => onAdopt(puzzle.id)}
-            className="px-2.5 py-1 rounded-full border border-white/[0.12] text-[10px] text-white/40 hover:border-white/25 hover:text-white/65 transition-all"
+            className="px-2.5 py-1 rounded-full border border-white/[0.12] text-caption text-white/40 hover:border-white/25 hover:text-white/65 transition-all"
           >
             복원
           </button>
         ) : (
           <button
             onClick={() => onDiscard(puzzle.id)}
-            className="px-2.5 py-1 rounded-full border border-white/[0.08] text-[10px] text-white/25 hover:border-rose-400/20 hover:text-rose-300/50 transition-all"
+            className="px-2.5 py-1 rounded-full border border-white/[0.08] text-caption text-white/35 hover:border-rose-400/20 hover:text-rose-300/50 transition-all"
           >
             제외
           </button>
@@ -198,7 +198,7 @@ export default function PuzzleRecommendationCard({
           <button
             onClick={() => onAdopt(puzzle.id)}
             className={[
-              'px-3 py-1 rounded-full border text-[10px] font-medium transition-all',
+              'px-3 py-1 rounded-full border text-caption font-medium transition-all',
               isAdopted
                 ? 'border-emerald-400/30 text-emerald-300/70 bg-emerald-500/[0.08] hover:bg-emerald-500/[0.04]'
                 : 'border-white/[0.12] text-white/40 hover:border-emerald-400/25 hover:text-emerald-300/60',
@@ -224,7 +224,7 @@ const STATUS_CONFIG: Record<PuzzleRecommendationStatus, { label: string; cls: st
 function StatusBadge({ status }: { status: PuzzleRecommendationStatus }) {
   const cfg = STATUS_CONFIG[status];
   return (
-    <span className={`px-2 py-0.5 rounded-md border text-[9px] font-medium ${cfg.cls}`}>
+    <span className={`px-2 py-0.5 rounded-md border text-micro font-medium ${cfg.cls}`}>
       {cfg.label}
     </span>
   );
