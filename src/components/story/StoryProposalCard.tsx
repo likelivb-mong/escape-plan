@@ -39,16 +39,20 @@ export default function StoryProposalCard({
   return (
     <div
       className={[
-        'flex flex-col rounded-2xl border transition-all duration-200 overflow-hidden',
-        'bg-white/[0.02]',
+        'flex flex-col rounded-2xl border-2 transition-all duration-300 overflow-hidden relative',
         isSelected
-          ? 'border-white/35 shadow-[0_0_0_1px_rgba(255,255,255,0.10)]'
-          : 'border-white/[0.07] hover:border-white/[0.15]',
+          ? 'border-emerald-400/60 bg-emerald-500/[0.04] shadow-[0_0_24px_rgba(52,211,153,0.12),0_0_0_1px_rgba(52,211,153,0.15)] ring-1 ring-emerald-400/20'
+          : 'border-white/[0.07] bg-white/[0.02] hover:border-white/[0.18] hover:bg-white/[0.03]',
         isRegenerating ? 'opacity-50 pointer-events-none' : '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
+      {/* ── Selected indicator badge ── */}
+      {isSelected && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400/70 via-emerald-300/50 to-emerald-400/70" />
+      )}
+
       {/* ── Clickable body (opens detail modal) ── */}
       <div className="flex-1 flex flex-col cursor-pointer" onClick={onViewDetail}>
 
@@ -69,7 +73,7 @@ export default function StoryProposalCard({
           )}
         </div>
 
-        <h3 className="text-sm font-semibold text-white/90 mb-2 leading-snug">{title}</h3>
+        <h3 className={`text-sm font-semibold mb-2 leading-snug ${isSelected ? 'text-emerald-200/95' : 'text-white/90'}`}>{title}</h3>
         <p className="text-[11px] text-white/40 leading-relaxed italic">"{logline}"</p>
       </div>
 
@@ -110,9 +114,9 @@ export default function StoryProposalCard({
         <button
           onClick={(e) => { e.stopPropagation(); onSelect(); }}
           className={[
-            'flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-150',
+            'flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
             isSelected
-              ? 'bg-white text-black hover:bg-white/90'
+              ? 'bg-emerald-400/90 text-black hover:bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.25)]'
               : 'bg-white/[0.07] text-white/55 hover:bg-white/[0.12] hover:text-white/80',
           ].join(' ')}
         >

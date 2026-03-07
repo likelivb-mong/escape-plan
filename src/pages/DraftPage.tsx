@@ -22,6 +22,7 @@ export default function DraftPage() {
     puzzleFlowPlan,
     puzzleRecommendationGroups,
     gameFlowDesign,
+    setGameFlowDesign,
   } = useProject();
 
   // ── Build draft document ───────────────────────────────────────────────────
@@ -86,7 +87,12 @@ export default function DraftPage() {
             <DraftStorySection doc={doc} />
             <DraftFlowSection doc={doc} />
             <DraftPuzzleSection doc={doc} />
-            {gameFlowDesign && <DraftGameFlowSection plan={gameFlowDesign} />}
+            {gameFlowDesign && (
+              <DraftGameFlowSection
+                plan={gameFlowDesign}
+                onUpdatePlan={setGameFlowDesign}
+              />
+            )}
 
             {/* Document footer */}
             <div className="mt-6 mb-8 flex items-center gap-3">
