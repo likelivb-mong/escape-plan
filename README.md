@@ -1,73 +1,68 @@
-# React + TypeScript + Vite
+# XCAPE AI - 방탈출 테마 기획 도구
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+방탈출(Escape Room) 테마를 AI 기반으로 기획하고 설계하는 웹 애플리케이션입니다.
 
-Currently, two official plugins are available:
+## 🎯 주요 기능
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. 홈 (3가지 시작 방식)
+- **YouTube로 시작**: YouTube 영상 URL을 입력하면 AI가 분석해 테마 제안
+- **새 프로젝트 생성**: 직접 장르, 플레이타임, 수사 키워드 선택으로 시작
+- **사건 구성**: 가해자, 피해자, 범행 동기, 수사 단서 등으로 시나리오 작성
 
-## React Compiler
+### 2. 스토리 (AI 제안)
+사건 구성 또는 기본 정보로부터 3가지 스토리 제안 생성:
+- 추리 미스터리 (수사 관점)
+- 심리 스릴러 (인물 심리 관점)
+- 서스펜스 (탈출/생존 관점)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 3. 만다라트 (9×9 보드)
+- 선택한 스토리를 기반으로 9×9 만다라트 보드 자동 생성
+- 세 가지 색상으로 요소 분류:
+  - 🌹 Rose: 컨셉
+  - 🌊 Sky: 연출/장치
+  - 🟠 Amber: 단서/소품
+- 직접 편집 및 커스터마이징 가능
 
-## Expanding the ESLint configuration
+### 4. 퍼즐 설계 (Game Flow)
+- 5단계 게임 플로우 (기/승/전/반전/결)
+- 각 단계별 퍼즐 추천
+- 스토리 연결고리 확인
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ 기술 스택
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Frontend**: React 19 + TypeScript 5.9
+- **Build Tool**: Vite 7
+- **Styling**: TailwindCSS v4
+- **Routing**: React Router v7
+- **Deployment**: Vercel
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📦 설치 및 실행
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행 (http://localhost:5173)
+npm run dev
+
+# 프로덕션 빌드
+npm run build
+
+# 빌드 결과 미리보기
+npm preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🌐 배포
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **레포지토리**: https://github.com/likelivb-mong/escape-plan
+- **배포 URL**: https://escape-plan-tool.vercel.app
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 📝 흐름 통합
+
 ```
+홈 (3가지 시작) → 스토리 (3가지 제안) → 만다라트 (편집) → 퍼즐 설계 (Game Flow)
+```
+
+---
+
+**개발**: Claude Opus 4.6
