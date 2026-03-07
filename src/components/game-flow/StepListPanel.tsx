@@ -8,6 +8,7 @@ interface StepListPanelProps {
   rooms: string[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onAddStep?: (stageLabel: StageLabel) => void;
 }
 
 export default function StepListPanel({
@@ -15,6 +16,7 @@ export default function StepListPanel({
   rooms,
   selectedId,
   onSelect,
+  onAddStep,
 }: StepListPanelProps) {
   const grouped = STAGE_ORDER.map((stage) => ({
     stage,
@@ -43,6 +45,16 @@ export default function StepListPanel({
               onClick={() => onSelect(step.id)}
             />
           ))}
+
+          {/* Add step button */}
+          {onAddStep && (
+            <button
+              onClick={() => onAddStep(stage)}
+              className="w-full px-3 py-2 text-[10px] text-white/25 hover:text-white/50 hover:bg-white/[0.03] transition-all duration-150 border-b border-white/[0.04] flex items-center justify-center gap-1"
+            >
+              <span className="text-xs">+</span> 스텝 추가
+            </button>
+          )}
         </div>
       ))}
     </div>

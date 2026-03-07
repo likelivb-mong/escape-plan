@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { GameFlowPlan, GameFlowStep, ProblemMode, AnswerType } from '../../types/gameFlow';
+import type { GameFlowPlan, GameFlowStep, ProblemMode, AnswerType, StageLabel } from '../../types/gameFlow';
 import { useProject } from '../../context/ProjectContext';
 import StepListPanel from './StepListPanel';
 import StepDetailPanel from './StepDetailPanel';
@@ -10,6 +10,7 @@ interface GameFlowTabProps {
   isRegenerating: boolean;
   onRegenerate: () => void;
   onUpdatePlan: (plan: GameFlowPlan) => void;
+  onAddStep?: (stageLabel: StageLabel) => void;
 }
 
 export default function GameFlowTab({
@@ -17,6 +18,7 @@ export default function GameFlowTab({
   isRegenerating,
   onRegenerate,
   onUpdatePlan,
+  onAddStep,
 }: GameFlowTabProps) {
   const navigate = useNavigate();
   const { setGameFlowDesign } = useProject();
@@ -156,6 +158,7 @@ export default function GameFlowTab({
             rooms={plan.rooms}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            onAddStep={onAddStep}
           />
         </div>
 

@@ -10,12 +10,11 @@ function parsePlaytime(playtime: string): number {
   return m ? parseInt(m[0], 10) : 60;
 }
 
-/** Total puzzle count recommendation by playtime */
+/** Total puzzle count recommendation by playtime (Game Flow 스텝 수와 일치) */
 function calcTotalPuzzles(minutes: number): number {
-  if (minutes >= 90) return 16;
-  if (minutes >= 80) return 14;
-  if (minutes >= 70) return 13;
-  return 11; // 60분
+  if (minutes >= 80) return 40;
+  if (minutes >= 70) return 30;
+  return 20; // 60분
 }
 
 type FiveTuple = [number, number, number, number, number];
@@ -35,20 +34,16 @@ function distributeTime(total: number): FiveTuple {
 
 /**
  * Distribute puzzle slots across 5 stages.
- * Base: 기1 / 승3 / 전3 / 반전2 / 결1 = 10
- * Remaining slots go to 승 → 전 → 반전 in rotation.
+ * 기:15% / 승:25% / 전:25% / 반전:20% / 결:15%
+ * Game Flow와 동일한 비율 사용.
  */
 function distributePuzzles(total: number): FiveTuple {
-  const dist: FiveTuple = [1, 3, 3, 2, 1];
-  let remaining = total - 10;
-  const spillover = [1, 2, 3]; // indices for 승, 전, 반전
-  let si = 0;
-  while (remaining > 0) {
-    dist[spillover[si % spillover.length]]++;
-    si++;
-    remaining--;
-  }
-  return dist;
+  const ratios: FiveTuple = [0.15, 0.25, 0.25, 0.20, 0.15];
+  const raw = ratios.map((r) => Math.max(1, Math.round(total * r))) as FiveTuple;
+  // Correct rounding drift on 승 (index 1)
+  const drift = total - (raw[0] + raw[1] + raw[2] + raw[3] + raw[4]);
+  raw[1] += drift;
+  return raw;
 }
 
 // Stage configuration: ordered 기→승→전→반전→결
@@ -69,7 +64,10 @@ function pick<T>(arr: T[], n: number, offset = 0): T[] {
   return Array.from({ length: Math.min(n, arr.length) }, (_, i) => arr[(i + offset) % arr.length]);
 }
 
-/** Assign relevant mandalart keywords to each stage by theme affinity. */
+/**
+ * Assign relevant mandalart keywords to each stage by theme affinity.
+ * 강화: 스테이지당 5-8개 키워드 + 서브골 라벨 포함.
+ */
 function pickKeywordsForStage(
   key: PuzzleFlowStageKey,
   cells: MandalartCellData[],
@@ -81,14 +79,25 @@ function pickKeywordsForStage(
   const amber = filled.filter((c) => c.theme === 'amber').map((c) => c.text.trim());
   const other = filled.filter((c) => !c.theme).map((c) => c.text.trim());
 
+  // 서브골(isSubGoal) 셀도 키워드로 포함
+  const subGoals = cells
+    .filter((c) => (c as MandalartCellData & { isSubGoal?: boolean }).isSubGoal && c.text.trim())
+    .map((c) => c.text.trim());
+
   // Rotate picks by offset to vary them on regenerate
   switch (key) {
-    case 'intro':       return [...pick(other, 2, offset), ...pick(amber, 1, offset)];
-    case 'development': return [...pick(sky,   2, offset), ...pick(amber, 2, offset)];
-    case 'expansion':   return [...pick(sky,   1, offset), ...pick(rose,  1, offset), ...pick(other, 1, offset)];
-    case 'twist':       return [...pick(rose,  3, offset)];
-    case 'ending':      return [...pick(amber, 2, offset), ...pick(rose,  1, offset)];
-    default:            return pick(other, 3, offset);
+    case 'intro':
+      return [...pick(other, 3, offset), ...pick(amber, 2, offset), ...pick(subGoals, 1, offset)];
+    case 'development':
+      return [...pick(sky, 3, offset), ...pick(amber, 3, offset), ...pick(subGoals, 1, offset)];
+    case 'expansion':
+      return [...pick(sky, 2, offset), ...pick(rose, 2, offset), ...pick(amber, 1, offset)];
+    case 'twist':
+      return [...pick(rose, 4, offset), ...pick(amber, 1, offset)];
+    case 'ending':
+      return [...pick(amber, 3, offset), ...pick(rose, 2, offset), ...pick(subGoals, 1, offset)];
+    default:
+      return [...pick(other, 3, offset), ...pick(amber, 2, offset)];
   }
 }
 

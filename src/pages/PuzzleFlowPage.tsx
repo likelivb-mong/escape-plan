@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { generatePuzzleFlowFromStory, regeneratePuzzleFlow } from '../utils/puzzleFlow';
-import { generateGameFlowFromStory, regenerateGameFlow } from '../utils/gameFlow';
+import { generateGameFlowFromStory, regenerateGameFlow, addStepToStage } from '../utils/gameFlow';
 import type { PuzzleFlowPlan, PuzzleFlowStage } from '../types/puzzleFlow';
-import type { GameFlowPlan } from '../types/gameFlow';
+import type { GameFlowPlan, StageLabel } from '../types/gameFlow';
 
 import PuzzleFlowTimeline from '../components/puzzle-flow/PuzzleFlowTimeline';
 import PuzzleFlowSidebar from '../components/puzzle-flow/PuzzleFlowSidebar';
@@ -60,7 +60,7 @@ export default function PuzzleFlowPage() {
   useEffect(() => {
     if (!selectedStory) return;
     setStoryH({ stack: [generatePuzzleFlowFromStory(selectedStory, cells, 0)], idx: 0 });
-    setGameH ({ stack: [generateGameFlowFromStory(selectedStory)],             idx: 0 });
+    setGameH ({ stack: [generateGameFlowFromStory(selectedStory, cells)],       idx: 0 });
   }, [selectedStory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Regen story flow ─────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ export default function PuzzleFlowPage() {
     if (!selectedStory || isRegenGame) return;
     setIsRegenGame(true);
     try {
-      const next = await regenerateGameFlow(selectedStory);
+      const next = await regenerateGameFlow(selectedStory, cells);
       setGameH(h => histPush(h, next));
     } finally {
       setIsRegenGame(false);
@@ -107,6 +107,13 @@ export default function PuzzleFlowPage() {
 
   // ── Game plan edit ───────────────────────────────────────────────────────────
   const handleUpdateGamePlan = (newPlan: GameFlowPlan) => {
+    setGameH(h => histPush(h, newPlan));
+  };
+
+  // ── Add step to stage ──────────────────────────────────────────────────────
+  const handleAddStep = (stageLabel: StageLabel) => {
+    if (!gamePlan) return;
+    const newPlan = addStepToStage(gamePlan, stageLabel);
     setGameH(h => histPush(h, newPlan));
   };
 
@@ -286,6 +293,7 @@ export default function PuzzleFlowPage() {
             isRegenerating={isRegenGame}
             onRegenerate={handleRegenGame}
             onUpdatePlan={handleUpdateGamePlan}
+            onAddStep={handleAddStep}
           />
         ) : (
           <div className="flex flex-1 items-center justify-center">

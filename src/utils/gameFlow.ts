@@ -1,4 +1,5 @@
 import type { StoryProposal } from '../types/story';
+import type { MandalartCellData } from '../types/mandalart';
 import type {
   GameFlowPlan,
   GameFlowStep,
@@ -13,11 +14,37 @@ import type {
 
 const DEFAULT_ROOMS = ['수사실', '처치실', '할머니 방', '골목', '공용 부엌'];
 
-// ── Step blueprint (structure only) ──────────────────────────────────────────
+// ── Step count by playtime ────────────────────────────────────────────────────
+
+function parsePlaytime(playtime: string): number {
+  const m = playtime.match(/\d+/);
+  return m ? parseInt(m[0], 10) : 60;
+}
+
+function calcTotalSteps(minutes: number): number {
+  if (minutes >= 80) return 40;
+  if (minutes >= 70) return 30;
+  return 20; // 60분 기본
+}
+
+type FiveTuple = [number, number, number, number, number];
+const STAGE_ORDER: StageLabel[] = ['기', '승', '전', '반전', '결'];
+
+/**
+ * 기:15% / 승:25% / 전:25% / 반전:20% / 결:15%
+ */
+function distributeSteps(total: number): FiveTuple {
+  const ratios: FiveTuple = [0.15, 0.25, 0.25, 0.20, 0.15];
+  const raw = ratios.map((r) => Math.max(2, Math.round(total * r))) as FiveTuple;
+  // Correct rounding drift on 승 (index 1)
+  const drift = total - (raw[0] + raw[1] + raw[2] + raw[3] + raw[4]);
+  raw[1] += drift;
+  return raw;
+}
+
+// ── Blueprint pools (per stage) ──────────────────────────────────────────────
 
 interface StepBlueprint {
-  stageLabel: StageLabel;
-  roomIndex: number;
   problemMode: ProblemMode;
   answerType: AnswerType;
   deviceSubtype?: DeviceSubtype;
@@ -25,72 +52,254 @@ interface StepBlueprint {
   inputLabel: string;
 }
 
-const BLUEPRINTS: StepBlueprint[] = [
-  // 기 (2 steps) — 수사실
-  {
-    stageLabel: '기', roomIndex: 0, problemMode: 'clue',
-    answerType: 'number_4', output: 'hidden_compartment_open',
-    inputLabel: '서랍 속 4자리 숫자 자물쇠',
-  },
-  {
-    stageLabel: '기', roomIndex: 0, problemMode: 'clue',
-    answerType: 'alphabet_5', output: 'item_acquired',
-    inputLabel: '캐비닛 알파벳 5자리 자물쇠',
-  },
-  // 승 (3 steps) — 처치실 · 할머니 방
-  {
-    stageLabel: '승', roomIndex: 1, problemMode: 'clue_device',
-    answerType: 'keypad', deviceSubtype: 'keypad_device', output: 'door_open',
-    inputLabel: '전자 키패드 패널',
-  },
-  {
-    stageLabel: '승', roomIndex: 1, problemMode: 'device',
-    answerType: 'xkit', deviceSubtype: 'light', output: 'xkit_guide_revealed',
-    inputLabel: 'X-KIT 폰 앱',
-  },
-  {
-    stageLabel: '승', roomIndex: 2, problemMode: 'clue',
-    answerType: 'key', output: 'door_open',
-    inputLabel: '문 열쇠 슬롯',
-  },
-  // 전 (2 steps) — 할머니 방 · 골목
-  {
-    stageLabel: '전', roomIndex: 2, problemMode: 'device',
-    answerType: 'auto', deviceSubtype: 'auto_trigger', output: 'led_on',
-    inputLabel: '자동 조명 트리거',
-  },
-  {
-    stageLabel: '전', roomIndex: 3, problemMode: 'clue_device',
-    answerType: 'number_3', deviceSubtype: 'sensor', output: 'next_room_open',
-    inputLabel: '3자리 숫자 자물쇠 (센서)',
-  },
-  // 반전 (2 steps) — 골목 · 공용 부엌
-  {
-    stageLabel: '반전', roomIndex: 3, problemMode: 'clue',
-    answerType: 'xkit', output: 'xkit_guide_revealed',
-    inputLabel: 'X-KIT 폰 앱',
-  },
-  {
-    stageLabel: '반전', roomIndex: 4, problemMode: 'device',
-    answerType: 'auto', deviceSubtype: 'hidden_door', output: 'hidden_compartment_open',
-    inputLabel: '숨겨진 문 자동 개방',
-  },
-  // 결 (2 steps) — 공용 부엌
-  {
-    stageLabel: '결', roomIndex: 4, problemMode: 'clue_device',
-    answerType: 'number_4', deviceSubtype: 'keypad_device', output: 'ending_video',
-    inputLabel: '최종 4자리 번호 자물쇠',
-  },
-  {
-    stageLabel: '결', roomIndex: 4, problemMode: 'device',
-    answerType: 'auto', deviceSubtype: 'auto_trigger', output: 'escape_clear',
-    inputLabel: '탈출 자동장치 트리거',
-  },
+const POOL_기: StepBlueprint[] = [
+  { problemMode: 'clue', answerType: 'number_4', output: 'hidden_compartment_open', inputLabel: '서랍 속 4자리 숫자 자물쇠' },
+  { problemMode: 'clue', answerType: 'alphabet_5', output: 'item_acquired', inputLabel: '캐비닛 알파벳 5자리 자물쇠' },
+  { problemMode: 'clue', answerType: 'key', output: 'door_open', inputLabel: '열쇠 슬롯' },
+  { problemMode: 'clue_device', answerType: 'keypad', deviceSubtype: 'keypad_device', output: 'hidden_compartment_open', inputLabel: '전자 키패드 패널' },
+  { problemMode: 'clue', answerType: 'number_3', output: 'item_acquired', inputLabel: '3자리 숫자 자물쇠' },
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'sensor', output: 'led_on', inputLabel: '센서 반응 트리거' },
 ];
 
-// ── Step content templates per stage ─────────────────────────────────────────
+const POOL_승: StepBlueprint[] = [
+  { problemMode: 'clue_device', answerType: 'keypad', deviceSubtype: 'keypad_device', output: 'door_open', inputLabel: '전자 키패드 패널' },
+  { problemMode: 'device', answerType: 'xkit', deviceSubtype: 'light', output: 'xkit_guide_revealed', inputLabel: 'X-KIT 폰 앱' },
+  { problemMode: 'clue', answerType: 'key', output: 'door_open', inputLabel: '문 열쇠 슬롯' },
+  { problemMode: 'clue', answerType: 'number_4', output: 'hidden_compartment_open', inputLabel: '보관함 4자리 자물쇠' },
+  { problemMode: 'clue_device', answerType: 'number_3', deviceSubtype: 'sensor', output: 'next_room_open', inputLabel: '센서 3자리 자물쇠' },
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'auto_trigger', output: 'led_on', inputLabel: '자동 조명 트리거' },
+  { problemMode: 'clue', answerType: 'alphabet_5', output: 'item_acquired', inputLabel: '해독 알파벳 자물쇠' },
+  { problemMode: 'clue_device', answerType: 'keypad', deviceSubtype: 'magnet', output: 'hidden_compartment_open', inputLabel: '자석 패널 + 키패드' },
+];
 
-interface StepContent {
+const POOL_전: StepBlueprint[] = [
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'auto_trigger', output: 'led_on', inputLabel: '자동 조명 트리거' },
+  { problemMode: 'clue_device', answerType: 'number_3', deviceSubtype: 'sensor', output: 'next_room_open', inputLabel: '센서 3자리 자물쇠' },
+  { problemMode: 'clue', answerType: 'number_4', output: 'hidden_compartment_open', inputLabel: '전환점 4자리 자물쇠' },
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'hidden_door', output: 'hidden_compartment_open', inputLabel: '숨겨진 공간 탐지' },
+  { problemMode: 'clue_device', answerType: 'keypad', deviceSubtype: 'keypad_device', output: 'door_open', inputLabel: '비밀번호 키패드' },
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'light', output: 'tv_on', inputLabel: 'UV 라이트 반응' },
+  { problemMode: 'clue', answerType: 'key', output: 'next_room_open', inputLabel: '특수 열쇠 슬롯' },
+  { problemMode: 'clue', answerType: 'alphabet_5', output: 'item_acquired', inputLabel: '암호 해독 자물쇠' },
+];
+
+const POOL_반전: StepBlueprint[] = [
+  { problemMode: 'clue', answerType: 'xkit', output: 'xkit_guide_revealed', inputLabel: 'X-KIT 폰 앱' },
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'hidden_door', output: 'hidden_compartment_open', inputLabel: '숨겨진 문 자동 개방' },
+  { problemMode: 'clue', answerType: 'number_4', output: 'hidden_compartment_open', inputLabel: '반전 4자리 자물쇠' },
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'sensor', output: 'led_on', inputLabel: '센서 반응 연출' },
+  { problemMode: 'clue_device', answerType: 'keypad', deviceSubtype: 'keypad_device', output: 'next_room_open', inputLabel: '반전 키패드 패널' },
+  { problemMode: 'clue', answerType: 'number_3', output: 'item_acquired', inputLabel: '숨겨진 3자리 자물쇠' },
+];
+
+const POOL_결: StepBlueprint[] = [
+  { problemMode: 'clue_device', answerType: 'number_4', deviceSubtype: 'keypad_device', output: 'ending_video', inputLabel: '최종 4자리 번호 자물쇠' },
+  { problemMode: 'device', answerType: 'auto', deviceSubtype: 'auto_trigger', output: 'escape_clear', inputLabel: '탈출 자동장치 트리거' },
+  { problemMode: 'clue', answerType: 'key', output: 'door_open', inputLabel: '최종 열쇠 슬롯' },
+  { problemMode: 'clue_device', answerType: 'keypad', deviceSubtype: 'keypad_device', output: 'hidden_compartment_open', inputLabel: '최종 키패드 입력' },
+  { problemMode: 'clue', answerType: 'alphabet_5', output: 'item_acquired', inputLabel: '최종 알파벳 해독' },
+  { problemMode: 'clue', answerType: 'number_3', output: 'ending_video', inputLabel: '엔딩 3자리 코드' },
+];
+
+const BLUEPRINT_POOLS: Record<StageLabel, StepBlueprint[]> = {
+  '기': POOL_기,
+  '승': POOL_승,
+  '전': POOL_전,
+  '반전': POOL_반전,
+  '결': POOL_결,
+};
+
+// ── Answer pools ─────────────────────────────────────────────────────────────
+
+const ANSWER_POOLS: Record<string, string[]> = {
+  number_4: ['1947', '3614', '7829', '5204', '9631', '4187', '2756', '6043', '8812', '1124'],
+  number_3: ['428', '715', '392', '861', '573', '249', '637', '184'],
+  alphabet_5: ['TRUTH', 'GHOST', 'NERVE', 'ALIVE', 'CHASE', 'FLAME', 'TRACE', 'BLIND'],
+  key: ['(열쇠 획득)', '(특수 열쇠 획득)', '(마스터키 획득)'],
+  keypad: ['8812', '4627', '1953', '7340', '5918', '2064'],
+  auto: ['(자동 반응)', '(자동 트리거)', '(자동 개방)', '(센서 반응)', '(자동 조명)'],
+};
+
+// ── Clue title templates per stage ──────────────────────────────────────────
+
+const TITLE_TEMPLATES: Record<StageLabel, string[]> = {
+  '기': [
+    '{perp}의 초기 흔적 분석',
+    '사건 기록부 해독',
+    '현장 초기 증거물 확인',
+    '진입 코드 해제',
+    '{scene} 첫 번째 단서',
+    '암호화된 명찰 분석',
+    '초기 현장 보존 자료',
+    '사건 접수 기록 해독',
+  ],
+  '승': [
+    '{victim} 관련 기록 해독',
+    'UV 자외선 벽면 메시지',
+    '숨겨진 연결 단서 해독',
+    '심층 증거물 분석',
+    '{scene} 추가 단서 확보',
+    '증인 진술 기록 분석',
+    '중간 보고서 암호 해제',
+    '교차 검증 단서 조합',
+  ],
+  '전': [
+    '오르골 멜로디 시퀀스',
+    '{scene} 건물번호 암호',
+    '전환점 — 숨겨진 공간 탐색',
+    '비밀 통로 발견',
+    '핵심 증거물 연결',
+    '위장된 단서 해독',
+    '새로운 공간 진입 코드',
+    '시간순 단서 재배열',
+  ],
+  '반전': [
+    '{victim}의 마지막 메시지',
+    '진실 — 숨겨진 공모 관계',
+    '반전 증거물 확보',
+    '위조된 기록 발견',
+    '{perp}의 숨겨진 동기',
+    '최종 진술 해독',
+  ],
+  '결': [
+    '최종 암호 — 전 단계 단서 집약',
+    '탈출 시퀀스 가동',
+    '마스터 퍼즐 해제',
+    '최종 탈출 코드',
+    '엔딩 트리거 해제',
+    '진실 공개 시퀀스',
+  ],
+};
+
+// ── Notes templates per stage ────────────────────────────────────────────────
+
+const NOTES_TEMPLATES: Record<StageLabel, string[]> = {
+  '기': [
+    '기 도입부 — 플레이어가 사건의 실마리를 처음 접하는 장면.',
+    '기 초반 — 기본 탐색과 초기 단서 수집 구간.',
+    '기 진입 — 현장의 분위기를 파악하고 첫 퍼즐을 만나는 단계.',
+  ],
+  '승': [
+    '승 전개 — 단서가 연결되기 시작하며 긴장감이 높아지는 구간.',
+    '승 심화 — 복합 퍼즐과 장치 조작이 결합되는 단계.',
+    '승 확장 — 새로운 공간과 정보가 드러나는 구간.',
+  ],
+  '전': [
+    '전 전환 — 분위기가 급변하며 새로운 사실이 드러나는 구간.',
+    '전 확장 — 숨겨진 공간과 비밀이 밝혀지는 클라이맥스 직전.',
+    '전 심화 — 이전 단서들이 재해석되는 구간.',
+  ],
+  '반전': [
+    '반전 핵심 — 기존 가설이 뒤집히며 진실이 드러나는 구간.',
+    '반전 충격 — 예상치 못한 사실이 밝혀지는 극적 순간.',
+    '반전 재해석 — 모든 단서가 새로운 관점으로 재조명되는 구간.',
+  ],
+  '결': [
+    '결 마무리 — 전 단계 단서를 통합하여 최종 해결하는 구간.',
+    '결 탈출 — 마지막 퍼즐 해제 후 탈출 시퀀스 가동.',
+    '결 엔딩 — 최종 코드 입력으로 사건이 종결되는 구간.',
+  ],
+};
+
+// ── xkit prompt/answer pools ──────────────────────────────────────────────────
+
+const XKIT_POOL = [
+  { prompt: '벽에 숨겨진 진실을 붙여쓰기 없이 입력하세요', answer: '존속방관', guide: '할머니 방 침대 밑 왼쪽 구석을 조사하세요' },
+  { prompt: '메시지 카드에 적힌 문장을 붙여쓰기로 입력하세요', answer: '나는범인이아니다', guide: '공용 부엌 냉장고 안쪽 세 번째 칸을 확인하세요' },
+  { prompt: '사진 뒷면에 적힌 단어를 입력하세요', answer: '무죄', guide: '다음 방 서랍 밑바닥을 확인하세요' },
+  { prompt: '거울에 비친 글자를 바르게 입력하세요', answer: '진실은반대다', guide: '벽면 세 번째 타일을 눌러보세요' },
+  { prompt: '손편지의 마지막 문장 키워드를 입력하세요', answer: '용서해줘', guide: '장롱 윗칸 오른쪽을 확인하세요' },
+];
+
+// ── Keyword extraction from mandalart cells ─────────────────────────────────
+
+function extractKeywordsByTheme(cells: MandalartCellData[]): {
+  rose: string[];
+  sky: string[];
+  amber: string[];
+  other: string[];
+  subGoals: string[];
+} {
+  const filled = cells.filter((c) => !c.isCenter && c.text.trim());
+  return {
+    rose:     filled.filter((c) => c.theme === 'rose' && !c.isSubGoal).map((c) => c.text.trim()),
+    sky:      filled.filter((c) => c.theme === 'sky'  && !c.isSubGoal).map((c) => c.text.trim()),
+    amber:    filled.filter((c) => c.theme === 'amber' && !c.isSubGoal).map((c) => c.text.trim()),
+    other:    filled.filter((c) => !c.theme && !c.isSubGoal).map((c) => c.text.trim()),
+    subGoals: filled.filter((c) => c.isSubGoal).map((c) => c.text.trim()),
+  };
+}
+
+function pickN<T>(arr: T[], n: number, offset = 0): T[] {
+  if (arr.length === 0) return [];
+  return Array.from({ length: Math.min(n, arr.length) }, (_, i) => arr[(i + offset) % arr.length]);
+}
+
+function getStageKeywords(
+  stage: StageLabel,
+  kw: ReturnType<typeof extractKeywordsByTheme>,
+  offset: number,
+): { clueTags: string[]; deviceTags: string[] } {
+  switch (stage) {
+    case '기':
+      return {
+        clueTags: [...pickN(kw.amber, 2, offset), ...pickN(kw.other, 1, offset)],
+        deviceTags: pickN(kw.sky, 1, offset),
+      };
+    case '승':
+      return {
+        clueTags: [...pickN(kw.amber, 3, offset + 2), ...pickN(kw.rose, 1, offset)],
+        deviceTags: pickN(kw.sky, 2, offset + 1),
+      };
+    case '전':
+      return {
+        clueTags: [...pickN(kw.amber, 2, offset + 4), ...pickN(kw.rose, 1, offset + 2)],
+        deviceTags: pickN(kw.sky, 2, offset + 3),
+      };
+    case '반전':
+      return {
+        clueTags: [...pickN(kw.rose, 3, offset + 3), ...pickN(kw.amber, 1, offset + 6)],
+        deviceTags: pickN(kw.sky, 1, offset + 5),
+      };
+    case '결':
+      return {
+        clueTags: [...pickN(kw.amber, 2, offset + 8), ...pickN(kw.rose, 1, offset + 5)],
+        deviceTags: pickN(kw.sky, 1, offset + 7),
+      };
+    default:
+      return { clueTags: [], deviceTags: [] };
+  }
+}
+
+// ── Room assignment per stage ────────────────────────────────────────────────
+
+function getRoomForStep(
+  stage: StageLabel,
+  stepInStage: number,
+  rooms: string[],
+): string {
+  const r = rooms.length > 0 ? rooms : DEFAULT_ROOMS;
+  const safeIdx = (i: number) => r[Math.min(i, r.length - 1)];
+
+  switch (stage) {
+    case '기':   return safeIdx(stepInStage % 2 === 0 ? 0 : Math.min(1, r.length - 1));
+    case '승':   return safeIdx(stepInStage % 2 === 0 ? Math.min(1, r.length - 1) : Math.min(2, r.length - 1));
+    case '전':   return safeIdx(stepInStage % 2 === 0 ? Math.min(2, r.length - 1) : Math.min(3, r.length - 1));
+    case '반전': return safeIdx(stepInStage % 2 === 0 ? Math.min(3, r.length - 1) : Math.min(4, r.length - 1));
+    case '결':   return safeIdx(Math.min(4, r.length - 1));
+    default:     return r[0];
+  }
+}
+
+// ── Dynamic content builder ──────────────────────────────────────────────────
+
+function buildDynamicContent(
+  blueprint: StepBlueprint,
+  stage: StageLabel,
+  stepInStage: number,
+  story: StoryProposal,
+  stageTags: { clueTags: string[]; deviceTags: string[] },
+): {
   clueTitle: string;
   answer: string;
   clueTags: string[];
@@ -99,147 +308,124 @@ interface StepContent {
   xkitPrompt?: string;
   xkitAnswer?: string;
   xkitNextGuide?: string;
-}
-
-function buildStepContent(
-  blueprint: StepBlueprint,
-  index: number,
-  story: StoryProposal,
-): StepContent {
+} {
   const inv = story.investigation;
+  const perp = inv?.perpetrator ?? '용의자';
+  const victim = inv?.victim ?? '피해자';
+  const scene = inv?.scene ?? '현장';
 
-  const contents: StepContent[] = [
-    // Step 01 — 기 / number_4
-    {
-      clueTitle: inv ? `${inv.perpetrator}의 초기 흔적 분석` : '사건 기록부의 첫 번째 단서',
-      answer: '1947',
-      clueTags: ['기록부', '날짜코드', inv?.scene ?? '사건 현장'],
-      deviceTags: ['서랍', '4자리 자물쇠'],
-      notes: '기록부 속 형광펜으로 표시된 연도 4개를 순서대로 조합. 기 도입부 — 플레이어가 사건의 실마리를 처음 접하는 장면.',
-    },
-    // Step 02 — 기 / alphabet_5
-    {
-      clueTitle: inv ? `암호화된 ${inv.perpetrator} 명찰` : '암호화된 명찰',
-      answer: 'TRUTH',
-      clueTags: ['명찰', '알파벳 치환', '특수기호'],
-      deviceTags: ['캐비닛', '알파벳 자물쇠'],
-      notes: '명찰 뒷면 특수 기호를 알파벳 치환표로 변환. 5글자 정답을 완성해야 다음 아이템 획득.',
-    },
-    // Step 03 — 승 / keypad
-    {
-      clueTitle: inv ? `${inv.victim} 의료 기록 해독` : '의료 기록 해독',
-      answer: '8812',
-      clueTags: ['의료 기록', '혈압 수치', inv?.clue ?? '기록지'],
-      deviceTags: ['전자 키패드', '숫자 역순'],
-      notes: '기록지의 수치(혈압 88/12 → 8812)를 키패드에 입력. 단서와 장치가 결합된 문제.',
-    },
-    // Step 04 — 승 / xkit + UV
-    {
-      clueTitle: 'UV 자외선 벽면 메시지',
-      answer: inv?.motive ?? '존속방관',
-      clueTags: ['UV 메시지', '벽면 단서', '한자'],
-      deviceTags: ['UV 라이트', 'X-KIT'],
-      notes: '자외선 등을 벽면에 비추면 숨겨진 한자/단어 드러남. X-KIT 앱에 입력해야 다음 가이드 해제.',
-      xkitPrompt: '벽에 숨겨진 진실을 붙여쓰기 없이 입력하세요',
-      xkitAnswer: inv?.motive ?? '존속방관',
-      xkitNextGuide: '할머니 방 침대 밑 왼쪽 구석을 조사하세요',
-    },
-    // Step 05 — 승 / key
-    {
-      clueTitle: 'X-KIT 가이드 — 침대 밑 열쇠',
-      answer: '(열쇠 획득)',
-      clueTags: ['X-KIT 가이드', '침대 밑', '위치 정보'],
-      deviceTags: ['열쇠', '문 잠금장치'],
-      notes: '이전 X-KIT 가이드에서 위치 확인 → 침대 밑 열쇠 수거 → 할머니 방 잠긴 문 해제.',
-    },
-    // Step 06 — 전 / auto (오르골)
-    {
-      clueTitle: '오르골 멜로디 시퀀스',
-      answer: '(자동 반응)',
-      clueTags: ['오르골', '멜로디 순서', '악보'],
-      deviceTags: ['자동 조명', '숨겨진 공간 LED'],
-      notes: '벽면 악보를 보고 오르골 버튼을 순서대로 누르면 자동으로 LED가 켜지며 숨겨진 공간 조명. 전 초입 — 분위기 전환.',
-    },
-    // Step 07 — 전 / number_3 + sensor
-    {
-      clueTitle: inv ? `골목 ${inv.scene ?? '현장'} 건물번호 암호` : '골목 건물 번호판 암호',
-      answer: '428',
-      clueTags: ['번호판', '건물 코드', '골목 단서'],
-      deviceTags: ['센서 자물쇠', '3자리', '자외선 반응'],
-      notes: '골목 벽면 번호판 3개에서 특정 숫자만 추출하여 조합. 센서가 정답 감지 시 다음 공간 문 자동 개방.',
-    },
-    // Step 08 — 반전 / xkit
-    {
-      clueTitle: inv ? `${inv.victim}의 마지막 메시지` : '피해자의 마지막 메시지',
-      answer: inv ? `${inv.victim}은무죄다` : '나는범인이아니다',
-      clueTags: ['메시지 카드', '피해자 필적', '반전 단서'],
-      deviceTags: ['X-KIT'],
-      notes: '반전 구간 핵심. 피해자로 알려진 인물이 실제로는 공모자였음을 암시하는 메시지. 붙여쓰기로 입력.',
-      xkitPrompt: '메시지 카드에 적힌 문장을 붙여쓰기로 입력하세요',
-      xkitAnswer: inv ? `${inv.victim}은무죄다` : '나는범인이아니다',
-      xkitNextGuide: '공용 부엌 냉장고 안쪽 세 번째 칸을 확인하세요',
-    },
-    // Step 09 — 반전 / auto (hidden_door)
-    {
-      clueTitle: 'X-KIT 가이드 — 냉장고 숨겨진 칸',
-      answer: '(자동 개방)',
-      clueTags: ['X-KIT 가이드', '냉장고', '숨겨진 문서'],
-      deviceTags: ['숨겨진 문', '자동 개방', '센서'],
-      notes: 'X-KIT 다음 가이드에서 냉장고 위치 확인. 세 번째 칸에 손을 넣으면 센서가 반응하여 숨겨진 칸 자동 개방 → 최종 문서 획득.',
-    },
-    // Step 10 — 결 / number_4
-    {
-      clueTitle: '최종 암호 — 전 단계 단서 집약',
-      answer: '1124',
-      clueTags: ['전체 단서 통합', '날짜 코드', '최종 해독'],
-      deviceTags: ['최종 키패드', '4자리 자물쇠'],
-      notes: '1단계(19), 3단계(88→반전으로 12), 7단계(4)에서 추출한 숫자 조합 → 1124. 전체 흐름을 이해해야만 풀 수 있는 마스터 퍼즐.',
-    },
-    // Step 11 — 결 / auto (escape)
-    {
-      clueTitle: '탈출 시퀀스 가동',
-      answer: '(자동 트리거)',
-      clueTags: ['최종 코드 입력 완료', '엔딩'],
-      deviceTags: ['탈출 장치', '자동 도어', '엔딩 영상'],
-      notes: '10번 최종 코드 입력 시 자동으로 탈출 도어 오픈 + 엔딩 영상 재생. escape_clear 상태 전환.',
-    },
-  ];
+  // Clue title
+  const titlePool = TITLE_TEMPLATES[stage];
+  const rawTitle = titlePool[stepInStage % titlePool.length];
+  const clueTitle = rawTitle
+    .replace('{perp}', perp)
+    .replace('{victim}', victim)
+    .replace('{scene}', scene);
 
-  return contents[index] ?? contents[0];
+  // Answer
+  const answerPool = ANSWER_POOLS[blueprint.answerType] ?? ['(정답)'];
+  let answer = answerPool[stepInStage % answerPool.length];
+
+  // For xkit, use investigation data
+  if (blueprint.answerType === 'xkit') {
+    const xkitData = XKIT_POOL[stepInStage % XKIT_POOL.length];
+    if (inv?.motive) answer = inv.motive;
+    else answer = xkitData.answer;
+  }
+
+  // Tags: merge blueprint-implied + mandalart keywords
+  const baseClueTags = stageTags.clueTags.length > 0
+    ? stageTags.clueTags.slice(0, 3)
+    : [scene, '단서'];
+  const baseDeviceTags = stageTags.deviceTags.length > 0
+    ? stageTags.deviceTags.slice(0, 2)
+    : blueprint.deviceSubtype ? [blueprint.inputLabel] : [];
+
+  // Notes
+  const notesPool = NOTES_TEMPLATES[stage];
+  const notes = notesPool[stepInStage % notesPool.length];
+
+  // xkit fields
+  let xkitPrompt: string | undefined;
+  let xkitAnswer: string | undefined;
+  let xkitNextGuide: string | undefined;
+  if (blueprint.answerType === 'xkit') {
+    const xd = XKIT_POOL[stepInStage % XKIT_POOL.length];
+    xkitPrompt = xd.prompt;
+    xkitAnswer = answer;
+    xkitNextGuide = xd.guide;
+  }
+
+  return {
+    clueTitle,
+    answer,
+    clueTags: baseClueTags,
+    deviceTags: baseDeviceTags,
+    notes,
+    xkitPrompt,
+    xkitAnswer,
+    xkitNextGuide,
+  };
 }
 
 // ── Main generator ────────────────────────────────────────────────────────────
 
 export function generateGameFlowFromStory(
   story: StoryProposal,
+  cells: MandalartCellData[] = [],
   rooms: string[] = DEFAULT_ROOMS,
 ): GameFlowPlan {
-  const steps: GameFlowStep[] = BLUEPRINTS.map((blueprint, i) => {
-    const content = buildStepContent(blueprint, i, story);
-    const room = rooms[blueprint.roomIndex] ?? rooms[rooms.length - 1];
+  const minutes = parsePlaytime(story.meta.playtime);
+  const totalSteps = calcTotalSteps(minutes);
+  const stepDist = distributeSteps(totalSteps);
+  const kw = extractKeywordsByTheme(cells);
 
-    return {
-      id: `step-${story.id}-${i + 1}`,
-      stepNumber: i + 1,
-      room,
-      stageLabel: blueprint.stageLabel,
-      clueTitle: content.clueTitle,
-      problemMode: blueprint.problemMode,
-      answerType: blueprint.answerType,
-      deviceSubtype: blueprint.deviceSubtype ?? null,
-      inputLabel: blueprint.inputLabel,
-      answer: content.answer,
-      output: blueprint.output,
-      clueTags: content.clueTags,
-      deviceTags: content.deviceTags,
-      notes: content.notes,
-      ...(blueprint.answerType === 'xkit' ? {
-        xkitPrompt: content.xkitPrompt,
-        xkitAnswer: content.xkitAnswer,
-        xkitNextGuide: content.xkitNextGuide,
-      } : {}),
-    };
+  const steps: GameFlowStep[] = [];
+  let stepNumber = 1;
+
+  STAGE_ORDER.forEach((stage, stageIdx) => {
+    const count = stepDist[stageIdx];
+    const pool = BLUEPRINT_POOLS[stage];
+
+    for (let i = 0; i < count; i++) {
+      const blueprint = pool[i % pool.length];
+      const room = getRoomForStep(stage, i, rooms);
+      const stageTags = getStageKeywords(stage, kw, i);
+      const content = buildDynamicContent(blueprint, stage, i, story, stageTags);
+
+      steps.push({
+        id: `step-${story.id}-${stepNumber}`,
+        stepNumber,
+        room,
+        stageLabel: stage,
+        clueTitle: content.clueTitle,
+        problemMode: blueprint.problemMode,
+        answerType: blueprint.answerType,
+        deviceSubtype: blueprint.deviceSubtype ?? null,
+        inputLabel: blueprint.inputLabel,
+        answer: content.answer,
+        output: blueprint.output,
+        clueTags: content.clueTags,
+        deviceTags: content.deviceTags,
+        notes: content.notes,
+        ...(blueprint.answerType === 'xkit' ? {
+          xkitPrompt: content.xkitPrompt,
+          xkitAnswer: content.xkitAnswer,
+          xkitNextGuide: content.xkitNextGuide,
+        } : {}),
+      });
+
+      stepNumber++;
+    }
   });
+
+  // Ensure last step is always escape_clear
+  if (steps.length > 0) {
+    const last = steps[steps.length - 1];
+    if (last.output !== 'escape_clear') {
+      steps[steps.length - 1] = { ...last, output: 'escape_clear' };
+    }
+  }
 
   return {
     storyId: story.id,
@@ -251,10 +437,71 @@ export function generateGameFlowFromStory(
 
 export async function regenerateGameFlow(
   story: StoryProposal,
+  cells: MandalartCellData[] = [],
   rooms?: string[],
 ): Promise<GameFlowPlan> {
   await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
-  return generateGameFlowFromStory(story, rooms);
+  return generateGameFlowFromStory(story, cells, rooms);
+}
+
+// ── Add step to stage ────────────────────────────────────────────────────────
+
+export function createEmptyStep(
+  stageLabel: StageLabel,
+  room: string,
+  stepNumber: number,
+): GameFlowStep {
+  return {
+    id: `step-new-${Date.now()}-${stepNumber}`,
+    stepNumber,
+    room,
+    stageLabel,
+    clueTitle: '새 단서',
+    problemMode: 'clue',
+    answerType: 'number_4',
+    deviceSubtype: null,
+    inputLabel: '4자리 숫자 자물쇠',
+    answer: '0000',
+    output: 'item_acquired',
+    clueTags: [],
+    deviceTags: [],
+    notes: '',
+  };
+}
+
+export function addStepToStage(
+  plan: GameFlowPlan,
+  stageLabel: StageLabel,
+): GameFlowPlan {
+  // Find the last step of this stage
+  let insertIdx = -1;
+  for (let i = plan.steps.length - 1; i >= 0; i--) {
+    if (plan.steps[i].stageLabel === stageLabel) {
+      insertIdx = i + 1;
+      break;
+    }
+  }
+  if (insertIdx < 0) insertIdx = plan.steps.length;
+
+  // Use the room of the last step in this stage, or first room
+  const lastInStage = plan.steps.filter((s) => s.stageLabel === stageLabel);
+  const room = lastInStage.length > 0
+    ? lastInStage[lastInStage.length - 1].room
+    : plan.rooms[0] ?? DEFAULT_ROOMS[0];
+
+  const newStep = createEmptyStep(stageLabel, room, insertIdx + 1);
+
+  // Insert and renumber
+  const newSteps = [...plan.steps];
+  newSteps.splice(insertIdx, 0, newStep);
+
+  // Renumber all steps
+  const renumbered = newSteps.map((s, i) => ({
+    ...s,
+    stepNumber: i + 1,
+  }));
+
+  return { ...plan, steps: renumbered };
 }
 
 // ── Label/display helpers ─────────────────────────────────────────────────────
