@@ -20,7 +20,13 @@ export interface ProjectBrief {
   genres: Genre[];
   playTimes: PlayTime[];
   investigation: InvestigationSelection;
+  puzzleTypes?: PuzzleType[];
+  clueFormats?: ClueFormat[];
 }
+
+// QD 문제유형 분류 (클루제작과 문제유형 파악을 위한 퀘스트 백과사전/다이어그램)
+export type PuzzleType = '추리' | '관찰' | '수리' | '협동' | '활동' | '오감';
+export type ClueFormat = '평면' | '입체' | '공간' | '감각';
 
 // Project types
 export type PlayTime = 60 | 70 | 80 | 90;

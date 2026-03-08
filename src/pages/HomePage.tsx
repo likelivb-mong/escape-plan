@@ -1,10 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { PlayTime, Genre, InvestigationSelection } from '../types';
+import type { PlayTime, Genre, PuzzleType, ClueFormat } from '../types';
+import type { ScenarioFormState, ScenarioBuildResult } from '../types/scenario';
+import { INITIAL_FORM_STATE } from '../types/scenario';
 import { useProject } from '../context/ProjectContext';
 import { analyzeYoutube } from '../services/aiAnalysis';
 import { createInitialCells } from '../data/mockMandalart';
-import InvestigationPicker from '../components/home/InvestigationPicker';
+import { buildScenarioResult } from '../utils/scenario';
+import { populateMandalartFromScenario } from '../utils/mandalartFromScenario';
+import { generateStoryProposalsFromScenario } from '../utils/storyFromScenario';
+import ScenarioForm from '../components/scenario/ScenarioForm';
 import StoryBeatsInput from '../components/home/StoryBeatsInput';
 
 // ── YouTube URL 파싱 ──────────────────────────────────────────────────────────
@@ -21,14 +26,14 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
-// ── 미리보기 상태 타입 ────────────────────────────────────────────────────────
-
 interface VideoPreview {
   videoId: string;
   title: string | null;
   channel: string | null;
   metaLoading: boolean;
 }
+
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const PLAY_TIMES: PlayTime[] = [60, 70, 80, 90];
 
@@ -43,20 +48,29 @@ const GENRES: { value: Genre; label: string }[] = [
   { value: 'comedy', label: '코미디' },
 ];
 
-type TabKey = 'youtube' | 'manual' | 'scenario';
+const PUZZLE_TYPES: PuzzleType[] = ['추리', '관찰', '수리', '협동', '활동', '오감'];
+const CLUE_FORMATS: ClueFormat[] = ['평면', '입체', '공간', '감각'];
+
+type TabKey = 'youtube' | 'build';
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { setProjectName: setCtxProjectName, setCells, setAiStoryProposals, setProjectBrief } = useProject();
+  const {
+    setProjectName: setCtxProjectName,
+    setCells,
+    setAiStoryProposals,
+    setProjectBrief,
+  } = useProject();
 
-  // Tab
-  const [activeTab, setActiveTab] = useState<TabKey>('youtube');
+  const [activeTab, setActiveTab] = useState<TabKey>('build');
 
-  // ── YouTube tab state ──────────────────────────────────────────────────────
+  // ── YouTube state ────────────────────────────────────────────────────────
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubeLoading, setYoutubeLoading] = useState(false);
-  const [youtubeStep, setYoutubeStep] = useState<string>('');
-  const [youtubeError, setYoutubeError] = useState<string>('');
+  const [youtubeStep, setYoutubeStep] = useState('');
+  const [youtubeError, setYoutubeError] = useState('');
   const [preview, setPreview] = useState<VideoPreview | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -79,19 +93,29 @@ export default function HomePage() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [youtubeUrl]);
 
-  // ── Manual tab state ───────────────────────────────────────────────────────
+  // ── Build (사건 구성하기) state ──────────────────────────────────────────
   const [projectName, setProjectName] = useState('');
   const [playTimes, setPlayTimes] = useState<PlayTime[]>([60]);
   const [genres, setGenres] = useState<Genre[]>(['mystery']);
+  const [puzzleTypes, setPuzzleTypes] = useState<PuzzleType[]>([]);
+  const [clueFormats, setClueFormats] = useState<ClueFormat[]>([]);
   const [synopsis, setSynopsis] = useState('');
   const [beats, setBeats] = useState<Record<string, string>>({
     '기': '', '승': '', '전': '', '반전': '', '결': '',
   });
-  const [investigation, setInvestigation] = useState<InvestigationSelection>({
-    motives: [], methods: [], clues: [], techniques: [],
-  });
+  const [scenarioForm, setScenarioForm] = useState<ScenarioFormState>(INITIAL_FORM_STATE);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // Live scenario result
+  const scenarioResult: ScenarioBuildResult | null = useMemo(() => {
+    const f = scenarioForm;
+    const hasAny =
+      f.motive.item || f.crimeType.item || f.clue.item || f.method.item ||
+      f.characters.some((c) => c.name.trim()) || f.location;
+    if (!hasAny) return null;
+    return buildScenarioResult(f);
+  }, [scenarioForm]);
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
   const handleYoutubeGenerate = async () => {
     const url = youtubeUrl.trim();
@@ -125,46 +149,92 @@ export default function HomePage() {
     }
   };
 
-  const togglePlayTime = (t: PlayTime) => {
+  const togglePlayTime = (t: PlayTime) =>
     setPlayTimes((prev) =>
       prev.includes(t) ? (prev.length > 1 ? prev.filter((v) => v !== t) : prev) : [...prev, t],
     );
-  };
 
-  const toggleGenre = (g: Genre) => {
+  const toggleGenre = (g: Genre) =>
     setGenres((prev) =>
       prev.includes(g) ? (prev.length > 1 ? prev.filter((v) => v !== g) : prev) : [...prev, g],
     );
-  };
 
-  const handleNewProject = () => {
+  const togglePuzzleType = (t: PuzzleType) =>
+    setPuzzleTypes((prev) =>
+      prev.includes(t) ? prev.filter((v) => v !== t) : [...prev, t],
+    );
+
+  const toggleClueFormat = (f: ClueFormat) =>
+    setClueFormats((prev) =>
+      prev.includes(f) ? prev.filter((v) => v !== f) : [...prev, f],
+    );
+
+  const handleBuildSubmit = () => {
     const name = projectName.trim();
     if (!name) return;
+
     setCtxProjectName(name);
-    const freshCells = createInitialCells();
-    setCells(freshCells.map((c) => (c.isCenter ? { ...c, text: name } : c)));
-    setProjectBrief({
-      source: 'manual',
-      videoId: null,
-      videoTitle: null,
-      videoChannel: null,
-      synopsis,
-      beats: (['기', '승', '전', '반전', '결'] as const)
-        .filter((l) => beats[l])
-        .map((l) => ({ label: l, description: beats[l] })),
-      genres,
-      playTimes,
-      investigation,
-    });
+
+    // If scenario form has data, use scenario-based generation
+    if (scenarioResult) {
+      setCells(populateMandalartFromScenario(scenarioForm));
+      const proposals = generateStoryProposalsFromScenario(scenarioForm, scenarioResult);
+      setAiStoryProposals(proposals);
+      setProjectBrief({
+        source: 'scenario',
+        videoId: null,
+        videoTitle: null,
+        videoChannel: null,
+        synopsis: synopsis || scenarioResult.scenarioText,
+        beats: [
+          { label: '기', description: beats['기'] || scenarioResult.summary.caseOverview },
+          { label: '승', description: beats['승'] || `핵심 단서: ${scenarioResult.summary.coreClue}` },
+          { label: '전', description: beats['전'] || scenarioResult.summary.recommendedFocus },
+          { label: '반전', description: beats['반전'] || scenarioForm.memo || '(미입력)' },
+          { label: '결', description: beats['결'] || '만다라트에서 세부 기획 진행' },
+        ],
+        genres,
+        playTimes,
+        investigation: {
+          motives: scenarioForm.motive.item ? [scenarioForm.motive.item] : [],
+          methods: scenarioForm.crimeType.item ? [scenarioForm.crimeType.item] : [],
+          clues: scenarioForm.clue.item ? [scenarioForm.clue.item] : [],
+          techniques: scenarioForm.method.item ? [scenarioForm.method.item] : [],
+        },
+        puzzleTypes,
+        clueFormats,
+      });
+    } else {
+      // Manual-only flow
+      const freshCells = createInitialCells();
+      setCells(freshCells.map((c) => (c.isCenter ? { ...c, text: name } : c)));
+      setAiStoryProposals(null);
+      setProjectBrief({
+        source: 'manual',
+        videoId: null,
+        videoTitle: null,
+        videoChannel: null,
+        synopsis,
+        beats: (['기', '승', '전', '반전', '결'] as const)
+          .filter((l) => beats[l])
+          .map((l) => ({ label: l, description: beats[l] })),
+        genres,
+        playTimes,
+        investigation: { motives: [], methods: [], clues: [], techniques: [] },
+        puzzleTypes,
+        clueFormats,
+      });
+    }
+
     navigate('/story');
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-start px-4 sm:px-6 py-10 sm:py-16">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-start px-4 sm:px-6 py-10 sm:py-14">
       {/* Header */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-8">
         <p className="text-subhead font-semibold tracking-[0.2em] uppercase text-white/30 mb-3">
           XCAPE Internal Tool
         </p>
@@ -172,22 +242,23 @@ export default function HomePage() {
           방탈출 테마 기획 AI
         </h1>
         <p className="text-white/40 text-body leading-relaxed">
-          YouTube 영상, 직접 입력 또는 사건 구성으로 새 테마를 시작하세요
+          YouTube 영상 분석 또는 직접 사건을 구성하여 새 테마를 시작하세요
         </p>
       </div>
 
-      {/* Main card */}
-      <div className="w-full max-w-lg sm:max-w-xl lg:max-w-2xl rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+      {/* Main card — wider for build tab */}
+      <div
+        className={`w-full rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden transition-all duration-300 ${
+          activeTab === 'build' ? 'max-w-2xl lg:max-w-4xl' : 'max-w-lg sm:max-w-xl lg:max-w-2xl'
+        }`}
+      >
         {/* Tab bar */}
         <div className="flex border-b border-white/10">
           <TabButton active={activeTab === 'youtube'} onClick={() => setActiveTab('youtube')}>
             YouTube로 시작
           </TabButton>
-          <TabButton active={activeTab === 'manual'} onClick={() => setActiveTab('manual')}>
-            새 프로젝트 생성
-          </TabButton>
-          <TabButton active={activeTab === 'scenario'} onClick={() => setActiveTab('scenario')}>
-            사건 구성
+          <TabButton active={activeTab === 'build'} onClick={() => setActiveTab('build')}>
+            사건 구성하기
           </TabButton>
         </div>
 
@@ -203,24 +274,27 @@ export default function HomePage() {
               youtubeError={youtubeError}
               onGenerate={handleYoutubeGenerate}
             />
-          ) : activeTab === 'manual' ? (
-            <ManualTab
+          ) : (
+            <BuildTab
               projectName={projectName}
               setProjectName={setProjectName}
               playTimes={playTimes}
               togglePlayTime={togglePlayTime}
               genres={genres}
               toggleGenre={toggleGenre}
-              investigation={investigation}
-              setInvestigation={setInvestigation}
+              puzzleTypes={puzzleTypes}
+              togglePuzzleType={togglePuzzleType}
+              clueFormats={clueFormats}
+              toggleClueFormat={toggleClueFormat}
+              scenarioForm={scenarioForm}
+              setScenarioForm={setScenarioForm}
+              scenarioResult={scenarioResult}
               synopsis={synopsis}
               setSynopsis={setSynopsis}
               beats={beats}
               setBeats={setBeats}
-              onSubmit={handleNewProject}
+              onSubmit={handleBuildSubmit}
             />
-          ) : (
-            <ScenarioEntryTab onStart={() => navigate('/scenario')} />
           )}
         </div>
       </div>
@@ -271,9 +345,8 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
       />
 
-      {/* Preview */}
       {preview && (
-        <div className="flex gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 animate-[fadeIn_0.2s_ease]">
+        <div className="flex gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
           <div className="flex-shrink-0 w-24 h-[54px] rounded-lg overflow-hidden bg-white/[0.06]">
             <img
               src={`https://img.youtube.com/vi/${preview.videoId}/mqdefault.jpg`}
@@ -328,17 +401,22 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
   );
 }
 
-// ── Manual Tab ──────────────────────────────────────────────────────────────
+// ── Build Tab (사건 구성하기) ────────────────────────────────────────────────
 
-interface ManualTabProps {
+interface BuildTabProps {
   projectName: string;
   setProjectName: (v: string) => void;
   playTimes: PlayTime[];
   togglePlayTime: (t: PlayTime) => void;
   genres: Genre[];
   toggleGenre: (g: Genre) => void;
-  investigation: InvestigationSelection;
-  setInvestigation: (sel: InvestigationSelection) => void;
+  puzzleTypes: PuzzleType[];
+  togglePuzzleType: (t: PuzzleType) => void;
+  clueFormats: ClueFormat[];
+  toggleClueFormat: (f: ClueFormat) => void;
+  scenarioForm: ScenarioFormState;
+  setScenarioForm: (fn: ScenarioFormState | ((prev: ScenarioFormState) => ScenarioFormState)) => void;
+  scenarioResult: ScenarioBuildResult | null;
   synopsis: string;
   setSynopsis: (v: string) => void;
   beats: Record<string, string>;
@@ -346,127 +424,177 @@ interface ManualTabProps {
   onSubmit: () => void;
 }
 
-function ManualTab({
+function BuildTab({
   projectName, setProjectName,
   playTimes, togglePlayTime,
   genres, toggleGenre,
-  investigation, setInvestigation,
+  puzzleTypes, togglePuzzleType,
+  clueFormats, toggleClueFormat,
+  scenarioForm, setScenarioForm,
+  scenarioResult,
   synopsis, setSynopsis,
   beats, setBeats,
   onSubmit,
-}: ManualTabProps) {
+}: BuildTabProps) {
+  const [openSection, setOpenSection] = useState<string>('basic');
+
+  const toggle = (key: string) =>
+    setOpenSection((prev) => (prev === key ? '' : key));
+
   return (
-    <div className="flex flex-col gap-5">
-      {/* Project name */}
-      <Field label="프로젝트 이름">
-        <input
-          type="text"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-          placeholder="테마 이름을 입력하세요"
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
-        />
-      </Field>
+    <div className="flex flex-col gap-4">
+      {/* ── Section 1: 기본 정보 ── */}
+      <SectionHeader
+        title="기본 정보"
+        subtitle="프로젝트명, 시간, 장르"
+        open={openSection === 'basic'}
+        onToggle={() => toggle('basic')}
+      />
+      {openSection === 'basic' && (
+        <div className="flex flex-col gap-4 pl-1">
+          <Field label="프로젝트 이름">
+            <input
+              type="text"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="테마 이름을 입력하세요"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
+            />
+          </Field>
 
-      {/* Play time (multi-select) */}
-      <Field label="플레이 시간">
-        <div className="flex gap-2">
-          {PLAY_TIMES.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => togglePlayTime(t)}
-              className={`flex-1 py-2.5 rounded-xl text-body font-medium transition-all duration-200 border ${
-                playTimes.includes(t)
-                  ? 'bg-white text-black border-white'
-                  : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
-              }`}
-            >
-              {t}m
-            </button>
-          ))}
+          <Field label="플레이 시간">
+            <div className="flex gap-2">
+              {PLAY_TIMES.map((t) => (
+                <ToggleChip key={t} active={playTimes.includes(t)} onClick={() => togglePlayTime(t)}>
+                  {t}m
+                </ToggleChip>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="장르">
+            <div className="flex flex-wrap gap-1.5">
+              {GENRES.map((g) => (
+                <TogglePill key={g.value} active={genres.includes(g.value)} onClick={() => toggleGenre(g.value)}>
+                  {g.label}
+                </TogglePill>
+              ))}
+            </div>
+          </Field>
         </div>
-      </Field>
+      )}
 
-      {/* Genre (multi-select) */}
-      <Field label="장르">
-        <div className="flex flex-wrap gap-1.5">
-          {GENRES.map((g) => (
-            <button
-              key={g.value}
-              type="button"
-              onClick={() => toggleGenre(g.value)}
-              className={`px-3 py-1.5 rounded-full text-subhead font-medium transition-all duration-200 border ${
-                genres.includes(g.value)
-                  ? 'bg-white text-black border-white'
-                  : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
-              }`}
-            >
-              {g.label}
-            </button>
-          ))}
+      {/* ── Section 2: 사건 요소 ── */}
+      <SectionHeader
+        title="사건 요소"
+        subtitle="인물, 장소, 범행동기, 수사단서"
+        open={openSection === 'scenario'}
+        onToggle={() => toggle('scenario')}
+      />
+      {openSection === 'scenario' && (
+        <div className="pl-1">
+          <ScenarioForm form={scenarioForm} onChange={setScenarioForm} />
+          {scenarioResult && (
+            <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+              <p className="text-caption text-white/25 uppercase tracking-widest mb-2">사건 개요</p>
+              <p className="text-subhead text-white/60 leading-relaxed">
+                {scenarioResult.scenarioText}
+              </p>
+            </div>
+          )}
         </div>
-      </Field>
+      )}
 
-      {/* Investigation picker */}
-      <Field label="수사 키워드 조합">
-        <InvestigationPicker selection={investigation} onChange={setInvestigation} />
-      </Field>
+      {/* ── Section 3: 문제 유형 (QD 분류) ── */}
+      <SectionHeader
+        title="문제 유형"
+        subtitle="퍼즐 유형 + 클루 형태"
+        open={openSection === 'puzzle'}
+        onToggle={() => toggle('puzzle')}
+      />
+      {openSection === 'puzzle' && (
+        <div className="flex flex-col gap-4 pl-1">
+          <Field label="퍼즐 유형">
+            <div className="flex flex-wrap gap-1.5">
+              {PUZZLE_TYPES.map((t) => (
+                <TogglePill key={t} active={puzzleTypes.includes(t)} onClick={() => togglePuzzleType(t)}>
+                  {t}
+                </TogglePill>
+              ))}
+            </div>
+          </Field>
 
-      {/* Synopsis */}
-      <Field label="스토리 핵심 흐름">
-        <textarea
-          value={synopsis}
-          onChange={(e) => setSynopsis(e.target.value)}
-          placeholder="생성하려는 스토리의 핵심 주제와 방향을 입력하세요"
-          rows={3}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200 resize-none"
-        />
-      </Field>
+          <Field label="클루 대분류">
+            <div className="flex flex-wrap gap-1.5">
+              {CLUE_FORMATS.map((f) => (
+                <TogglePill key={f} active={clueFormats.includes(f)} onClick={() => toggleClueFormat(f)}>
+                  {f}
+                </TogglePill>
+              ))}
+            </div>
+            <p className="text-caption text-white/20 mt-2 leading-relaxed">
+              평면(텍스트·UV·영상) · 입체(물품·장치·가구·기계) · 공간(배치·동선) · 감각(시각~촉각)
+            </p>
+          </Field>
+        </div>
+      )}
 
-      {/* Story beats */}
-      <Field label="기승전반결">
-        <StoryBeatsInput beats={beats} onChange={setBeats} />
-      </Field>
+      {/* ── Section 4: 스토리 흐름 (선택) ── */}
+      <SectionHeader
+        title="스토리 흐름"
+        subtitle="시놉시스 + 기승전반결 (선택사항)"
+        open={openSection === 'story'}
+        onToggle={() => toggle('story')}
+      />
+      {openSection === 'story' && (
+        <div className="flex flex-col gap-4 pl-1">
+          <Field label="스토리 핵심 흐름">
+            <textarea
+              value={synopsis}
+              onChange={(e) => setSynopsis(e.target.value)}
+              placeholder="생성하려는 스토리의 핵심 주제와 방향을 입력하세요"
+              rows={3}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200 resize-none"
+            />
+          </Field>
+          <Field label="기승전반결">
+            <StoryBeatsInput beats={beats} onChange={setBeats} />
+          </Field>
+        </div>
+      )}
 
-      {/* Submit */}
+      {/* ── Submit ── */}
       <button
         onClick={onSubmit}
         disabled={!projectName.trim()}
-        className="mt-1 w-full py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="mt-2 w-full py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        프로젝트 생성
-      </button>
-    </div>
-  );
-}
-
-// ── Scenario Entry Tab ──────────────────────────────────────────────────────
-
-function ScenarioEntryTab({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="flex flex-col gap-5 items-center py-6">
-      <div className="w-14 h-14 rounded-2xl bg-amber-500/[0.08] border border-amber-400/20 flex items-center justify-center">
-        <span className="text-title1">🔍</span>
-      </div>
-      <div className="text-center max-w-sm">
-        <h3 className="text-body font-semibold text-white/80 mb-2">사건 구성으로 시작</h3>
-        <p className="text-subhead text-white/35 leading-relaxed">
-          가해자, 피해자, 범행 동기, 수사 단서 등 사건 요소를 조합하여
-          방탈출 시나리오를 구성하고 스토리를 생성합니다.
-        </p>
-      </div>
-      <button
-        onClick={onStart}
-        className="mt-1 w-full max-w-xs py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90"
-      >
-        사건 구성 시작
+        스토리 제안 보기 →
       </button>
     </div>
   );
 }
 
 // ── Shared sub-components ───────────────────────────────────────────────────
+
+function SectionHeader({ title, subtitle, open, onToggle }: {
+  title: string; subtitle: string; open: boolean; onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="flex items-center justify-between w-full py-3 border-b border-white/[0.06] group"
+    >
+      <div className="text-left">
+        <span className="text-body font-semibold text-white/80">{title}</span>
+        <span className="text-footnote text-white/30 ml-2">{subtitle}</span>
+      </div>
+      <span className={`text-white/30 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
+        ▾
+      </span>
+    </button>
+  );
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -476,6 +604,38 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       </label>
       {children}
     </div>
+  );
+}
+
+function ToggleChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 py-2.5 rounded-xl text-body font-medium transition-all duration-200 border ${
+        active
+          ? 'bg-white text-black border-white'
+          : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function TogglePill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-full text-subhead font-medium transition-all duration-200 border ${
+        active
+          ? 'bg-white text-black border-white'
+          : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
