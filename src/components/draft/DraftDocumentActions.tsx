@@ -71,7 +71,7 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
 
         {/* View saved projects shortcut */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/projects')}
           className="px-3 py-1.5 rounded-full border border-white/[0.10] text-footnote text-white/35 hover:border-white/20 hover:text-white/55 transition-all"
         >
           내 프로젝트

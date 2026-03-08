@@ -40,13 +40,12 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { projectName } = useProject();
 
-  const isHome = location.pathname === '/';
-  const isNewProject = location.pathname === '/new';
   const isInsideProject = PROJECT_PATHS.some((p) => location.pathname.startsWith(p));
+  const isProjects = location.pathname === '/projects';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-white/10 backdrop-blur-xl bg-black/60">
-      {/* Left: Brand + back link */}
+      {/* Left: Brand */}
       <div className="flex items-center gap-3">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-white/90 flex items-center justify-center">
@@ -55,33 +54,31 @@ export default function Navbar() {
           <span className="text-body font-semibold tracking-wide text-white/90">XCAPE AI</span>
         </Link>
 
-        {/* Back to projects (shown when inside project creation or project workflow) */}
-        {(isNewProject || isInsideProject) && (
+        {/* Back to projects when inside workflow */}
+        {isInsideProject && (
           <>
             <span className="h-4 w-px bg-white/10" />
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/projects')}
               className="text-subhead text-white/40 hover:text-white/70 transition-colors"
             >
               ← 내 프로젝트
             </button>
-          </>
-        )}
-
-        {/* Project name (shown when inside a project workflow) */}
-        {isInsideProject && projectName && projectName !== 'Untitled Theme Project' && (
-          <>
-            <span className="h-4 w-px bg-white/10" />
-            <span className="text-footnote text-white/30 font-medium truncate max-w-[160px]">
-              {projectName}
-            </span>
+            {projectName && projectName !== 'Untitled Theme Project' && (
+              <>
+                <span className="h-4 w-px bg-white/10" />
+                <span className="text-footnote text-white/30 font-medium truncate max-w-[160px]">
+                  {projectName}
+                </span>
+              </>
+            )}
           </>
         )}
       </div>
 
-      {/* Right: Nav links + theme toggle */}
+      {/* Right: Nav items + theme toggle */}
       <div className="flex items-center gap-1">
-        {/* Project-internal navigation (only shown inside a project) */}
+        {/* Project-internal tabs */}
         {isInsideProject && (
           <>
             {projectNavItems.map((item) => {
@@ -100,19 +97,22 @@ export default function Navbar() {
                 </Link>
               );
             })}
-
-            {/* Divider */}
-            <span className="mx-2 h-4 w-px bg-white/15" />
+            <span className="mx-1.5 h-4 w-px bg-white/15" />
           </>
         )}
 
-        {/* Home page: no nav items, just show project count or nothing */}
-        {isHome && (
-          <>
-            <span className="text-subhead text-white/35 mr-2">내 프로젝트</span>
-            <span className="mx-1 h-4 w-px bg-white/15" />
-          </>
+        {/* 내 프로젝트 link — always visible (except when already on /projects) */}
+        {!isProjects && (
+          <Link
+            to="/projects"
+            className="px-4 py-1.5 rounded-full text-body font-medium text-white/50 hover:text-white/80 hover:bg-white/10 transition-all duration-200"
+          >
+            내 프로젝트
+          </Link>
         )}
+
+        {/* Divider */}
+        <span className="mx-1 h-4 w-px bg-white/15" />
 
         {/* Theme toggle */}
         <button

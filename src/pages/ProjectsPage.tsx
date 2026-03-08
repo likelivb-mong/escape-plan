@@ -185,7 +185,7 @@ export default function ProjectsPage() {
     } else if (project.completionLevel === 'story') {
       navigate('/story');
     } else {
-      navigate('/new');
+      navigate('/');
     }
   };
 
@@ -208,7 +208,7 @@ export default function ProjectsPage() {
             </p>
           </div>
           <button
-            onClick={() => navigate('/new')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-body font-semibold hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             <PlusIcon />
@@ -220,7 +220,7 @@ export default function ProjectsPage() {
       {/* Grid or Empty state */}
       <div className="max-w-5xl mx-auto">
         {projects.length === 0 ? (
-          <EmptyState onNewProject={() => navigate('/new')} />
+          <EmptyState onNewProject={() => navigate('/')} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map((project) => (
