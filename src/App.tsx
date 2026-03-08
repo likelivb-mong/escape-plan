@@ -17,7 +17,8 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<ProjectsPage />} />
+            <Route path="/new" element={<HomePage />} />
             <Route path="/mandalart" element={<MandalartPage />} />
             <Route path="/story" element={<StoryPage />} />
             <Route path="/scenario" element={<ScenarioPage />} />
@@ -25,7 +26,6 @@ export default function App() {
             <Route path="/puzzle-recommendations" element={<PuzzleRecommendationsPage />} />
             <Route path="/floor-plan" element={<FloorPlanPage />} />
             <Route path="/draft" element={<DraftPage />} />
-            <Route path="/projects" element={<ProjectsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

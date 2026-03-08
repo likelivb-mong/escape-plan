@@ -25,7 +25,7 @@ export default function StoryPageHeader({
           onClick={() => navigate('/')}
           className="text-white/30 hover:text-white/60 transition-colors text-subhead"
         >
-          ← 홈
+          ← 프로젝트
         </button>
         <span className="h-3.5 w-px bg-white/10" />
         <h1 className="text-body font-semibold text-white/85">{projectName}</h1>

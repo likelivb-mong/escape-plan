@@ -1,9 +1,11 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { useProject } from '../../context/ProjectContext';
 
-const navItems = [
-  { path: '/', label: '홈' },
-  { path: '/projects', label: '프로젝트' },
+// Pages that belong to a project workflow
+const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/puzzle-flow', '/puzzle-recommendations', '/floor-plan', '/draft'];
+
+const projectNavItems = [
   { path: '/story', label: '스토리' },
   { path: '/mandalart', label: '만다라트' },
 ];
@@ -34,39 +36,83 @@ function MoonIcon() {
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { projectName } = useProject();
+
+  const isHome = location.pathname === '/';
+  const isNewProject = location.pathname === '/new';
+  const isInsideProject = PROJECT_PATHS.some((p) => location.pathname.startsWith(p));
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-white/10 backdrop-blur-xl bg-black/60">
-      {/* Brand */}
-      <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-md bg-white/90 flex items-center justify-center">
-          <span className="text-black text-subhead font-bold">X</span>
-        </div>
-        <span className="text-body font-semibold tracking-wide text-white/90">XCAPE AI</span>
+      {/* Left: Brand + back link */}
+      <div className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-white/90 flex items-center justify-center">
+            <span className="text-black text-subhead font-bold">X</span>
+          </div>
+          <span className="text-body font-semibold tracking-wide text-white/90">XCAPE AI</span>
+        </Link>
+
+        {/* Back to projects (shown when inside project creation or project workflow) */}
+        {(isNewProject || isInsideProject) && (
+          <>
+            <span className="h-4 w-px bg-white/10" />
+            <button
+              onClick={() => navigate('/')}
+              className="text-subhead text-white/40 hover:text-white/70 transition-colors"
+            >
+              ← 내 프로젝트
+            </button>
+          </>
+        )}
+
+        {/* Project name (shown when inside a project workflow) */}
+        {isInsideProject && projectName && projectName !== 'Untitled Theme Project' && (
+          <>
+            <span className="h-4 w-px bg-white/10" />
+            <span className="text-footnote text-white/30 font-medium truncate max-w-[160px]">
+              {projectName}
+            </span>
+          </>
+        )}
       </div>
 
-      {/* Nav links + theme toggle */}
+      {/* Right: Nav links + theme toggle */}
       <div className="flex items-center gap-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`px-4 py-1.5 rounded-full text-body font-medium transition-all duration-200 ${
-                isActive
-                  ? 'bg-white text-black'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/10'
-              }`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        {/* Project-internal navigation (only shown inside a project) */}
+        {isInsideProject && (
+          <>
+            {projectNavItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`px-4 py-1.5 rounded-full text-body font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-white text-black'
+                      : 'text-white/50 hover:text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
-        {/* Divider */}
-        <span className="mx-2 h-4 w-px bg-white/15" />
+            {/* Divider */}
+            <span className="mx-2 h-4 w-px bg-white/15" />
+          </>
+        )}
+
+        {/* Home page: no nav items, just show project count or nothing */}
+        {isHome && (
+          <>
+            <span className="text-subhead text-white/35 mr-2">내 프로젝트</span>
+            <span className="mx-1 h-4 w-px bg-white/15" />
+          </>
+        )}
 
         {/* Theme toggle */}
         <button
