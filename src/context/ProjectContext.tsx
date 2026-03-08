@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { MandalartCellData } from '../types/mandalart';
 import type { StoryProposal } from '../types/story';
 import type { ProjectBrief } from '../types';
@@ -7,14 +7,23 @@ import type { PuzzleRecommendationGroup } from '../types/puzzleRecommendation';
 import type { GameFlowPlan } from '../types/gameFlow';
 import type { FloorPlanData } from '../types/floorPlan';
 import { createInitialCells } from '../data/mockMandalart';
+import {
+  upsertProject,
+  deleteProjectById,
+  loadProjectById,
+  deriveCompletionLevel,
+  type SavedProject,
+} from '../utils/projectStorage';
 
 // ── Context value type ────────────────────────────────────────────────────────
-// All project state lives here so it's serialisable to Supabase in one payload.
 
 interface ProjectContextValue {
   // Project meta
   projectName: string;
   setProjectName: (name: string) => void;
+
+  // Current saved project id (null = unsaved / new)
+  currentProjectId: string | null;
 
   // Mandalart
   cells: MandalartCellData[];
@@ -47,6 +56,11 @@ interface ProjectContextValue {
   // Project brief (set from YouTube or manual flow)
   projectBrief: ProjectBrief | null;
   setProjectBrief: (brief: ProjectBrief | null) => void;
+
+  // Persistence helpers
+  saveCurrentProject: () => string; // returns saved project id
+  loadProject: (id: string) => boolean;
+  deleteProject: (id: string) => void;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -57,6 +71,7 @@ const ProjectContext = createContext<ProjectContextValue | null>(null);
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const [projectName, setProjectName]         = useState('Untitled Theme Project');
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [cells, setCells]                     = useState<MandalartCellData[]>(createInitialCells);
   const [aiStoryProposals, setAiStoryProposals] = useState<StoryProposal[] | null>(null);
   const [selectedStory, setSelectedStory]     = useState<StoryProposal | null>(null);
@@ -67,10 +82,65 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
   const [projectBrief, setProjectBrief] = useState<ProjectBrief | null>(null);
 
+  const saveCurrentProject = useCallback((): string => {
+    const id = currentProjectId ?? crypto.randomUUID();
+    const now = new Date().toISOString();
+    const existing = currentProjectId ? loadProjectById(currentProjectId) : null;
+
+    const project: SavedProject = {
+      id,
+      name: projectName,
+      savedAt: existing?.savedAt ?? now,
+      updatedAt: now,
+      storyTitle: selectedStory?.title,
+      genres: projectBrief?.genres,
+      playTimes: projectBrief?.playTimes,
+      synopsis: projectBrief?.synopsis ?? selectedStory?.logline,
+      completionLevel: deriveCompletionLevel(selectedStory, puzzleFlowPlan, gameFlowDesign),
+      projectBrief,
+      cells,
+      selectedStory,
+      puzzleFlowPlan,
+      puzzleRecommendationGroups,
+      gameFlowDesign,
+      floorPlanData,
+    };
+
+    upsertProject(project);
+    setCurrentProjectId(id);
+    return id;
+  }, [
+    currentProjectId, projectName, selectedStory, puzzleFlowPlan,
+    gameFlowDesign, projectBrief, cells, puzzleRecommendationGroups, floorPlanData,
+  ]);
+
+  const loadProject = useCallback((id: string): boolean => {
+    const saved = loadProjectById(id);
+    if (!saved) return false;
+
+    setProjectName(saved.name);
+    setCurrentProjectId(saved.id);
+    setCells(saved.cells);
+    setAiStoryProposals(null);
+    setSelectedStory(saved.selectedStory);
+    setPuzzleFlowPlan(saved.puzzleFlowPlan);
+    setPuzzleRecommendationGroups(saved.puzzleRecommendationGroups);
+    setGameFlowDesign(saved.gameFlowDesign);
+    setFloorPlanData(saved.floorPlanData);
+    setProjectBrief(saved.projectBrief);
+    return true;
+  }, []);
+
+  const deleteProject = useCallback((id: string): void => {
+    deleteProjectById(id);
+    if (currentProjectId === id) setCurrentProjectId(null);
+  }, [currentProjectId]);
+
   return (
     <ProjectContext.Provider
       value={{
         projectName, setProjectName,
+        currentProjectId,
         cells, setCells,
         aiStoryProposals, setAiStoryProposals,
         selectedStory, setSelectedStory,
@@ -79,6 +149,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         gameFlowDesign, setGameFlowDesign,
         floorPlanData, setFloorPlanData,
         projectBrief, setProjectBrief,
+        saveCurrentProject,
+        loadProject,
+        deleteProject,
       }}
     >
       {children}

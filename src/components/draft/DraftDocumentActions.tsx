@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { DraftDocument } from '../../types/draft';
-import { mockExportPDF, mockExportNotion, mockSaveDraft } from '../../utils/draft';
+import { mockExportPDF, mockExportNotion } from '../../utils/draft';
+import { useProject } from '../../context/ProjectContext';
 
 interface DraftDocumentActionsProps {
   doc: DraftDocument | null;
@@ -8,6 +10,25 @@ interface DraftDocumentActionsProps {
 
 export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps) {
   const navigate = useNavigate();
+  const { saveCurrentProject, currentProjectId } = useProject();
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleSave = () => {
+    if (!doc) return;
+    setSaveState('saving');
+    try {
+      saveCurrentProject();
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 2500);
+    } catch {
+      setSaveState('idle');
+    }
+  };
+
+  const saveLabel =
+    saveState === 'saving' ? '저장 중…' :
+    saveState === 'saved'  ? '✓ 저장됨' :
+    currentProjectId       ? 'Save Draft' : 'Save Draft';
 
   return (
     <div className="flex-shrink-0 px-8 py-4 border-t border-white/[0.06] flex items-center justify-between gap-4">
@@ -48,12 +69,24 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
           Export Notion
         </button>
 
+        {/* View saved projects shortcut */}
         <button
-          onClick={() => doc && mockSaveDraft(doc)}
-          disabled={!doc}
-          className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
+          onClick={() => navigate('/projects')}
+          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-footnote text-white/35 hover:border-white/20 hover:text-white/55 transition-all"
         >
-          Save Draft
+          내 프로젝트
+        </button>
+
+        <button
+          onClick={handleSave}
+          disabled={!doc || saveState === 'saving'}
+          className={`px-4 py-1.5 rounded-full text-subhead font-semibold transition-all disabled:opacity-25 disabled:cursor-not-allowed ${
+            saveState === 'saved'
+              ? 'bg-emerald-400/90 text-black shadow-[0_0_12px_rgba(52,211,153,0.25)]'
+              : 'bg-white text-black hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98]'
+          }`}
+        >
+          {saveLabel}
         </button>
       </div>
     </div>

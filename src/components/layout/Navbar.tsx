@@ -3,6 +3,7 @@ import { useTheme } from '../../context/ThemeContext';
 
 const navItems = [
   { path: '/', label: '홈' },
+  { path: '/projects', label: '프로젝트' },
   { path: '/story', label: '스토리' },
   { path: '/mandalart', label: '만다라트' },
 ];

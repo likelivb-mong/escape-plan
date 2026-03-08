@@ -9,6 +9,7 @@ import PuzzleRecommendationsPage from './pages/PuzzleRecommendationsPage';
 import DraftPage from './pages/DraftPage';
 import FloorPlanPage from './pages/FloorPlanPage';
 import ScenarioPage from './pages/ScenarioPage';
+import ProjectsPage from './pages/ProjectsPage';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/puzzle-recommendations" element={<PuzzleRecommendationsPage />} />
             <Route path="/floor-plan" element={<FloorPlanPage />} />
             <Route path="/draft" element={<DraftPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
