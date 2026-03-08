@@ -240,9 +240,9 @@ export default function ProjectsPage() {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-function EmptyState({ onNewProject }: { onNewProject: () => void }) {
+function EmptyState({ onNewProject: _ }: { onNewProject: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 gap-6 text-center">
+    <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
       <div className="w-16 h-16 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-2xl">
         🗂
       </div>
@@ -252,12 +252,6 @@ function EmptyState({ onNewProject }: { onNewProject: () => void }) {
           Draft 페이지에서 "Save Draft"를 누르면 여기에 저장됩니다
         </p>
       </div>
-      <button
-        onClick={onNewProject}
-        className="px-6 py-2.5 rounded-full bg-white text-black text-body font-semibold hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
-      >
-        새 프로젝트 시작하기
-      </button>
     </div>
   );
 }
