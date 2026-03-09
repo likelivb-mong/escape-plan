@@ -185,7 +185,7 @@ export default function ProjectsPage() {
     } else if (project.completionLevel === 'story') {
       navigate('/story');
     } else {
-      navigate('/');
+      navigate('/mandalart');
     }
   };
 
