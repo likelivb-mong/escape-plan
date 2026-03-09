@@ -6,6 +6,10 @@ interface StoryPageHeaderProps {
   isAddingBatch: boolean;
   onAddNewBatch: () => void;
   onContinue: () => void;
+  historyIndex: number;
+  historyLength: number;
+  onHistoryBack: () => void;
+  onHistoryForward: () => void;
 }
 
 export default function StoryPageHeader({
@@ -14,6 +18,10 @@ export default function StoryPageHeader({
   isAddingBatch,
   onAddNewBatch,
   onContinue,
+  historyIndex,
+  historyLength,
+  onHistoryBack,
+  onHistoryForward,
 }: StoryPageHeaderProps) {
   const navigate = useNavigate();
 
@@ -52,12 +60,35 @@ export default function StoryPageHeader({
           )}
         </button>
 
+        {/* ── History navigation ── */}
+        {historyLength > 0 && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onHistoryBack}
+              disabled={historyIndex <= 0}
+              className="w-7 h-7 flex items-center justify-center rounded-full border border-white/[0.12] text-footnote text-white/45 hover:border-white/25 hover:text-white/65 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              ←
+            </button>
+            <span className="text-footnote text-white/35 tabular-nums min-w-[2.5rem] text-center">
+              {historyIndex + 1}/{historyLength}
+            </span>
+            <button
+              onClick={onHistoryForward}
+              disabled={historyIndex >= historyLength - 1}
+              className="w-7 h-7 flex items-center justify-center rounded-full border border-white/[0.12] text-footnote text-white/45 hover:border-white/25 hover:text-white/65 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              →
+            </button>
+          </div>
+        )}
+
         <button
           onClick={onContinue}
           disabled={!selectedId}
           className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          만다라트 편집 →
+          Story Flow 확정
         </button>
       </div>
     </div>
