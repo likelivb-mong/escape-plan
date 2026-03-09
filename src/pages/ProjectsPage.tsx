@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import { listSavedProjects, type SavedProject, type CompletionLevel } from '../utils/projectStorage';
+import {
+  listSavedProjects,
+  listTrashedProjects,
+  restoreFromTrash,
+  permanentlyDelete,
+  emptyTrash,
+  type SavedProject,
+  type TrashedProject,
+  type CompletionLevel,
+} from '../utils/projectStorage';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -166,21 +175,42 @@ function PlusIcon() {
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
-  const { deleteProject } = useProject();
+  const { moveToTrash } = useProject();
   const [projects, setProjects] = useState<SavedProject[]>([]);
+  const [trashed, setTrashed] = useState<TrashedProject[]>([]);
+  const [showTrash, setShowTrash] = useState(false);
+  const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
 
-  // Refresh list whenever page is shown
-  useEffect(() => {
+  const refresh = () => {
     setProjects(listSavedProjects());
-  }, []);
+    setTrashed(listTrashedProjects());
+  };
+
+  useEffect(() => { refresh(); }, []);
 
   const handleOpen = (project: SavedProject) => {
     navigate(`/projects/${project.id}`);
   };
 
-  const handleDelete = (id: string) => {
-    deleteProject(id);
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+  const handleMoveToTrash = (id: string) => {
+    moveToTrash(id);
+    refresh();
+  };
+
+  const handleRestore = (id: string) => {
+    restoreFromTrash(id);
+    refresh();
+  };
+
+  const handlePermanentDelete = (id: string) => {
+    permanentlyDelete(id);
+    refresh();
+  };
+
+  const handleEmptyTrash = () => {
+    emptyTrash();
+    setConfirmEmptyTrash(false);
+    refresh();
   };
 
   return (
@@ -206,7 +236,7 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {/* Grid or Empty state */}
+      {/* Active Projects Grid or Empty state */}
       <div className="max-w-5xl mx-auto">
         {projects.length === 0 ? (
           <EmptyState onNewProject={() => navigate('/')} />
@@ -217,10 +247,133 @@ export default function ProjectsPage() {
                 key={project.id}
                 project={project}
                 onOpen={handleOpen}
-                onDelete={handleDelete}
+                onDelete={handleMoveToTrash}
               />
             ))}
           </div>
+        )}
+
+        {/* Trash Section */}
+        <div className="mt-14">
+          <button
+            onClick={() => setShowTrash((v) => !v)}
+            className="flex items-center gap-2 text-body text-white/30 hover:text-white/50 transition-colors mb-4"
+          >
+            <TrashIcon />
+            <span>휴지통</span>
+            {trashed.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-white/[0.06] text-caption text-white/40">
+                {trashed.length}
+              </span>
+            )}
+            <span className="text-footnote">{showTrash ? '▴' : '▾'}</span>
+          </button>
+
+          {showTrash && (
+            <div>
+              {trashed.length === 0 ? (
+                <p className="text-footnote text-white/25 py-4 text-center">휴지통이 비어 있습니다</p>
+              ) : (
+                <>
+                  <div className="flex justify-end mb-3">
+                    {confirmEmptyTrash ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-footnote text-white/40">정말 모두 삭제할까요?</span>
+                        <button
+                          onClick={() => setConfirmEmptyTrash(false)}
+                          className="px-3 py-1 rounded-full text-caption text-white/40 hover:text-white/60 transition-colors"
+                        >
+                          취소
+                        </button>
+                        <button
+                          onClick={handleEmptyTrash}
+                          className="px-3 py-1 rounded-full bg-red-500/15 text-caption text-red-400/90 hover:bg-red-500/25 transition-all"
+                        >
+                          전체 영구 삭제
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmEmptyTrash(true)}
+                        className="text-caption text-white/25 hover:text-red-400/60 transition-colors"
+                      >
+                        휴지통 비우기
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {trashed.map((project) => (
+                      <TrashCard
+                        key={project.id}
+                        project={project}
+                        onRestore={handleRestore}
+                        onPermanentDelete={handlePermanentDelete}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Trash Card ────────────────────────────────────────────────────────────────
+
+interface TrashCardProps {
+  project: TrashedProject;
+  onRestore: (id: string) => void;
+  onPermanentDelete: (id: string) => void;
+}
+
+function TrashCard({ project, onRestore, onPermanentDelete }: TrashCardProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  return (
+    <div className="flex flex-col rounded-2xl border border-white/[0.05] bg-white/[0.02] overflow-hidden opacity-60">
+      <div className="flex flex-col flex-1 p-4 gap-2">
+        <h3 className="text-body font-semibold text-white/50 truncate">{project.name}</h3>
+        {project.synopsis && (
+          <p className="text-footnote text-white/25 line-clamp-2 leading-relaxed">{project.synopsis}</p>
+        )}
+        <p className="text-caption text-white/20">
+          {formatDate(project.deletedAt)} 삭제됨
+        </p>
+      </div>
+      <div className="px-4 pb-3 flex items-center justify-end gap-2 border-t border-white/[0.04] pt-3">
+        {confirmDelete ? (
+          <>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="px-3 py-1 rounded-full text-caption text-white/40 hover:text-white/60 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              onClick={() => onPermanentDelete(project.id)}
+              className="px-3 py-1 rounded-full bg-red-500/15 text-caption text-red-400/90 hover:bg-red-500/25 transition-all"
+            >
+              영구 삭제
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => onRestore(project.id)}
+              className="px-3 py-1.5 rounded-full border border-white/10 text-caption text-white/45 hover:border-white/25 hover:text-white/65 transition-all"
+            >
+              복원
+            </button>
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="px-3 py-1.5 rounded-full bg-red-500/10 text-caption text-red-400/70 hover:bg-red-500/20 transition-all"
+            >
+              영구 삭제
+            </button>
+          </>
         )}
       </div>
     </div>
