@@ -11,6 +11,7 @@ import {
   upsertProject,
   deleteProjectById,
   loadProjectById,
+  moveToTrash as moveToTrashById,
   deriveCompletionLevel,
   type SavedProject,
 } from '../utils/projectStorage';
@@ -61,6 +62,7 @@ interface ProjectContextValue {
   saveCurrentProject: () => string; // returns saved project id
   loadProject: (id: string) => boolean;
   deleteProject: (id: string) => void;
+  moveToTrash: (id: string) => void;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -136,6 +138,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     if (currentProjectId === id) setCurrentProjectId(null);
   }, [currentProjectId]);
 
+  const moveToTrash = useCallback((id: string): void => {
+    moveToTrashById(id);
+    if (currentProjectId === id) setCurrentProjectId(null);
+  }, [currentProjectId]);
+
   return (
     <ProjectContext.Provider
       value={{
@@ -152,6 +159,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         saveCurrentProject,
         loadProject,
         deleteProject,
+        moveToTrash,
       }}
     >
       {children}
