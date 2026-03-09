@@ -127,7 +127,7 @@ export default function StoryPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {/* Page header with breadcrumb + action buttons */}
       <StoryPageHeader
         projectName={projectName}
@@ -144,7 +144,7 @@ export default function StoryPage() {
       <SelectedKeywordSummary categories={categories} themeTitle={themeTitle} />
 
       {/* Main: 3-column grid of story cards */}
-      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto min-h-0 flex flex-col">
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-5 flex flex-col">
         <StoryProposalGrid
           proposals={proposals}
           selectedId={selectedId}
