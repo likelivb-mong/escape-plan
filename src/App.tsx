@@ -10,6 +10,7 @@ import DraftPage from './pages/DraftPage';
 import FloorPlanPage from './pages/FloorPlanPage';
 import ScenarioPage from './pages/ScenarioPage';
 import ProjectsPage from './pages/ProjectsPage';
+import ProjectDashboardPage from './pages/ProjectDashboardPage';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:id" element={<ProjectDashboardPage />} />
             <Route path="/mandalart" element={<MandalartPage />} />
             <Route path="/story" element={<StoryPage />} />
             <Route path="/scenario" element={<ScenarioPage />} />

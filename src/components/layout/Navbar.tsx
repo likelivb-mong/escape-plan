@@ -40,7 +40,8 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { projectName } = useProject();
 
-  const isInsideProject = PROJECT_PATHS.some((p) => location.pathname.startsWith(p));
+  const isProjectDashboard = location.pathname.startsWith('/projects/') && location.pathname !== '/projects';
+  const isInsideProject = isProjectDashboard || PROJECT_PATHS.some((p) => location.pathname.startsWith(p));
   const isProjects = location.pathname === '/projects';
 
   return (
