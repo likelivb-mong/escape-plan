@@ -176,7 +176,11 @@ export default function ProjectsPage() {
 
   const handleOpen = (project: SavedProject) => {
     const ok = loadProject(project.id);
-    if (!ok) return;
+    if (!ok) {
+      console.error('Failed to load project:', project.id);
+      alert('프로젝트를 불러올 수 없습니다.');
+      return;
+    }
     // Navigate to the best page based on completion level
     if (project.completionLevel === 'draft') {
       navigate('/draft');
