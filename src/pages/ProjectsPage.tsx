@@ -166,7 +166,7 @@ function PlusIcon() {
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
-  const { loadProject, deleteProject } = useProject();
+  const { deleteProject } = useProject();
   const [projects, setProjects] = useState<SavedProject[]>([]);
 
   // Refresh list whenever page is shown
@@ -175,18 +175,7 @@ export default function ProjectsPage() {
   }, []);
 
   const handleOpen = (project: SavedProject) => {
-    const ok = loadProject(project.id);
-    if (!ok) return;
-    // Navigate to the best page based on completion level
-    if (project.completionLevel === 'draft') {
-      navigate('/draft');
-    } else if (project.completionLevel === 'flow') {
-      navigate('/puzzle-flow');
-    } else if (project.completionLevel === 'story') {
-      navigate('/story');
-    } else {
-      navigate('/');
-    }
+    navigate(`/projects/${project.id}`);
   };
 
   const handleDelete = (id: string) => {
