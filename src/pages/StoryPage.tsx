@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import {
   extractKeywordsByCategory,
@@ -8,13 +9,6 @@ import {
 } from '../utils/story';
 import type { StoryProposal } from '../types/story';
 import { populateMandalartFromStory } from '../utils/mandalartFromStory';
-import {
-  loadHistory,
-  saveHistory,
-  cleanExpiredSnapshots,
-  createSnapshot,
-  type StoryFlowSnapshot,
-} from '../utils/storyFlowHistory';
 import StoryPageHeader from '../components/story/StoryPageHeader';
 import SelectedKeywordSummary from '../components/story/SelectedKeywordSummary';
 import ProjectBriefSection from '../components/story/ProjectBriefSection';
@@ -22,14 +16,8 @@ import StoryProposalGrid from '../components/story/StoryProposalGrid';
 import StoryDetailModal from '../components/story/StoryDetailModal';
 
 export default function StoryPage() {
-  const {
-    projectName, setProjectName,
-    currentProjectId,
-    cells, setCells,
-    setSelectedStory,
-    aiStoryProposals,
-    projectBrief,
-  } = useProject();
+  const navigate = useNavigate();
+  const { projectName, setProjectName, cells, setCells, setSelectedStory, aiStoryProposals, projectBrief } = useProject();
 
   // ── Derived context ────────────────────────────────────────────────────────
   const themeTitle = useMemo(
@@ -66,23 +54,6 @@ export default function StoryPage() {
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [isAddingBatch, setIsAddingBatch] = useState(false);
-
-  // ── History state ────────────────────────────────────────────────────────
-  const [history, setHistory] = useState<StoryFlowSnapshot[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-
-  // Load & clean history on mount
-  useEffect(() => {
-    const loaded = loadHistory(currentProjectId, projectName);
-    const cleaned = cleanExpiredSnapshots(loaded);
-    if (cleaned.length !== loaded.length) {
-      saveHistory(currentProjectId, projectName, cleaned);
-    }
-    setHistory(cleaned);
-    if (cleaned.length > 0) {
-      setHistoryIndex(cleaned.length - 1);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -143,50 +114,15 @@ export default function StoryPage() {
     }
   };
 
-  // ── Story Flow 확정 ─────────────────────────────────────────────────────
+  // ── Continue to Mandalart ─────────────────────────────────────────────────
   const handleContinue = () => {
-    if (!selectedId) return;
     const proposal = proposals.find((p) => p.id === selectedId);
-    if (!proposal) return;
-
-    // Update context so other pages can use the confirmed story
-    setSelectedStory(proposal);
-    setProjectName(proposal.title);
-    setCells(populateMandalartFromStory(proposal));
-
-    // Build snapshot
-    const snapshot = createSnapshot(selectedId, proposals, variantIndices);
-
-    // If viewing a past snapshot, truncate forward history
-    const base =
-      historyIndex >= 0 && historyIndex < history.length
-        ? history.slice(0, historyIndex + 1)
-        : [...history];
-
-    const updated = [...base, snapshot];
-    setHistory(updated);
-    setHistoryIndex(updated.length - 1);
-    saveHistory(currentProjectId, projectName, updated);
-  };
-
-  // ── History navigation ──────────────────────────────────────────────────
-  const handleHistoryBack = () => {
-    const newIdx = Math.max(0, historyIndex - 1);
-    if (newIdx === historyIndex) return;
-    applySnapshot(history[newIdx], newIdx);
-  };
-
-  const handleHistoryForward = () => {
-    const newIdx = Math.min(history.length - 1, historyIndex + 1);
-    if (newIdx === historyIndex) return;
-    applySnapshot(history[newIdx], newIdx);
-  };
-
-  const applySnapshot = (snapshot: StoryFlowSnapshot, idx: number) => {
-    setHistoryIndex(idx);
-    setProposals(snapshot.proposals);
-    setSelectedId(snapshot.selectedId);
-    setVariantIndices(snapshot.variantIndices);
+    if (proposal) {
+      setSelectedStory(proposal);
+      setProjectName(proposal.title);
+      setCells(populateMandalartFromStory(proposal));
+      navigate('/mandalart');
+    }
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -199,10 +135,6 @@ export default function StoryPage() {
         isAddingBatch={isAddingBatch}
         onAddNewBatch={handleAddNewBatch}
         onContinue={handleContinue}
-        historyIndex={historyIndex}
-        historyLength={history.length}
-        onHistoryBack={handleHistoryBack}
-        onHistoryForward={handleHistoryForward}
       />
 
       {/* Project brief (YouTube or manual) */}
