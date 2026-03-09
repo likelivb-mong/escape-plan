@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PlayTime, Genre, PuzzleType, ClueFormat } from '../types';
 import type { ScenarioFormState, ScenarioBuildResult } from '../types/scenario';
@@ -62,9 +62,12 @@ export default function HomePage() {
     setCells,
     setAiStoryProposals,
     setProjectBrief,
+    saveCurrentProject,
+    projectBrief,
   } = useProject();
 
   const [activeTab, setActiveTab] = useState<TabKey>('build');
+  const [shouldNavigateAfterSave, setShouldNavigateAfterSave] = useState(false);
 
   // ── YouTube state ────────────────────────────────────────────────────────
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -105,6 +108,15 @@ export default function HomePage() {
   });
   const [scenarioForm, setScenarioForm] = useState<ScenarioFormState>(INITIAL_FORM_STATE);
 
+  // 자동 저장 후 네비게이션 처리
+  useEffect(() => {
+    if (shouldNavigateAfterSave && projectBrief) {
+      saveCurrentProject();
+      setShouldNavigateAfterSave(false);
+      navigate('/story');
+    }
+  }, [shouldNavigateAfterSave, projectBrief, saveCurrentProject, navigate]);
+
   // Live scenario result
   const scenarioResult: ScenarioBuildResult | null = useMemo(() => {
     const f = scenarioForm;
@@ -140,7 +152,8 @@ export default function HomePage() {
         playTimes: [],
         investigation: { motives: [], methods: [], clues: [], techniques: [] },
       });
-      navigate('/story');
+      setYoutubeStep('프로젝트 저장 중...');
+      setShouldNavigateAfterSave(true);
     } catch (err) {
       setYoutubeError(err instanceof Error ? err.message : 'AI 분석 중 오류가 발생했습니다.');
     } finally {
@@ -226,7 +239,8 @@ export default function HomePage() {
       });
     }
 
-    navigate('/story');
+    // 상태 업데이트 후 저장 및 네비게이션
+    setShouldNavigateAfterSave(true);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
