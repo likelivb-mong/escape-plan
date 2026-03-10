@@ -1,4 +1,4 @@
-import { PuzzleDesignResponse } from '../types/puzzleRecommendation';
+import type { PuzzleDesignResponse } from '../types/puzzleRecommendation';
 
 export interface ValidationResult {
   isValid: boolean;
