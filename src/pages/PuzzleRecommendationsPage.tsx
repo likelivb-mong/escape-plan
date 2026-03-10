@@ -179,7 +179,7 @@ export default function PuzzleRecommendationsPage() {
 
   // ── Main render ────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
 
       {/* ✅ NEW: Tab navigation ── */}
       <div className="border-b border-white/[0.06] bg-slate-900/50">
