@@ -65,7 +65,7 @@ export default function FloorPlanPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden print:h-auto print:overflow-visible">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] print:h-auto print:overflow-visible">
 
       {/* ── Page header ── */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0 print:hidden">

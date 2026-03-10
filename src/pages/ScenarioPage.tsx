@@ -75,7 +75,7 @@ export default function ScenarioPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {/* Header */}
       <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-b border-white/10 flex items-center justify-between">
         <div>

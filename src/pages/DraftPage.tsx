@@ -71,7 +71,7 @@ export default function DraftPage() {
 
   // ── Main render ────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
 
       {/* ── Header ── */}
       <DraftHeader projectName={projectName} doc={doc} />

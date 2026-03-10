@@ -224,7 +224,7 @@ export default function MandalartPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
 
       {/* ── Page Header ── */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
