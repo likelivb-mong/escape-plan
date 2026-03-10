@@ -254,7 +254,7 @@ export default function PuzzleFlowPage() {
                 <LoadingPlaceholder text="스토리 플로우 생성 중…" />
               )}
             </div>
-            <div className="w-full lg:w-72 flex-shrink-0">
+            <div className="w-full lg:w-72 flex-shrink-0 lg:h-full">
               {storyPlan && <PuzzleFlowSidebar plan={storyPlan} cells={cells} />}
             </div>
           </div>

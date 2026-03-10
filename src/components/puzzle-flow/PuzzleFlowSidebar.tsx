@@ -61,7 +61,7 @@ export default function PuzzleFlowSidebar({ plan, cells }: PuzzleFlowSidebarProp
   const allDetected = [...conceptKeywords, ...effectsKeywords, ...clueKeywords];
 
   return (
-    <div className="flex flex-col rounded-xl border border-white/[0.07] bg-white/[0.015] overflow-hidden">
+    <div className="flex flex-col lg:h-full rounded-xl border border-white/[0.07] bg-white/[0.015] overflow-hidden">
 
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-white/[0.06]">
