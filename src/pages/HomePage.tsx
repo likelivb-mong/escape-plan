@@ -253,30 +253,35 @@ export default function HomePage() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-start px-4 sm:px-6 py-10 sm:py-14">
+    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-start px-4 sm:px-6 py-8 sm:py-12">
       {/* Header */}
       <div className="text-center mb-8">
-        <p className="text-subhead font-semibold tracking-[0.2em] uppercase text-white/30 mb-3">
-          XCAPE Internal Tool
-        </p>
-        <h1 className="text-display font-semibold tracking-tight text-white mb-3">
-          방탈출 테마 기획 AI
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/15 mb-4">
+          <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+          <span className="text-caption font-semibold tracking-wider uppercase text-indigo-300/70">
+            Theme Design Studio
+          </span>
+        </div>
+        <h1 className="text-display font-bold tracking-tight text-white mb-2">
+          새 테마 설계
         </h1>
-        <p className="text-white/40 text-body leading-relaxed">
-          YouTube 영상 분석 또는 직접 사건을 구성하여 새 테마를 시작하세요
+        <p className="text-white/35 text-subhead leading-relaxed max-w-md mx-auto">
+          사건을 정의하고, 플레이어 경험을 설계하세요.
+          <br className="hidden sm:block" />
+          YouTube 분석 또는 직접 구성으로 시작할 수 있습니다.
         </p>
       </div>
 
       {/* Main card — wider for build tab */}
       <div
-        className={`w-full rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden transition-all duration-300 ${
+        className={`w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] overflow-hidden transition-all duration-300 ${
           activeTab === 'build' ? 'max-w-2xl lg:max-w-4xl' : 'max-w-lg sm:max-w-xl lg:max-w-2xl'
         }`}
       >
         {/* Tab bar */}
-        <div className="flex border-b border-white/10">
+        <div className="flex border-b border-white/[0.07]">
           <TabButton active={activeTab === 'youtube'} onClick={() => setActiveTab('youtube')}>
-            YouTube로 시작
+            YouTube 분석
           </TabButton>
           <TabButton active={activeTab === 'build'} onClick={() => setActiveTab('build')}>
             사건 구성하기
@@ -329,10 +334,10 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`flex-1 py-3.5 text-body font-medium transition-all duration-200 ${
+      className={`flex-1 py-3 text-subhead font-medium transition-all duration-200 ${
         active
-          ? 'text-white border-b-2 border-white bg-white/[0.03]'
-          : 'text-white/35 hover:text-white/55 hover:bg-white/[0.02]'
+          ? 'text-white border-b-2 border-indigo-400 bg-white/[0.02]'
+          : 'text-white/30 hover:text-white/50 hover:bg-white/[0.02]'
       }`}
     >
       {children}
@@ -398,7 +403,7 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
       <button
         onClick={onGenerate}
         disabled={!youtubeUrl.trim() || youtubeLoading}
-        className="mt-2 w-full py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="mt-2 w-full py-3 rounded-xl text-body font-semibold transition-all duration-200 bg-indigo-500 text-white hover:bg-indigo-400 disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {youtubeLoading ? (
           <>
@@ -406,7 +411,7 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
             {youtubeStep || 'AI 분석 중...'}
           </>
         ) : (
-          'AI 테마 생성'
+          'AI 테마 생성 →'
         )}
       </button>
 
@@ -588,9 +593,9 @@ function BuildTab({
       <button
         onClick={onSubmit}
         disabled={!projectName.trim()}
-        className="mt-2 w-full py-3 rounded-xl text-body font-medium transition-all duration-200 bg-white text-black hover:bg-white/90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
+        className="mt-3 w-full py-3 rounded-xl text-body font-semibold transition-all duration-200 bg-indigo-500 text-white hover:bg-indigo-400 active:scale-[0.99] disabled:opacity-25 disabled:cursor-not-allowed"
       >
-        스토리 제안 보기 →
+        테마 설계 시작 →
       </button>
     </div>
   );

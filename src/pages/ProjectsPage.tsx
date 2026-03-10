@@ -139,7 +139,7 @@ function ProjectCard({ project, onOpen, onDelete }: ProjectCardProps) {
               </button>
               <button
                 onClick={() => onOpen(project)}
-                className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="px-4 py-1.5 rounded-lg bg-indigo-500/90 text-white text-subhead font-semibold hover:bg-indigo-400 active:scale-[0.98] transition-all"
               >
                 열기
               </button>
@@ -214,24 +214,24 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-10 py-10 sm:py-14">
+    <div className="min-h-[calc(100vh-3rem)] px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
       {/* Header */}
-      <div className="max-w-5xl mx-auto mb-10">
+      <div className="max-w-5xl mx-auto mb-8">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-title1 font-bold text-white/90">내 프로젝트</h1>
-            <p className="text-body text-white/35 mt-1">
+            <p className="text-subhead text-white/30 mt-1">
               {projects.length > 0
-                ? `${projects.length}개의 저장된 프로젝트`
+                ? `${projects.length}개의 테마 프로젝트`
                 : '저장된 프로젝트가 없습니다'}
             </p>
           </div>
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-body font-semibold hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 text-white text-subhead font-semibold hover:bg-indigo-400 active:scale-[0.98] transition-all"
           >
             <PlusIcon />
-            새 프로젝트
+            새 테마
           </button>
         </div>
       </div>

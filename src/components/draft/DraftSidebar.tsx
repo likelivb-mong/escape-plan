@@ -26,8 +26,8 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
 
   const saveLabel =
     saveState === 'saving' ? '저장 중…' :
-    saveState === 'saved'  ? '✓ 저장됨' :
-    'Save Draft';
+    saveState === 'saved'  ? '저장 완료' :
+    '기획안 저장';
 
   return (
     <div className="flex flex-col h-full border-l border-white/[0.06]">
@@ -36,7 +36,7 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
 
         {/* ── 1. Completeness ── */}
         <SidebarSection>
-          <SectionLabel>Draft Completeness</SectionLabel>
+          <SectionLabel>기획안 완성도</SectionLabel>
           <div className="mt-3 flex items-center gap-3">
             <ScoreRing value={status.completenessScore} />
             <div>
@@ -60,7 +60,7 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
 
         {/* ── 2. Quick stats ── */}
         <SidebarSection>
-          <SectionLabel>Quick Stats</SectionLabel>
+          <SectionLabel>요약 통계</SectionLabel>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <StatPill label="플레이타임" value={`${doc.totalPlayTime}분`} />
             <StatPill label="채택 퍼즐" value={`${doc.totalAdoptedCount}개`} accent={doc.totalAdoptedCount > 0 ? 'emerald' : undefined} />
@@ -74,7 +74,7 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
         {/* ── 3. Suggested next steps ── */}
         {nextSteps.length > 0 && (
           <SidebarSection>
-            <SectionLabel>Suggested Next Steps</SectionLabel>
+            <SectionLabel>다음 작업 추천</SectionLabel>
             <ul className="mt-3 flex flex-col gap-2">
               {nextSteps.map((step, i) => (
                 <li key={i} className="flex items-start gap-2">
@@ -89,7 +89,7 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
         {/* ── 4. Stage breakdown ── */}
         {doc.adoptedPuzzlesByStage.length > 0 && (
           <SidebarSection>
-            <SectionLabel>Puzzles by Stage</SectionLabel>
+            <SectionLabel>스테이지별 퍼즐</SectionLabel>
             <div className="mt-3 flex flex-col gap-1.5">
               {doc.adoptedPuzzlesByStage.map((s) => (
                 <div key={s.stageKey} className="flex items-center justify-between">
@@ -110,10 +110,10 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
         <button
           onClick={handleSave}
           disabled={saveState === 'saving'}
-          className={`w-full py-2 rounded-xl text-subhead font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`w-full py-2 rounded-lg text-subhead font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
             saveState === 'saved'
-              ? 'bg-emerald-400/90 text-black shadow-[0_0_12px_rgba(52,211,153,0.25)]'
-              : 'bg-white/90 text-black hover:bg-white active:bg-white/80'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              : 'bg-indigo-500 text-white hover:bg-indigo-400'
           }`}
         >
           {saveLabel}
