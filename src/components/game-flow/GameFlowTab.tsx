@@ -149,10 +149,10 @@ export default function GameFlowTab({
       </div>
 
       {/* ── Main split layout ── */}
-      <div className="flex flex-1 overflow-hidden min-h-0">
+      <div className="flex flex-col sm:flex-row flex-1 overflow-y-auto sm:overflow-hidden min-h-0">
 
         {/* Left: Step list — 240px */}
-        <div className="w-60 flex-shrink-0 overflow-hidden">
+        <div className="w-full sm:w-60 flex-shrink-0 overflow-hidden">
           <StepListPanel
             steps={filtered}
             rooms={plan.rooms}
@@ -163,7 +163,7 @@ export default function GameFlowTab({
         </div>
 
         {/* Right: Detail panel */}
-        <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+        <div className="flex-1 sm:overflow-hidden flex flex-col min-w-0">
           <StepDetailPanel
             step={selectedStep}
             rooms={plan.rooms}
