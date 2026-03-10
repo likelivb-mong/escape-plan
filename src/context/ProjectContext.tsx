@@ -60,6 +60,7 @@ interface ProjectContextValue {
 
   // Persistence helpers
   resetForNewProject: () => void; // clear currentProjectId so next save creates a NEW project
+  forkAsNewProject: () => void;   // nullify currentProjectId only (keep all other state) so next save creates a NEW project
   saveCurrentProject: () => string; // returns saved project id
   loadProject: (id: string) => boolean;
   deleteProject: (id: string) => void;
@@ -84,6 +85,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [gameFlowDesign, setGameFlowDesign] = useState<GameFlowPlan | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
   const [projectBrief, setProjectBrief] = useState<ProjectBrief | null>(null);
+
+  const forkAsNewProject = useCallback(() => {
+    setCurrentProjectId(null);
+  }, []);
 
   const resetForNewProject = useCallback(() => {
     setCurrentProjectId(null);
@@ -171,6 +176,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         floorPlanData, setFloorPlanData,
         projectBrief, setProjectBrief,
         resetForNewProject,
+        forkAsNewProject,
         saveCurrentProject,
         loadProject,
         deleteProject,
