@@ -115,7 +115,7 @@ export function deriveCompletionLevel(
   puzzleFlowPlan: PuzzleFlowPlan | null,
   gameFlowDesign: GameFlowPlan | null,
 ): CompletionLevel {
-  if (puzzleFlowPlan || gameFlowDesign) return 'draft';
-  if (selectedStory) return 'flow';
+  if (puzzleFlowPlan || gameFlowDesign) return 'flow';
+  if (selectedStory) return 'story';
   return 'brief';
 }
