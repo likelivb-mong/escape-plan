@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockExportPDF, mockExportNotion, mockSaveDraft } from '../../utils/draft';
+import { mockExportPDF, mockExportNotion } from '../../utils/draft';
 import type { DraftDocument } from '../../types/draft';
+import { useProject } from '../../context/ProjectContext';
 
 interface DraftHeaderProps {
   projectName: string;
@@ -9,6 +11,25 @@ interface DraftHeaderProps {
 
 export default function DraftHeader({ projectName, doc }: DraftHeaderProps) {
   const navigate = useNavigate();
+  const { saveCurrentProject } = useProject();
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleSave = () => {
+    if (!doc) return;
+    setSaveState('saving');
+    try {
+      saveCurrentProject();
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 2500);
+    } catch {
+      setSaveState('idle');
+    }
+  };
+
+  const saveLabel =
+    saveState === 'saving' ? '저장 중…' :
+    saveState === 'saved'  ? '✓ 저장됨' :
+    'Save Draft';
 
   return (
     <div className="flex-shrink-0 px-8 py-4 border-b border-white/[0.07] flex items-start justify-between gap-6">
@@ -65,10 +86,15 @@ export default function DraftHeader({ projectName, doc }: DraftHeaderProps) {
         </button>
 
         <button
-          onClick={() => doc && mockSaveDraft(doc)}
-          className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
+          onClick={handleSave}
+          disabled={!doc || saveState === 'saving'}
+          className={`px-4 py-1.5 rounded-full text-subhead font-semibold transition-all disabled:opacity-25 disabled:cursor-not-allowed ${
+            saveState === 'saved'
+              ? 'bg-emerald-400/90 text-black shadow-[0_0_12px_rgba(52,211,153,0.25)]'
+              : 'bg-white text-black hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98]'
+          }`}
         >
-          Save Draft
+          {saveLabel}
         </button>
       </div>
     </div>
