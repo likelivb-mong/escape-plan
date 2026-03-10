@@ -21,8 +21,11 @@ export default function StoryPage() {
     projectName, setProjectName, cells, setCells,
     selectedStory, setSelectedStory,
     aiStoryProposals, projectBrief,
-    saveCurrentProject, resetForNewProject,
+    saveCurrentProject, forkAsNewProject,
   } = useProject();
+
+  // ── Whether this project already has a locked story ────────────────────────
+  const isStoryLocked = selectedStory !== null;
 
   // ── Derived context ────────────────────────────────────────────────────────
   const themeTitle = useMemo(
@@ -39,7 +42,6 @@ export default function StoryPage() {
 
   // ── State ──────────────────────────────────────────────────────────────────
 
-  // variantIndices: proposal.id → variant index (for mock rotation)
   const [variantIndices, setVariantIndices] = useState<Record<string, number>>(() => {
     const initial =
       aiStoryProposals && aiStoryProposals.length > 0
@@ -48,7 +50,6 @@ export default function StoryPage() {
     return Object.fromEntries(initial.map((p) => [p.id, 0]));
   });
 
-  // Use AI-generated proposals (from YouTube flow) if available; otherwise mock
   const [proposals, setProposals] = useState<StoryProposal[]>(() =>
     aiStoryProposals && aiStoryProposals.length > 0
       ? aiStoryProposals
@@ -63,6 +64,8 @@ export default function StoryPage() {
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleSelect = (id: string) => {
+    // Don't allow selecting the already-locked story
+    if (isStoryLocked && selectedStory.id === id) return;
     setSelectedId((prev) => (prev === id || id === '' ? null : id));
   };
 
@@ -93,7 +96,6 @@ export default function StoryPage() {
     }
   };
 
-  // "+ NEW 스토리 생성": 새 3개를 기존 목록 위(앞)에 추가
   const handleAddNewBatch = async () => {
     if (isAddingBatch || regeneratingId !== null) return;
     setIsAddingBatch(true);
@@ -119,22 +121,16 @@ export default function StoryPage() {
     }
   };
 
-  // ── Continue to Mandalart (select & lock story) ────────────────────────────
+  // ── Continue to Mandalart ─────────────────────────────────────────────────
   const handleContinue = () => {
     const proposal = proposals.find((p) => p.id === selectedId);
-    if (proposal) {
-      setSelectedStory(proposal);
-      setProjectName(proposal.title);
-      setCells(populateMandalartFromStory(proposal));
-      // Auto-save so the story selection persists
-      setTimeout(() => saveCurrentProject(), 0);
-      navigate('/mandalart');
-    }
-  };
+    if (!proposal) return;
 
-  // ── Fork: create new project with a different story ────────────────────────
-  const handleForkWithStory = (proposal: StoryProposal) => {
-    resetForNewProject();
+    if (isStoryLocked && selectedStory.id !== proposal.id) {
+      // Different story selected → fork as new project
+      forkAsNewProject();
+    }
+
     setSelectedStory(proposal);
     setProjectName(proposal.title);
     setCells(populateMandalartFromStory(proposal));
@@ -142,109 +138,80 @@ export default function StoryPage() {
     navigate('/mandalart');
   };
 
-  // ── If story is already locked, show locked view ──────────────────────────
-  if (selectedStory) {
-    return (
-      <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => navigate('/projects')}
-              className="text-white/30 hover:text-white/60 transition-colors text-subhead"
-            >
-              ← 내 프로젝트
-            </button>
-            <span className="h-3.5 w-px bg-white/10" />
-            <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
-            <span className="h-3.5 w-px bg-white/10" />
-            <span className="text-footnote text-white/35 font-medium tracking-wide">
-              Story (확정됨)
-            </span>
-          </div>
-          <button
-            onClick={() => navigate('/mandalart')}
-            className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 transition-colors"
-          >
-            만다라트 편집 →
-          </button>
-        </div>
-
-        {/* Locked story card */}
-        <div className="flex-1 px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
-          <div className="max-w-2xl mx-auto">
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-6 sm:p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-caption font-medium">
-                  선택 확정됨
-                </span>
-              </div>
-              <h2 className="text-title1 font-bold text-white/90 mb-2">
-                {selectedStory.title}
-              </h2>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-subhead text-white/40">{selectedStory.genre}</span>
-                <span className="h-3 w-px bg-white/10" />
-                <span className="text-subhead text-white/40">{selectedStory.tone}</span>
-                <span className="h-3 w-px bg-white/10" />
-                <span className="text-subhead text-white/40">{selectedStory.meta.playtime}</span>
-              </div>
-              <p className="text-body text-white/60 leading-relaxed mb-6">
-                {selectedStory.synopsis}
-              </p>
-
-              {/* Beats */}
-              {selectedStory.beats.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {selectedStory.beats.map((beat) => (
-                    <div key={beat.label} className="flex gap-3">
-                      <span className="text-subhead font-semibold text-white/30 w-8 flex-shrink-0 text-right">
-                        {beat.label}
-                      </span>
-                      <span className="text-subhead text-white/50">{beat.description}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Option to create a new project with different story */}
-            <div className="mt-8 text-center">
-              <p className="text-footnote text-white/25 mb-3">
-                다른 스토리로 진행하려면 새 프로젝트를 만들어야 합니다
-              </p>
-              <button
-                onClick={() => navigate('/')}
-                className="px-4 py-2 rounded-xl border border-white/10 text-subhead text-white/40 hover:text-white/70 hover:border-white/25 transition-all"
-              >
-                + 새 프로젝트 만들기
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Normal render (no story locked yet) ─────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-      {/* Page header with breadcrumb + action buttons */}
-      <StoryPageHeader
-        projectName={projectName}
-        selectedId={selectedId}
-        isAddingBatch={isAddingBatch}
-        onAddNewBatch={handleAddNewBatch}
-        onContinue={handleContinue}
-      />
+      {/* Page header */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => navigate('/projects')}
+            className="text-white/30 hover:text-white/60 transition-colors text-subhead"
+          >
+            ← 내 프로젝트
+          </button>
+          <span className="h-3.5 w-px bg-white/10" />
+          <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
+          <span className="h-3.5 w-px bg-white/10" />
+          <span className="text-footnote text-white/35 font-medium tracking-wide">
+            Story Proposals
+          </span>
+        </div>
 
-      {/* Project brief (YouTube or manual) */}
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          {/* Locked story indicator */}
+          {isStoryLocked && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-caption font-medium">
+              현재 스토리: {selectedStory.title}
+            </span>
+          )}
+
+          <button
+            onClick={handleAddNewBatch}
+            disabled={isAddingBatch}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote text-white/45 hover:border-white/25 hover:text-white/65 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {isAddingBatch ? (
+              <>
+                <span className="inline-block w-3 h-3 border border-white/30 border-t-white/70 rounded-full animate-spin" />
+                생성 중…
+              </>
+            ) : (
+              <>+ NEW 스토리 생성</>
+            )}
+          </button>
+
+          <button
+            onClick={handleContinue}
+            disabled={!selectedId}
+            className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {isStoryLocked && selectedId && !proposals.find((p) => p.id === selectedId && p.id === selectedStory.id)
+              ? '새 프로젝트로 만다라트 →'
+              : '만다라트 편집 →'}
+          </button>
+        </div>
+      </div>
+
+      {/* Info banner when story is already locked */}
+      {isStoryLocked && (
+        <div className="px-6 py-2.5 bg-emerald-500/[0.06] border-b border-emerald-500/10">
+          <p className="text-caption text-emerald-400/70">
+            이 프로젝트의 스토리는 확정되었습니다.
+            다른 스토리를 선택하면 <strong>새 프로젝트</strong>가 자동으로 생성됩니다.
+          </p>
+        </div>
+      )}
+
+      {/* Project brief */}
       {projectBrief && <ProjectBriefSection brief={projectBrief} />}
 
       {/* Keyword summary strip */}
       <SelectedKeywordSummary categories={categories} themeTitle={themeTitle} />
 
-      {/* Main: 3-column grid of story cards */}
+      {/* Main: story cards */}
       <div className="flex-1 px-4 sm:px-6 py-4 sm:py-5 flex flex-col overflow-y-auto">
         <StoryProposalGrid
           proposals={proposals}
@@ -254,6 +221,7 @@ export default function StoryPage() {
           onSelect={handleSelect}
           onRegenerate={handleRegenerateSingle}
           onViewDetail={setViewingId}
+          lockedStoryId={isStoryLocked ? selectedStory.id : undefined}
         />
       </div>
 

@@ -5,6 +5,8 @@ import StoryStructurePreview from './StoryStructurePreview';
 interface StoryProposalCardProps {
   proposal: StoryProposal;
   isSelected: boolean;
+  /** This story is already locked for the current project */
+  isLocked?: boolean;
   isRegenerating: boolean;
   onSelect: () => void;
   onRegenerate: () => void;
@@ -29,6 +31,7 @@ const TWIST_COLOR: Record<TwistIntensity, string> = {
 export default function StoryProposalCard({
   proposal,
   isSelected,
+  isLocked = false,
   isRegenerating,
   onSelect,
   onRegenerate,
@@ -40,16 +43,25 @@ export default function StoryProposalCard({
     <div
       className={[
         'flex flex-col rounded-2xl border-2 transition-all duration-300 overflow-hidden relative',
-        isSelected
-          ? 'border-emerald-400/60 bg-emerald-500/[0.04] shadow-[0_0_24px_rgba(52,211,153,0.12),0_0_0_1px_rgba(52,211,153,0.15)] ring-1 ring-emerald-400/20'
-          : 'border-white/[0.07] bg-white/[0.02] hover:border-white/[0.18] hover:bg-white/[0.03]',
+        isLocked
+          ? 'border-emerald-400/40 bg-emerald-500/[0.03] opacity-60'
+          : isSelected
+            ? 'border-emerald-400/60 bg-emerald-500/[0.04] shadow-[0_0_24px_rgba(52,211,153,0.12),0_0_0_1px_rgba(52,211,153,0.15)] ring-1 ring-emerald-400/20'
+            : 'border-white/[0.07] bg-white/[0.02] hover:border-white/[0.18] hover:bg-white/[0.03]',
         isRegenerating ? 'opacity-50 pointer-events-none' : '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
+      {/* ── Locked indicator ── */}
+      {isLocked && (
+        <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-micro font-medium">
+          확정됨
+        </div>
+      )}
+
       {/* ── Selected indicator badge ── */}
-      {isSelected && (
+      {isSelected && !isLocked && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400/70 via-emerald-300/50 to-emerald-400/70" />
       )}
 
@@ -111,17 +123,23 @@ export default function StoryProposalCard({
 
       {/* ── Footer: actions ── */}
       <div className="px-5 pb-5 pt-3 flex gap-2">
-        <button
-          onClick={(e) => { e.stopPropagation(); onSelect(); }}
-          className={[
-            'flex-1 py-2 rounded-xl text-subhead font-semibold transition-all duration-200',
-            isSelected
-              ? 'bg-emerald-400/90 text-black hover:bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.25)]'
-              : 'bg-white/[0.07] text-white/55 hover:bg-white/[0.12] hover:text-white/80',
-          ].join(' ')}
-        >
-          {isSelected ? '✓ 선택됨' : '이 스토리 선택'}
-        </button>
+        {isLocked ? (
+          <span className="flex-1 py-2 rounded-xl text-subhead font-semibold text-center bg-emerald-400/20 text-emerald-300/70 cursor-default">
+            현재 프로젝트 스토리
+          </span>
+        ) : (
+          <button
+            onClick={(e) => { e.stopPropagation(); onSelect(); }}
+            className={[
+              'flex-1 py-2 rounded-xl text-subhead font-semibold transition-all duration-200',
+              isSelected
+                ? 'bg-emerald-400/90 text-black hover:bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.25)]'
+                : 'bg-white/[0.07] text-white/55 hover:bg-white/[0.12] hover:text-white/80',
+            ].join(' ')}
+          >
+            {isSelected ? '✓ 선택됨' : '이 스토리 선택'}
+          </button>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onRegenerate(); }}
           disabled={isRegenerating}
