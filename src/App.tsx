@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProjectProvider } from './context/ProjectContext';
-import { AuthProvider } from './context/AuthContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import MandalartPage from './pages/MandalartPage';
@@ -15,7 +14,6 @@ import ProjectDashboardPage from './pages/ProjectDashboardPage';
 
 export default function App() {
   return (
-    <AuthProvider>
     <ProjectProvider>
       <BrowserRouter>
         <Routes>
@@ -34,6 +32,5 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ProjectProvider>
-    </AuthProvider>
   );
 }
