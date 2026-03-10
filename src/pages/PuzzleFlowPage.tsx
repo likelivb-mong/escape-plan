@@ -248,15 +248,15 @@ export default function PuzzleFlowPage() {
       {/* ── Tab content ── */}
       {activeTab === 'story' ? (
         <div className="flex flex-col flex-1 overflow-hidden min-h-0">
-          <div className="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-5 px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto lg:overflow-hidden min-h-0">
-            <div className="flex-1 lg:overflow-y-auto min-w-0 pr-1">
+          <div className="flex flex-col flex-1 gap-4 px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto min-h-0">
+            <div className="min-w-0">
               {storyPlan ? (
                 <PuzzleFlowTimeline plan={storyPlan} onUpdateStage={handleUpdateStage} />
               ) : (
                 <LoadingPlaceholder text="스토리 플로우 생성 중…" />
               )}
             </div>
-            <div className="w-full lg:w-72 flex-shrink-0 flex flex-col min-h-0">
+            <div className="w-full">
               {storyPlan && <PuzzleFlowSidebar plan={storyPlan} cells={cells} />}
             </div>
           </div>
