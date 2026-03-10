@@ -3,8 +3,8 @@ import { useProject } from '../../context/ProjectContext';
 
 // Design workflow stages — mirrors the escape room design pipeline
 const WORKFLOW_STEPS = [
-  { path: '/mandalart', label: '만다라트', shortLabel: '만다라트' },
   { path: '/story', label: '스토리', shortLabel: '스토리' },
+  { path: '/mandalart', label: '만다라트', shortLabel: '만다라트' },
   { path: '/puzzle-flow', label: '퍼즐 플로우', shortLabel: '플로우' },
   { path: '/puzzle-recommendations', label: '퍼즐 추천', shortLabel: '추천' },
   { path: '/floor-plan', label: '공간 배치', shortLabel: '공간' },

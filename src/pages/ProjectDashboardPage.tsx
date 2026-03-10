@@ -18,24 +18,24 @@ interface Stage {
 
 const STAGES: Stage[] = [
   {
-    key: 'mandalart',
-    label: '만다라트 보드',
-    description: '사건 키워드를 만다라트 보드로 구조화',
-    designerNote: '세계관의 핵심 요소를 시각적으로 펼쳐 빠짐없이 정리',
-    path: '/mandalart',
-    requiredLevel: null,
-    stepNumber: 1,
-    accentColor: 'amber',
-  },
-  {
     key: 'story',
     label: '스토리 제안',
     description: 'AI 스토리 제안을 검토하고 선택',
     designerNote: '기승전반결 구조로 플레이어 감정 곡선을 설계',
     path: '/story',
     requiredLevel: null,
-    stepNumber: 2,
+    stepNumber: 1,
     accentColor: 'sky',
+  },
+  {
+    key: 'mandalart',
+    label: '만다라트 보드',
+    description: '사건 키워드를 만다라트 보드로 구조화',
+    designerNote: '세계관의 핵심 요소를 시각적으로 펼쳐 빠짐없이 정리',
+    path: '/mandalart',
+    requiredLevel: null,
+    stepNumber: 2,
+    accentColor: 'amber',
   },
   {
     key: 'puzzle-flow',
@@ -203,7 +203,7 @@ export default function ProjectDashboardPage() {
           <h2 className="text-body font-semibold text-white/60">테마 설계 파이프라인</h2>
           <div className="h-px flex-1 bg-white/[0.05]" />
           <span className="text-caption text-white/20">
-            세계관 → 스토리 → 퍼즐 → 공간 → 기획안
+            스토리 → 만다라트 → 퍼즐 → 공간 → 기획안
           </span>
         </div>
 
