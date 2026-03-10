@@ -45,30 +45,42 @@ export default function Navbar() {
   const isProjects = location.pathname === '/projects';
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-white/10 backdrop-blur-xl bg-black/60">
+    <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b backdrop-blur-xl ${
+      theme === 'light'
+        ? 'bg-white/70 border-black/[0.08]'
+        : 'bg-black/60 border-white/10'
+    }`}>
       {/* Left: Brand */}
       <div className="flex items-center gap-3">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-white/90 flex items-center justify-center">
-            <span className="text-black text-subhead font-bold">X</span>
+          <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
+            theme === 'light' ? 'bg-black/85' : 'bg-white/90'
+          }`}>
+            <span className={`text-subhead font-bold ${theme === 'light' ? 'text-white' : 'text-black'}`}>X</span>
           </div>
-          <span className="text-body font-semibold tracking-wide text-white/90">XCAPE AI</span>
+          <span className={`text-body font-semibold tracking-wide ${
+            theme === 'light' ? 'text-black/85' : 'text-white/90'
+          }`}>XCAPE AI</span>
         </Link>
 
         {/* Back to projects when inside workflow */}
         {isInsideProject && (
           <>
-            <span className="h-4 w-px bg-white/10" />
+            <span className={`h-4 w-px ${theme === 'light' ? 'bg-black/10' : 'bg-white/10'}`} />
             <button
               onClick={() => navigate('/projects')}
-              className="text-subhead text-white/40 hover:text-white/70 transition-colors"
+              className={`text-subhead transition-colors ${
+                theme === 'light' ? 'text-black/45 hover:text-black/75' : 'text-white/40 hover:text-white/70'
+              }`}
             >
               ← 내 프로젝트
             </button>
             {projectName && projectName !== 'Untitled Theme Project' && (
               <>
-                <span className="h-4 w-px bg-white/10" />
-                <span className="text-footnote text-white/30 font-medium truncate max-w-[160px]">
+                <span className={`h-4 w-px ${theme === 'light' ? 'bg-black/10' : 'bg-white/10'}`} />
+                <span className={`text-footnote font-medium truncate max-w-[160px] ${
+                  theme === 'light' ? 'text-black/40' : 'text-white/30'
+                }`}>
                   {projectName}
                 </span>
               </>
@@ -90,15 +102,19 @@ export default function Navbar() {
                   to={item.path}
                   className={`px-4 py-1.5 rounded-full text-body font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-white text-black'
-                      : 'text-white/50 hover:text-white/80 hover:bg-white/10'
+                      ? theme === 'light'
+                        ? 'bg-black/85 text-white'
+                        : 'bg-white text-black'
+                      : theme === 'light'
+                        ? 'text-black/50 hover:text-black/80 hover:bg-black/[0.06]'
+                        : 'text-white/50 hover:text-white/80 hover:bg-white/10'
                   }`}
                 >
                   {item.label}
                 </Link>
               );
             })}
-            <span className="mx-1.5 h-4 w-px bg-white/15" />
+            <span className={`mx-1.5 h-4 w-px ${theme === 'light' ? 'bg-black/10' : 'bg-white/15'}`} />
           </>
         )}
 
@@ -106,20 +122,28 @@ export default function Navbar() {
         {!isProjects && (
           <Link
             to="/projects"
-            className="px-4 py-1.5 rounded-full text-body font-medium text-white/50 hover:text-white/80 hover:bg-white/10 transition-all duration-200"
+            className={`px-4 py-1.5 rounded-full text-body font-medium transition-all duration-200 ${
+              theme === 'light'
+                ? 'text-black/50 hover:text-black/80 hover:bg-black/[0.06]'
+                : 'text-white/50 hover:text-white/80 hover:bg-white/10'
+            }`}
           >
             내 프로젝트
           </Link>
         )}
 
         {/* Divider */}
-        <span className="mx-1 h-4 w-px bg-white/15" />
+        <span className={`mx-1 h-4 w-px ${theme === 'light' ? 'bg-black/10' : 'bg-white/15'}`} />
 
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-          className="p-2 rounded-full text-white/45 hover:text-white/80 hover:bg-white/10 transition-all duration-200"
+          className={`p-2 rounded-full transition-all duration-200 ${
+            theme === 'light'
+              ? 'text-black/50 hover:text-black/80 hover:bg-black/[0.06]'
+              : 'text-white/45 hover:text-white/80 hover:bg-white/10'
+          }`}
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
