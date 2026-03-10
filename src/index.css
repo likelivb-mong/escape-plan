@@ -42,29 +42,10 @@
 }
 
 .light {
-  --page-bg: #f5f5f5;
+  --page-bg: #f8f8f8;
   --page-fg: #1a1a1a;
   --color-white: oklch(0% 0 0);
   --color-black: oklch(100% 0 0);
-
-  /* ── Shadows: softer for light surfaces ── */
-  --shadow-subtle:   0 1px 2px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.04);
-  --shadow-card:     0 1px 4px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.05);
-  --shadow-elevated: 0 6px 20px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
-
-  /* ── Accent colors: darker for legibility on light bg ── */
-  --color-emerald-300: oklch(52% 0.14 162);
-  --color-emerald-400: oklch(46% 0.14 162);
-  --color-rose-400:    oklch(52% 0.18 15);
-  --color-rose-500:    oklch(46% 0.19 15);
-  --color-sky-300:     oklch(48% 0.13 235);
-  --color-sky-400:     oklch(42% 0.14 235);
-  --color-amber-300:   oklch(52% 0.13 80);
-  --color-amber-400:   oklch(46% 0.14 80);
-  --color-amber-500:   oklch(40% 0.14 80);
-  --color-red-400:     oklch(50% 0.18 25);
-  --color-red-500:     oklch(44% 0.19 25);
-  --color-purple-400:  oklch(48% 0.16 300);
 }
 
 /* ── Smooth theme transition (Apple ease-out curve) ──────────────────────── */
@@ -124,70 +105,4 @@
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(255,255,255,0.15);
   }
-
-  /* ── Light mode: scrollbar & selection ── */
-  .light ::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.10);
-  }
-  .light ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0,0,0,0.22);
-  }
-  .light ::selection {
-    background: rgba(16, 185, 129, 0.20);
-  }
-
-  /* ── Light mode: form inputs ── */
-  .light input,
-  .light textarea {
-    background-color: rgba(0,0,0,0.03) !important;
-    border-color: rgba(0,0,0,0.12) !important;
-    color: var(--page-fg) !important;
-  }
-  .light input::placeholder,
-  .light textarea::placeholder {
-    color: rgba(0,0,0,0.30) !important;
-  }
-  .light input:focus,
-  .light textarea:focus {
-    border-color: rgba(0,0,0,0.25) !important;
-    background-color: rgba(0,0,0,0.02) !important;
-  }
-
-  /* ── Light mode: boost colored badge / chip visibility ──────────────────
-   * Dark mode uses low-opacity accent colors (e.g. text-rose-300/65,
-   * bg-rose-500/[0.06]) which become nearly invisible on light backgrounds.
-   * These rules force readable values for text, borders, and backgrounds.
-   * ──────────────────────────────────────────────────────────────────────── */
-
-  /* Text: ensure colored text is readable */
-  .light [class*="text-rose-2"],
-  .light [class*="text-rose-3"]   { color: oklch(48% 0.18 15)  !important; }
-  .light [class*="text-sky-2"],
-  .light [class*="text-sky-3"]    { color: oklch(40% 0.12 235) !important; }
-  .light [class*="text-amber-2"],
-  .light [class*="text-amber-3"]  { color: oklch(45% 0.14 80)  !important; }
-  .light [class*="text-emerald-2"],
-  .light [class*="text-emerald-3"]{ color: oklch(42% 0.14 162) !important; }
-  .light [class*="text-violet-3"] { color: oklch(44% 0.16 290) !important; }
-
-  /* Borders: make accent borders visible */
-  .light [class*="border-rose-4"]    { border-color: oklch(65% 0.16 15 / 0.40)  !important; }
-  .light [class*="border-sky-4"]     { border-color: oklch(55% 0.10 235 / 0.40) !important; }
-  .light [class*="border-amber-4"]   { border-color: oklch(58% 0.12 80 / 0.40)  !important; }
-  .light [class*="border-emerald-4"] { border-color: oklch(52% 0.12 162 / 0.40) !important; }
-  .light [class*="border-violet-4"]  { border-color: oklch(52% 0.14 290 / 0.40) !important; }
-
-  /* Backgrounds: lift very low opacity tints to a visible floor */
-  .light [class*="bg-rose-5"]    { background-color: oklch(70% 0.10 15 / 0.12)  !important; }
-  .light [class*="bg-sky-5"]     { background-color: oklch(60% 0.08 235 / 0.12) !important; }
-  .light [class*="bg-amber-5"]   { background-color: oklch(65% 0.08 80 / 0.12)  !important; }
-  .light [class*="bg-emerald-5"] { background-color: oklch(55% 0.08 162 / 0.12) !important; }
-  .light [class*="bg-violet-5"]  { background-color: oklch(55% 0.08 290 / 0.12) !important; }
-
-  /* Dots / indicators: ensure colored dots stay visible */
-  .light [class*="bg-rose-4"]    { background-color: oklch(55% 0.18 15 / 0.70)  !important; }
-  .light [class*="bg-sky-4"]     { background-color: oklch(45% 0.13 235 / 0.70) !important; }
-  .light [class*="bg-amber-4"]   { background-color: oklch(52% 0.14 80 / 0.70)  !important; }
-  .light [class*="bg-emerald-4"] { background-color: oklch(48% 0.14 162 / 0.70) !important; }
-  .light [class*="bg-violet-4"]  { background-color: oklch(48% 0.16 290 / 0.70) !important; }
 }

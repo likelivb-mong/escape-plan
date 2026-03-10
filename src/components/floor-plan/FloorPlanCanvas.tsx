@@ -3,7 +3,6 @@ import type { GameFlowPlan } from '../../types/gameFlow';
 import type { FloorPlanData, DoorLayout, DoorType } from '../../types/floorPlan';
 import FloorPlanRoom from './FloorPlanRoom';
 import FloorPlanDoor from './FloorPlanDoor';
-import { useTheme } from '../../context/ThemeContext';
 
 interface FloorPlanCanvasProps {
   plan: GameFlowPlan;
@@ -38,7 +37,6 @@ export default function FloorPlanCanvas({
   onUpdateFloorPlan,
   isEditing,
 }: FloorPlanCanvasProps) {
-  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
 
@@ -236,11 +234,11 @@ export default function FloorPlanCanvas({
         style={{
           backgroundImage: [
             isEditing
-              ? `linear-gradient(to right, ${theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)'} 1px, transparent 1px)`
-              : `linear-gradient(to right, ${theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.025)'} 1px, transparent 1px)`,
+              ? 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px)'
+              : 'linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px)',
             isEditing
-              ? `linear-gradient(to bottom, ${theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)'} 1px, transparent 1px)`
-              : `linear-gradient(to bottom, ${theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.025)'} 1px, transparent 1px)`,
+              ? 'linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)'
+              : 'linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)',
           ].join(', '),
           backgroundSize: '5% 5%',
         }}
