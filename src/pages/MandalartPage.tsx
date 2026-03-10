@@ -9,7 +9,7 @@ import { createExampleCells, EXAMPLE_PROJECT_NAME } from '../data/mockMandalart'
 
 export default function MandalartPage() {
   const navigate = useNavigate();
-  const { projectName, setProjectName, cells, setCells, projectBrief, selectedStory } = useProject();
+  const { projectName, setProjectName, cells, setCells, projectBrief, selectedStory, saveCurrentProject } = useProject();
 
   const [selectedCellIds, setSelectedCellIds] = useState<Set<string>>(new Set());
   const [editingCellId, setEditingCellId] = useState<string | null>(null);
@@ -228,13 +228,19 @@ export default function MandalartPage() {
 
       {/* ── Page Header ── */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <SourceBreadcrumb
             projectBrief={projectBrief}
             hasSelectedStory={!!selectedStory}
             projectName={projectName}
             onNavigateBack={(path) => navigate(path)}
           />
+          {selectedStory && (
+            <div className="flex items-center gap-2 pl-2 border-l border-white/[0.1]">
+              <span className="text-footnote text-white/30">스토리:</span>
+              <span className="text-subhead font-medium text-white/70">{selectedStory.title}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-footnote text-white/30">임시 저장됨</span>

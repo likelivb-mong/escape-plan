@@ -64,6 +64,7 @@ export default function HomePage() {
     setProjectBrief,
     saveCurrentProject,
     projectBrief,
+    resetForNewProject,
   } = useProject();
 
   const [activeTab, setActiveTab] = useState<TabKey>('build');
@@ -135,6 +136,9 @@ export default function HomePage() {
     setYoutubeLoading(true);
     setYoutubeError('');
     try {
+      // ── Reset previous project state (새 프로젝트로 시작) ──
+      resetForNewProject();
+
       const result = await analyzeYoutube(url, setYoutubeStep);
       setYoutubeStep('보드 생성 중...');
       await new Promise((r) => setTimeout(r, 200));
@@ -185,6 +189,9 @@ export default function HomePage() {
   const handleBuildSubmit = () => {
     const name = projectName.trim();
     if (!name) return;
+
+    // ── Reset previous project state (새 프로젝트로 시작) ──
+    resetForNewProject();
 
     setCtxProjectName(name);
 
