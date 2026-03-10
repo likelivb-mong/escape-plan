@@ -64,6 +64,11 @@ export default function HomePage() {
     setProjectBrief,
     saveCurrentProject,
     projectBrief,
+    setSelectedStory,
+    setPuzzleFlowPlan,
+    setPuzzleRecommendationGroups,
+    setGameFlowDesign,
+    setFloorPlanData,
   } = useProject();
 
   const [activeTab, setActiveTab] = useState<TabKey>('build');
@@ -135,6 +140,13 @@ export default function HomePage() {
     setYoutubeLoading(true);
     setYoutubeError('');
     try {
+      // ── Reset previous project state ──
+      setSelectedStory(null);
+      setPuzzleFlowPlan(null);
+      setPuzzleRecommendationGroups([]);
+      setGameFlowDesign(null);
+      setFloorPlanData(null);
+
       const result = await analyzeYoutube(url, setYoutubeStep);
       setYoutubeStep('보드 생성 중...');
       await new Promise((r) => setTimeout(r, 200));
@@ -185,6 +197,13 @@ export default function HomePage() {
   const handleBuildSubmit = () => {
     const name = projectName.trim();
     if (!name) return;
+
+    // ── Reset previous project state ──
+    setSelectedStory(null);
+    setPuzzleFlowPlan(null);
+    setPuzzleRecommendationGroups([]);
+    setGameFlowDesign(null);
+    setFloorPlanData(null);
 
     setCtxProjectName(name);
 
