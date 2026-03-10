@@ -144,7 +144,7 @@ export default function StoryPage() {
       <SelectedKeywordSummary categories={categories} themeTitle={themeTitle} />
 
       {/* Main: 3-column grid of story cards */}
-      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-5 flex flex-col">
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-5 flex flex-col overflow-y-auto">
         <StoryProposalGrid
           proposals={proposals}
           selectedId={selectedId}
