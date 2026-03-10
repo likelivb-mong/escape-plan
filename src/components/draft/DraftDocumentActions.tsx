@@ -10,7 +10,7 @@ interface DraftDocumentActionsProps {
 
 export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps) {
   const navigate = useNavigate();
-  const { saveCurrentProject, currentProjectId } = useProject();
+  const { saveCurrentProject } = useProject();
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const handleSave = () => {
@@ -27,52 +27,51 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
 
   const saveLabel =
     saveState === 'saving' ? '저장 중…' :
-    saveState === 'saved'  ? '✓ 저장됨' :
-    currentProjectId       ? 'Save Draft' : 'Save Draft';
+    saveState === 'saved'  ? '저장 완료' :
+    '기획안 저장';
 
   return (
-    <div className="flex-shrink-0 px-8 py-4 border-t border-white/[0.06] flex items-center justify-between gap-4">
-      {/* Left */}
+    <div className="flex-shrink-0 px-6 sm:px-8 py-3 border-t border-white/[0.06] flex items-center justify-between gap-4">
+      {/* Left: back nav */}
       <button
-        onClick={() => navigate('/puzzle-recommendations')}
-        className="text-footnote text-white/35 hover:text-white/60 transition-colors"
+        onClick={() => navigate('/puzzle-flow')}
+        className="text-caption text-white/25 hover:text-white/50 transition-colors"
       >
-        ← Back to Puzzle Recommendations
+        ← 퍼즐 플로우
       </button>
 
-      {/* Center: stats */}
+      {/* Center: key stats */}
       {doc && (
         <div className="flex items-center gap-4">
           <ActionStat label="채택 퍼즐" value={`${doc.totalAdoptedCount}개`} accent="emerald" />
-          <span className="w-px h-3 bg-white/[0.08]" />
+          <span className="w-px h-3 bg-white/[0.06]" />
           <ActionStat label="플레이타임" value={`${doc.totalPlayTime}분`} />
-          <span className="w-px h-3 bg-white/[0.08]" />
+          <span className="w-px h-3 bg-white/[0.06]" />
           <ActionStat label="Flow 단계" value={`${doc.beats.length}단계`} />
         </div>
       )}
 
-      {/* Right: export actions */}
+      {/* Right: export */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => doc && mockExportPDF(doc)}
           disabled={!doc}
-          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-footnote text-white/35 hover:border-white/20 hover:text-white/55 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 rounded-lg border border-white/[0.08] text-caption text-white/30 hover:border-white/15 hover:text-white/50 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
         >
-          Export PDF
+          PDF
         </button>
 
         <button
           onClick={() => doc && mockExportNotion(doc)}
           disabled={!doc}
-          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-footnote text-white/35 hover:border-white/20 hover:text-white/55 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 rounded-lg border border-white/[0.08] text-caption text-white/30 hover:border-white/15 hover:text-white/50 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
         >
-          Export Notion
+          Notion
         </button>
 
-        {/* View saved projects shortcut */}
         <button
           onClick={() => navigate('/projects')}
-          className="px-3 py-1.5 rounded-full border border-white/[0.10] text-footnote text-white/35 hover:border-white/20 hover:text-white/55 transition-all"
+          className="px-3 py-1.5 rounded-lg border border-white/[0.08] text-caption text-white/30 hover:border-white/15 hover:text-white/50 transition-all"
         >
           내 프로젝트
         </button>
@@ -80,10 +79,10 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
         <button
           onClick={handleSave}
           disabled={!doc || saveState === 'saving'}
-          className={`px-4 py-1.5 rounded-full text-subhead font-semibold transition-all disabled:opacity-25 disabled:cursor-not-allowed ${
+          className={`px-4 py-1.5 rounded-lg text-caption font-semibold transition-all disabled:opacity-25 disabled:cursor-not-allowed ${
             saveState === 'saved'
-              ? 'bg-emerald-400/90 text-black shadow-[0_0_12px_rgba(52,211,153,0.25)]'
-              : 'bg-white text-black hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98]'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              : 'bg-indigo-500 text-white hover:bg-indigo-400'
           }`}
         >
           {saveLabel}
@@ -99,8 +98,8 @@ function ActionStat({ label, value, accent }: { label: string; value: string; ac
   const valCls = accent === 'emerald' ? 'text-emerald-300/70' : 'text-white/55';
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-caption text-white/35">{label}</span>
-      <span className={`text-body font-bold tabular-nums ${valCls}`}>{value}</span>
+      <span className="text-caption text-white/30">{label}</span>
+      <span className={`text-subhead font-bold tabular-nums ${valCls}`}>{value}</span>
     </div>
   );
 }

@@ -3,15 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { loadProjectById, type SavedProject, type CompletionLevel } from '../utils/projectStorage';
 
-// ── Stage definitions ─────────────────────────────────────────────────────────
+// ── Stage definitions — mirrors escape room design pipeline ──────────────────
 
 interface Stage {
   key: string;
   label: string;
   description: string;
+  designerNote: string; // why this step matters
   path: string;
-  requiredLevel: CompletionLevel | null; // null = always available
-  icon: string;
+  requiredLevel: CompletionLevel | null;
+  stepNumber: number;
+  accentColor: string;
 }
 
 const STAGES: Stage[] = [
@@ -19,49 +21,61 @@ const STAGES: Stage[] = [
     key: 'mandalart',
     label: '만다라트 보드',
     description: '사건 키워드를 만다라트 보드로 구조화',
+    designerNote: '세계관의 핵심 요소를 시각적으로 펼쳐 빠짐없이 정리',
     path: '/mandalart',
     requiredLevel: null,
-    icon: '🧩',
+    stepNumber: 1,
+    accentColor: 'amber',
   },
   {
     key: 'story',
     label: '스토리 제안',
     description: 'AI 스토리 제안을 검토하고 선택',
+    designerNote: '기승전반결 구조로 플레이어 감정 곡선을 설계',
     path: '/story',
     requiredLevel: null,
-    icon: '📖',
+    stepNumber: 2,
+    accentColor: 'sky',
   },
   {
     key: 'puzzle-flow',
     label: '퍼즐 플로우',
     description: '퍼즐 배치와 게임 흐름 설계',
+    designerNote: '단서 발견 → 해석 → 연결의 자연스러운 흐름',
     path: '/puzzle-flow',
     requiredLevel: 'story',
-    icon: '🔀',
+    stepNumber: 3,
+    accentColor: 'violet',
   },
   {
     key: 'puzzle-recommendations',
     label: '퍼즐 추천',
     description: 'AI 기반 퍼즐 추천 확인',
+    designerNote: '스토리와 연결된 퍼즐만 — 무의미한 자물쇠 지양',
     path: '/puzzle-recommendations',
     requiredLevel: 'story',
-    icon: '💡',
+    stepNumber: 4,
+    accentColor: 'rose',
   },
   {
     key: 'floor-plan',
     label: '공간 배치도',
     description: '방 구조와 동선 설계',
+    designerNote: '플레이어의 탐색 동선과 시야 발견 포인트 배치',
     path: '/floor-plan',
     requiredLevel: 'flow',
-    icon: '🗺️',
+    stepNumber: 5,
+    accentColor: 'emerald',
   },
   {
     key: 'draft',
-    label: '드래프트',
+    label: '기획안',
     description: '최종 기획안 정리 및 내보내기',
+    designerNote: '제작팀에게 전달할 수 있는 완성된 테마 문서',
     path: '/draft',
     requiredLevel: 'flow',
-    icon: '📋',
+    stepNumber: 6,
+    accentColor: 'indigo',
   },
 ];
 
@@ -75,13 +89,22 @@ const LEVEL_CONFIG: Record<CompletionLevel, { label: string; color: string; bgCo
   brief:  { label: '기획 단계',    color: 'text-amber-400',   bgColor: 'bg-amber-400/10' },
   story:  { label: '스토리 완성',  color: 'text-sky-400',     bgColor: 'bg-sky-400/10' },
   flow:   { label: '플로우 설계',  color: 'text-violet-400',  bgColor: 'bg-violet-400/10' },
-  draft:  { label: '드래프트 완성', color: 'text-emerald-400', bgColor: 'bg-emerald-400/10' },
+  draft:  { label: '기획안 완성',  color: 'text-emerald-400', bgColor: 'bg-emerald-400/10' },
 };
 
 const GENRE_KR: Record<string, string> = {
   horror: '공포', mystery: '미스터리', adventure: '어드벤처',
   thriller: '스릴러', fantasy: '판타지', 'sci-fi': 'SF',
   romance: '로맨스', comedy: '코미디',
+};
+
+const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string; dot: string }> = {
+  amber:   { border: 'border-amber-500/20',   text: 'text-amber-400',   bg: 'bg-amber-500/5',   dot: 'bg-amber-400' },
+  sky:     { border: 'border-sky-500/20',     text: 'text-sky-400',     bg: 'bg-sky-500/5',     dot: 'bg-sky-400' },
+  violet:  { border: 'border-violet-500/20',  text: 'text-violet-400',  bg: 'bg-violet-500/5',  dot: 'bg-violet-400' },
+  rose:    { border: 'border-rose-500/20',    text: 'text-rose-400',    bg: 'bg-rose-500/5',    dot: 'bg-rose-400' },
+  emerald: { border: 'border-emerald-500/20', text: 'text-emerald-400', bg: 'bg-emerald-500/5', dot: 'bg-emerald-400' },
+  indigo:  { border: 'border-indigo-500/20',  text: 'text-indigo-400',  bg: 'bg-indigo-500/5',  dot: 'bg-indigo-400' },
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -107,8 +130,11 @@ export default function ProjectDashboardPage() {
 
   if (!loaded || !project) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <p className="text-body text-white/40">프로젝트를 불러오는 중...</p>
+      <div className="min-h-[calc(100vh-3rem)] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+          <p className="text-body text-white/40">프로젝트를 불러오는 중...</p>
+        </div>
       </div>
     );
   }
@@ -116,117 +142,128 @@ export default function ProjectDashboardPage() {
   const levelCfg = LEVEL_CONFIG[project.completionLevel];
   const genres = (project.genres ?? []).map((g) => GENRE_KR[g] ?? g);
   const playTimes = (project.playTimes ?? []).join('/');
+  const progressPct = ((LEVEL_ORDER.indexOf(project.completionLevel) + 1) / LEVEL_ORDER.length) * 100;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-10 py-10 sm:py-14">
-      <div className="max-w-4xl mx-auto">
-        {/* Back link */}
-        <button
-          onClick={() => navigate('/projects')}
-          className="text-subhead text-white/40 hover:text-white/70 transition-colors mb-8 inline-flex items-center gap-1.5"
-        >
-          ← 내 프로젝트
-        </button>
+    <div className="min-h-[calc(100vh-3rem)] px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
+      <div className="max-w-5xl mx-auto">
 
-        {/* Project Header */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6 sm:p-8 mb-8">
-          <div className="flex items-start justify-between gap-4 mb-4">
+        {/* ── Project Header Card ── */}
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-7 mb-6">
+          <div className="flex items-start justify-between gap-4 mb-3">
             <div className="flex-1 min-w-0">
-              <h1 className="text-title1 font-bold text-white/90 mb-1">{project.name}</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-title1 font-bold text-white/90 truncate">{project.name}</h1>
+              </div>
               {project.storyTitle && (
-                <p className="text-body text-white/45">{project.storyTitle}</p>
+                <p className="text-body text-white/40 truncate">{project.storyTitle}</p>
               )}
             </div>
-            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${levelCfg.bgColor} ${levelCfg.color} text-subhead font-medium`}>
+            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${levelCfg.bgColor} ${levelCfg.color} text-caption font-semibold flex-shrink-0`}>
               {levelCfg.label}
             </span>
           </div>
 
-          {/* Synopsis */}
           {project.synopsis && (
-            <p className="text-body text-white/50 leading-relaxed mb-4">
+            <p className="text-subhead text-white/35 leading-relaxed mb-4 line-clamp-2">
               {project.synopsis}
             </p>
           )}
 
-          {/* Meta */}
-          <div className="flex flex-wrap gap-2">
-            {genres.map((g) => (
-              <span key={g} className="px-2.5 py-1 rounded-full bg-white/[0.06] text-caption text-white/40">
-                {g}
-              </span>
-            ))}
-            {playTimes && (
-              <span className="px-2.5 py-1 rounded-full bg-white/[0.06] text-caption text-white/40">
-                {playTimes}분
-              </span>
-            )}
+          {/* Meta tags + progress */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-1.5">
+              {genres.map((g) => (
+                <span key={g} className="px-2 py-0.5 rounded-md bg-white/[0.05] text-caption text-white/35 font-medium">
+                  {g}
+                </span>
+              ))}
+              {playTimes && (
+                <span className="px-2 py-0.5 rounded-md bg-white/[0.05] text-caption text-white/35 font-medium">
+                  {playTimes}분
+                </span>
+              )}
+            </div>
+
+            {/* Compact progress bar */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-caption text-white/25">{Math.round(progressPct)}%</span>
+              <div className="w-20 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-title3 font-semibold text-white/80">진행 단계</h2>
-          </div>
-          <div className="flex gap-1">
-            {LEVEL_ORDER.map((level) => {
-              const reached = isLevelReached(project.completionLevel, level);
-              const cfg = LEVEL_CONFIG[level];
-              return (
-                <div key={level} className="flex-1 flex flex-col gap-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all ${
-                      reached ? cfg.bgColor.replace('/10', '/50') : 'bg-white/[0.06]'
-                    }`}
-                  />
-                  <span className={`text-caption ${reached ? cfg.color : 'text-white/20'}`}>
-                    {cfg.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+        {/* ── Design Pipeline Header ── */}
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-body font-semibold text-white/60">테마 설계 파이프라인</h2>
+          <div className="h-px flex-1 bg-white/[0.05]" />
+          <span className="text-caption text-white/20">
+            세계관 → 스토리 → 퍼즐 → 공간 → 기획안
+          </span>
         </div>
 
-        {/* Stage cards */}
-        <div>
-          <h2 className="text-title3 font-semibold text-white/80 mb-4">작업 단계</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {STAGES.map((stage) => {
-              const available = !stage.requiredLevel || isLevelReached(project.completionLevel, stage.requiredLevel);
+        {/* ── Stage Cards Grid ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {STAGES.map((stage) => {
+            const available = !stage.requiredLevel || isLevelReached(project.completionLevel, stage.requiredLevel);
+            const accent = ACCENT_CLASSES[stage.accentColor];
 
-              return (
-                <button
-                  key={stage.key}
-                  onClick={() => available && navigate(stage.path)}
-                  disabled={!available}
-                  className={`group text-left rounded-xl border p-4 transition-all duration-200 ${
-                    available
-                      ? 'border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.15] cursor-pointer'
-                      : 'border-white/[0.04] bg-white/[0.01] opacity-40 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-xl flex-shrink-0 mt-0.5">{stage.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`text-body font-semibold mb-0.5 ${available ? 'text-white/80 group-hover:text-white' : 'text-white/30'}`}>
-                        {stage.label}
-                      </h3>
-                      <p className={`text-footnote ${available ? 'text-white/40' : 'text-white/15'}`}>
-                        {stage.description}
-                      </p>
-                    </div>
-                    {available && (
-                      <span className="text-white/20 group-hover:text-white/50 transition-colors mt-1 text-body">
-                        →
-                      </span>
-                    )}
+            return (
+              <button
+                key={stage.key}
+                onClick={() => available && navigate(stage.path)}
+                disabled={!available}
+                className={`group text-left rounded-xl border p-4 transition-all duration-200 ${
+                  available
+                    ? `${accent.border} bg-white/[0.02] hover:${accent.bg} hover:border-opacity-40 cursor-pointer`
+                    : 'border-white/[0.03] bg-white/[0.01] opacity-30 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                      available ? `${accent.bg} ${accent.text}` : 'bg-white/[0.04] text-white/20'
+                    }`}>
+                      {stage.stepNumber}
+                    </span>
+                    <h3 className={`text-body font-semibold ${available ? 'text-white/80 group-hover:text-white' : 'text-white/25'}`}>
+                      {stage.label}
+                    </h3>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                  {available && (
+                    <span className="text-white/15 group-hover:text-white/40 transition-colors text-caption">
+                      →
+                    </span>
+                  )}
+                </div>
+
+                <p className={`text-caption mb-1.5 ${available ? 'text-white/35' : 'text-white/15'}`}>
+                  {stage.description}
+                </p>
+
+                {available && (
+                  <p className={`text-caption italic ${accent.text} opacity-50 group-hover:opacity-80 transition-opacity`}>
+                    {stage.designerNote}
+                  </p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Designer tip ── */}
+        <div className="mt-8 px-4 py-3 rounded-xl border border-white/[0.04] bg-white/[0.015]">
+          <p className="text-caption text-white/25 leading-relaxed">
+            <span className="text-indigo-400/60 font-semibold">설계 원칙</span>
+            <span className="mx-1.5 text-white/10">|</span>
+            퍼즐은 "이 퍼즐이 왜 이 스토리에서 필요한가?"라는 질문에 답할 수 있어야 합니다.
+            모든 퍼즐은 단서 발견, 사건 해석, 공간 탐색 중 하나의 역할을 가져야 합니다.
+          </p>
         </div>
       </div>
     </div>
