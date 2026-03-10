@@ -1,4 +1,4 @@
-import { PuzzleDesign } from '../../types/puzzleRecommendation';
+import type { PuzzleDesign } from '../../types/puzzleRecommendation';
 
 interface PuzzleDesignCardProps {
   puzzle: PuzzleDesign;

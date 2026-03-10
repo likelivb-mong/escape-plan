@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import {
+import type {
   PuzzleDesignResponse,
 } from '../types/puzzleRecommendation';
 import { PUZZLE_DESIGN_SYSTEM_PROMPT, buildUserPromptForPuzzleGeneration } from './puzzleDesignPrompts';

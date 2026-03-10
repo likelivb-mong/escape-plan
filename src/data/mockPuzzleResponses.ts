@@ -1,4 +1,4 @@
-import { PuzzleDesignResponse } from '../types/puzzleRecommendation';
+import type { PuzzleDesignResponse } from '../types/puzzleRecommendation';
 
 /**
  * Mock AI 응답 - 미스터리 장르, 70분 플레이타임

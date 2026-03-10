@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useProject } from '../../context/ProjectContext';
 import { generateAIPuzzleRecommendations } from '../../services/aiPuzzleGeneration';
 import { validatePuzzleResponse, formatValidationErrors } from '../../utils/puzzleValidation';
-import { PuzzleDesignResponse } from '../../types/puzzleRecommendation';
+import type { PuzzleDesignResponse } from '../../types/puzzleRecommendation';
 import { getMockPuzzleResponse } from '../../data/mockPuzzleResponses';
 import AIGenerationModal from './AIGenerationModal';
 import PuzzleDesignCard from './PuzzleDesignCard';

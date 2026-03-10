@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useProject } from '../../context/ProjectContext';
+import { useAuth } from '../../context/AuthContext';
 
 // Pages that belong to a project workflow
 const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/puzzle-flow', '/puzzle-recommendations', '/floor-plan', '/draft'];
@@ -38,7 +39,8 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const { projectName } = useProject();
+  const { projectName, isSyncing } = useProject();
+  const { user, signOut, setShowAuthModal } = useAuth();
 
   const isProjectDashboard = location.pathname.startsWith('/projects/') && location.pathname !== '/projects';
   const isInsideProject = isProjectDashboard || PROJECT_PATHS.some((p) => location.pathname.startsWith(p));
@@ -123,6 +125,35 @@ export default function Navbar() {
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
+
+        {/* Divider */}
+        <span className="mx-1 h-4 w-px bg-white/15" />
+
+        {/* Auth button */}
+        {user ? (
+          <div className="flex items-center gap-2">
+            {isSyncing && (
+              <span className="text-footnote text-white/30 animate-pulse">동기화 중...</span>
+            )}
+            <button
+              onClick={() => signOut()}
+              title={user.email ?? '로그아웃'}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-footnote text-white/50 hover:text-white/80 hover:bg-white/10 transition-all duration-200"
+            >
+              <span className="w-5 h-5 rounded-full bg-rose-500/80 flex items-center justify-center text-white font-bold text-[10px]">
+                {(user.email?.[0] ?? '?').toUpperCase()}
+              </span>
+              <span className="hidden sm:inline">로그아웃</span>
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAuthModal(true)}
+            className="px-3 py-1.5 rounded-full text-footnote font-medium bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200"
+          >
+            로그인
+          </button>
+        )}
       </div>
     </nav>
   );

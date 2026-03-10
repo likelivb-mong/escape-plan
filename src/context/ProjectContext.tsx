@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { MandalartCellData } from '../types/mandalart';
 import type { StoryProposal } from '../types/story';
 import type { ProjectBrief } from '../types';
@@ -15,6 +15,13 @@ import {
   deriveCompletionLevel,
   type SavedProject,
 } from '../utils/projectStorage';
+import {
+  cloudUpsertProject,
+  cloudListProjects,
+  cloudDeleteProject,
+  cloudMoveToTrash,
+} from '../utils/supabaseStorage';
+import { supabase } from '../lib/supabase';
 
 // ── Context value type ────────────────────────────────────────────────────────
 
@@ -58,12 +65,17 @@ interface ProjectContextValue {
   projectBrief: ProjectBrief | null;
   setProjectBrief: (brief: ProjectBrief | null) => void;
 
+  // Cloud sync status
+  isSyncing: boolean;
+
   // Persistence helpers
   resetForNewProject: () => void; // clear currentProjectId so next save creates a NEW project
   saveCurrentProject: () => string; // returns saved project id
   loadProject: (id: string) => boolean;
   deleteProject: (id: string) => void;
   moveToTrash: (id: string) => void;
+  /** Fetch all projects from Supabase and merge into localStorage */
+  syncFromCloud: () => Promise<void>;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -84,6 +96,40 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [gameFlowDesign, setGameFlowDesign] = useState<GameFlowPlan | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
   const [projectBrief, setProjectBrief] = useState<ProjectBrief | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // ── Cloud sync ──────────────────────────────────────────────────────────────
+
+  const syncFromCloud = useCallback(async (): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    setIsSyncing(true);
+    try {
+      const cloudProjects = await cloudListProjects(user.id);
+      for (const cp of cloudProjects) {
+        const local = loadProjectById(cp.id);
+        if (!local || new Date(cp.updatedAt) > new Date(local.updatedAt)) {
+          upsertProject(cp);
+        }
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  }, []);
+
+  // Sync on initial mount if already logged in
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) syncFromCloud();
+    });
+
+    // Re-sync whenever auth state changes (login event)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') syncFromCloud();
+    });
+    return () => subscription.unsubscribe();
+  }, [syncFromCloud]);
 
   const resetForNewProject = useCallback(() => {
     setCurrentProjectId(null);
@@ -122,8 +168,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       floorPlanData,
     };
 
+    // Always save locally (synchronous, instant)
     upsertProject(project);
     setCurrentProjectId(id);
+
+    // Background cloud sync — non-blocking
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) cloudUpsertProject(project, user.id);
+    });
+
     return id;
   }, [
     currentProjectId, projectName, selectedStory, puzzleFlowPlan,
@@ -150,11 +203,17 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const deleteProject = useCallback((id: string): void => {
     deleteProjectById(id);
     if (currentProjectId === id) setCurrentProjectId(null);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) cloudDeleteProject(id);
+    });
   }, [currentProjectId]);
 
   const moveToTrash = useCallback((id: string): void => {
     moveToTrashById(id);
     if (currentProjectId === id) setCurrentProjectId(null);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) cloudMoveToTrash(id);
+    });
   }, [currentProjectId]);
 
   return (
@@ -170,11 +229,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         gameFlowDesign, setGameFlowDesign,
         floorPlanData, setFloorPlanData,
         projectBrief, setProjectBrief,
+        isSyncing,
         resetForNewProject,
         saveCurrentProject,
         loadProject,
         deleteProject,
         moveToTrash,
+        syncFromCloud,
       }}
     >
       {children}
