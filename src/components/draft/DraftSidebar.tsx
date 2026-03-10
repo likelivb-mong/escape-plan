@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { DraftDocument, DraftStatus } from '../../types/draft';
-import { getSuggestedNextSteps, mockExportPDF, mockExportNotion, mockSaveDraft } from '../../utils/draft';
+import { getSuggestedNextSteps, mockExportPDF, mockExportNotion } from '../../utils/draft';
+import { useProject } from '../../context/ProjectContext';
 
 interface DraftSidebarProps {
   doc: DraftDocument;
@@ -8,6 +10,24 @@ interface DraftSidebarProps {
 
 export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
   const nextSteps = getSuggestedNextSteps(status);
+  const { saveCurrentProject } = useProject();
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleSave = () => {
+    setSaveState('saving');
+    try {
+      saveCurrentProject();
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 2500);
+    } catch {
+      setSaveState('idle');
+    }
+  };
+
+  const saveLabel =
+    saveState === 'saving' ? '저장 중…' :
+    saveState === 'saved'  ? '✓ 저장됨' :
+    'Save Draft';
 
   return (
     <div className="flex flex-col h-full border-l border-white/[0.06]">
@@ -88,10 +108,15 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
       {/* ── Export actions (pinned bottom) ── */}
       <div className="flex-shrink-0 px-4 py-4 border-t border-white/[0.06] flex flex-col gap-2">
         <button
-          onClick={() => mockSaveDraft(doc)}
-          className="w-full py-2 rounded-xl bg-white/90 text-black text-subhead font-semibold hover:bg-white active:bg-white/80 transition-colors"
+          onClick={handleSave}
+          disabled={saveState === 'saving'}
+          className={`w-full py-2 rounded-xl text-subhead font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+            saveState === 'saved'
+              ? 'bg-emerald-400/90 text-black shadow-[0_0_12px_rgba(52,211,153,0.25)]'
+              : 'bg-white/90 text-black hover:bg-white active:bg-white/80'
+          }`}
         >
-          Save Draft
+          {saveLabel}
         </button>
         <div className="flex gap-2">
           <button
