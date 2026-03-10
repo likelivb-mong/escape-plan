@@ -19,6 +19,8 @@ import SelectedStoryMiniCard from '../components/puzzle-recommendations/Selected
 import PuzzleRecommendationFilters from '../components/puzzle-recommendations/PuzzleRecommendationFilters';
 import PuzzleStageSection from '../components/puzzle-recommendations/PuzzleStageSection';
 import PuzzleRecommendationSidebar from '../components/puzzle-recommendations/PuzzleRecommendationSidebar';
+// ✅ NEW: AI 기반 퍼즐 추천 컴포넌트
+import PuzzleRecommendationPanelWithAI from '../components/puzzle-recommendations/PuzzleRecommendationPanelWithAI';
 
 // ── Stage label map ───────────────────────────────────────────────────────────
 
@@ -35,6 +37,9 @@ const STAGE_LABEL_MAP: Record<string, string> = {
 export default function PuzzleRecommendationsPage() {
   const navigate = useNavigate();
   const { projectName, selectedStory, puzzleFlowPlan, cells, setPuzzleRecommendationGroups } = useProject();
+
+  // ✅ NEW: Tab state for AI generation vs existing recommendations
+  const [activeTab, setActiveTab] = useState<'ai' | 'recommendations'>('ai');
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [groups, setGroups] = useState<PuzzleRecommendationGroup[]>([]);
@@ -176,81 +181,114 @@ export default function PuzzleRecommendationsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
 
+      {/* ✅ NEW: Tab navigation ── */}
+      <div className="border-b border-white/[0.06] bg-slate-900/50">
+        <div className="flex items-center px-4 sm:px-6">
+          <button
+            onClick={() => setActiveTab('ai')}
+            className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+              activeTab === 'ai'
+                ? 'text-white border-cyan-500'
+                : 'text-white/50 hover:text-white/70 border-transparent'
+            }`}
+          >
+            ✨ AI 퍼즐 생성 (NEW)
+          </button>
+          <button
+            onClick={() => setActiveTab('recommendations')}
+            className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+              activeTab === 'recommendations'
+                ? 'text-white border-cyan-500'
+                : 'text-white/50 hover:text-white/70 border-transparent'
+            }`}
+          >
+            💡 퍼즐 추천 (기존)
+          </button>
+        </div>
+      </div>
+
+      {/* ✅ NEW: AI Generation Tab ── */}
+      {activeTab === 'ai' && <PuzzleRecommendationPanelWithAI />}
+
       {/* ── Header ── */}
-      <PuzzleRecommendationsHeader
-        projectName={projectName}
-        isRegenerating={isRegeneratingAll}
-        onRegenerateAll={handleRegenerateAll}
-      />
+      {activeTab === 'recommendations' && (
+        <>
+          <PuzzleRecommendationsHeader
+            projectName={projectName}
+            isRegenerating={isRegeneratingAll}
+            onRegenerateAll={handleRegenerateAll}
+          />
 
-      {/* ── Story + plan summary strip ── */}
-      <SelectedStoryMiniCard story={selectedStory} plan={puzzleFlowPlan} />
+          {/* ── Story + plan summary strip ── */}
+          <SelectedStoryMiniCard story={selectedStory} plan={puzzleFlowPlan} />
 
-      {/* ── Filter bar ── */}
-      <PuzzleRecommendationFilters
-        filters={filters}
-        onChange={setFilters}
-        stageKeys={stageKeys}
-        stageLabels={STAGE_LABEL_MAP}
-      />
+          {/* ── Filter bar ── */}
+          <PuzzleRecommendationFilters
+            filters={filters}
+            onChange={setFilters}
+            stageKeys={stageKeys}
+            stageLabels={STAGE_LABEL_MAP}
+          />
 
-      {/* ── Main content ── */}
-      <div className="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-5 px-4 sm:px-6 py-4 sm:py-5 overflow-hidden min-h-0">
+          {/* ── Main content ── */}
+          <div className="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-5 px-4 sm:px-6 py-4 sm:py-5 overflow-hidden min-h-0">
 
-        {/* Stage sections (scrollable) */}
-        <div className="flex-1 overflow-y-auto min-w-0 pr-1 flex flex-col gap-8">
-          {groups.length === 0 ? (
-            <div className="flex items-center justify-center h-32">
-              <span className="text-footnote text-white/35">추천 퍼즐 생성 중…</span>
+            {/* Stage sections (scrollable) */}
+            <div className="flex-1 overflow-y-auto min-w-0 pr-1 flex flex-col gap-8">
+              {groups.length === 0 ? (
+                <div className="flex items-center justify-center h-32">
+                  <span className="text-footnote text-white/35">추천 퍼즐 생성 중…</span>
+                </div>
+              ) : (
+                groups.map((group) => (
+                  <PuzzleStageSection
+                    key={group.stageId}
+                    group={group}
+                    filters={filters}
+                    regeneratingIds={regeneratingCardIds}
+                    onAdopt={handleAdopt}
+                    onDiscard={handleDiscard}
+                    onRegenerate={handleRegenerate}
+                    onRegenerateStage={handleRegenerateStage}
+                    isStageRegenerating={regeneratingStageIds.has(group.stageId)}
+                  />
+                ))
+              )}
             </div>
-          ) : (
-            groups.map((group) => (
-              <PuzzleStageSection
-                key={group.stageId}
-                group={group}
-                filters={filters}
-                regeneratingIds={regeneratingCardIds}
-                onAdopt={handleAdopt}
-                onDiscard={handleDiscard}
-                onRegenerate={handleRegenerate}
-                onRegenerateStage={handleRegenerateStage}
-                isStageRegenerating={regeneratingStageIds.has(group.stageId)}
-              />
-            ))
-          )}
-        </div>
 
-        {/* Sidebar */}
-        <div className="w-full lg:w-72 flex-shrink-0 flex flex-col">
-          <PuzzleRecommendationSidebar stats={stats} />
-        </div>
-      </div>
+            {/* Sidebar */}
+            <div className="w-full lg:w-72 flex-shrink-0 flex flex-col">
+              <PuzzleRecommendationSidebar stats={stats} />
+            </div>
+          </div>
 
-      {/* ── Bottom bar ── */}
-      <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-t border-white/[0.06] flex items-center justify-between gap-3">
-        <button
-          onClick={() => navigate('/puzzle-flow')}
-          className="text-footnote text-white/35 hover:text-white/60 transition-colors"
-        >
-          ← Back to Puzzle Flow
-        </button>
+          {/* ── Bottom bar ── */}
+          <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-t border-white/[0.06] flex items-center justify-between gap-3">
+            <button
+              onClick={() => navigate('/puzzle-flow')}
+              className="text-footnote text-white/35 hover:text-white/60 transition-colors"
+            >
+              ← Back to Puzzle Flow
+            </button>
 
-        {/* Stats row */}
-        <div className="flex items-center gap-4">
-          <BottomStat label="전체" value={stats.totalPuzzles} />
-          <span className="w-px h-3 bg-white/[0.08]" />
-          <BottomStat label="채택됨" value={stats.adoptedCount} accent="emerald" />
-          <span className="w-px h-3 bg-white/[0.08]" />
-          <BottomStat label="제외됨" value={stats.discardedCount} accent="rose" />
-        </div>
+            {/* Stats row */}
+            <div className="flex items-center gap-4">
+              <BottomStat label="전체" value={stats.totalPuzzles} />
+              <span className="w-px h-3 bg-white/[0.08]" />
+              <BottomStat label="채택됨" value={stats.adoptedCount} accent="emerald" />
+              <span className="w-px h-3 bg-white/[0.08]" />
+              <BottomStat label="제외됨" value={stats.discardedCount} accent="rose" />
+            </div>
 
-        <button
-          onClick={handleFinalize}
-          className="px-4 py-2 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
-        >
-          Finalize Current Draft →
-        </button>
-      </div>
+            <button
+              onClick={handleFinalize}
+              className="px-4 py-2 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
+            >
+              Finalize Current Draft →
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

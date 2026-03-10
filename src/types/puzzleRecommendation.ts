@@ -9,6 +9,11 @@ export type PuzzleType =
   | 'spatial'     // 공간 / 물리 탐색
   | 'cooperative';// 협력 / 분업
 
+export type PuzzleDesignType = 'clue' | 'device' | 'clue+device';
+export type LockType = 'key' | 'number3' | 'number4' | 'alphabet5' | 'keypad' | 'xkit';
+export type PlayerEngagement = 'cognitive' | 'physical' | 'collaborative' | 'sensory' | 'mixed';
+export type StoryPhase = '기' | '승' | '전' | '반전' | '결';
+
 export type PuzzleDifficulty = 'easy' | 'medium' | 'hard';
 
 export type PuzzleRecommendationStatus =
@@ -16,6 +21,56 @@ export type PuzzleRecommendationStatus =
   | 'adopted'     // 채택됨
   | 'edited'      // 수정됨 (채택 + 수정)
   | 'discarded';  // 제외됨
+
+// ── AI-Generated Puzzle Design ─────────────────────────────────────────────────
+
+export interface PuzzleDesign {
+  id: string;
+  title: string;
+  description: string;
+  phase: StoryPhase;
+  narrativeRole: string;
+  linkedStoryElement: string;
+  linkedEmotion: string;
+  storyKeywords: string[];
+  whyThisWorksInStory: string;
+  puzzleType: PuzzleDesignType;
+  lockType: LockType;
+  deviceName: string;
+  playerAction: string;
+  answerFormat: string;
+  answer: string;
+  answerHint?: string;
+  reward: string;
+  nextConnection: string;
+  predecessorPuzzleId?: string;
+  successorPuzzleId?: string;
+  setupDescription: string;
+  spaceHint: string;
+  productionNote: string;
+  installabilityNotes: string;
+  estimatedDifficulty: 1 | 2 | 3 | 4 | 5;
+  estimatedTime: number;
+  difficultyProgression: number;
+  playerEngagement: PlayerEngagement;
+  variant: number;
+  status: PuzzleRecommendationStatus;
+  adoptedAt?: string;
+  generatedAt: string;
+}
+
+export interface PuzzleDesignResponse {
+  projectSummary: {
+    themeTitle: string;
+    genre: string;
+    tone: string;
+    recommendedPuzzleCount: number;
+    flowSummary: string;
+    designWarnings: string[];
+    spaceNotes: string[];
+  };
+  puzzles: PuzzleDesign[];
+}
 
 // ── Core entities ─────────────────────────────────────────────────────────────
 
