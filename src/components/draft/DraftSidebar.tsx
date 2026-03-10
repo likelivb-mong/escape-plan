@@ -198,7 +198,7 @@ function ScoreRing({ value }: { value: number }) {
 
   return (
     <svg width="44" height="44" className="flex-shrink-0 -rotate-90">
-      <circle cx="22" cy="22" r={r} fill="none" className="stroke-white/[0.06]" strokeWidth="3" />
+      <circle cx="22" cy="22" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
       <circle
         cx="22" cy="22" r={r}
         fill="none"
