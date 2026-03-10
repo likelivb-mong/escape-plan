@@ -241,7 +241,9 @@ export default function PuzzleFlowPage() {
       </div>
 
       {/* ── Story summary strip ── */}
-      <SelectedStorySummary story={selectedStory} />
+      <div className="flex-shrink-0">
+        <SelectedStorySummary story={selectedStory} />
+      </div>
 
       {/* ── Tab content ── */}
       {activeTab === 'story' ? (
