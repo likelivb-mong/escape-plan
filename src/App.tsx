@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProjectProvider } from './context/ProjectContext';
 import Layout from './components/layout/Layout';
+import PasswordGate from './components/PasswordGate';
 import HomePage from './pages/HomePage';
 import ThemeDesignPage from './pages/ThemeDesignPage';
 import MandalartPage from './pages/MandalartPage';
@@ -15,6 +16,7 @@ import PassMapThemePage from './features/passmap/pages/PassMapThemePage';
 
 export default function App() {
   return (
+    <PasswordGate>
     <ProjectProvider>
       <BrowserRouter>
         <Routes>
@@ -35,5 +37,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ProjectProvider>
+    </PasswordGate>
   );
 }
