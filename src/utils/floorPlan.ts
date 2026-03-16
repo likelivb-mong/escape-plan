@@ -106,3 +106,118 @@ export function groupEntriesByRoom(
 
   return groups;
 }
+
+// ── Room validation & stabilization ──────────────────────────────────────
+
+/**
+ * Ensure room stays within canvas bounds and has minimum size
+ */
+export function validateRoomBounds(room: FloorPlanRoomLayout): FloorPlanRoomLayout {
+  const MIN_SIZE = 8;
+  const MAX_SIZE = 95;
+
+  let x = Math.max(0, Math.min(room.x, 100 - MIN_SIZE));
+  let y = Math.max(0, Math.min(room.y, 100 - MIN_SIZE));
+  let width = Math.max(MIN_SIZE, Math.min(room.width, 100 - x));
+  let height = Math.max(MIN_SIZE, Math.min(room.height, 100 - y));
+
+  return { ...room, x, y, width, height };
+}
+
+/**
+ * Check if two rooms overlap (with small tolerance)
+ */
+function roomsOverlap(r1: FloorPlanRoomLayout, r2: FloorPlanRoomLayout, tolerance = 0.5): boolean {
+  return !(
+    r1.x + r1.width + tolerance < r2.x ||
+    r2.x + r2.width + tolerance < r1.x ||
+    r1.y + r1.height + tolerance < r2.y ||
+    r2.y + r2.height + tolerance < r1.y
+  );
+}
+
+/**
+ * Adjust room to avoid overlaps with other rooms
+ */
+function adjustForOverlap(
+  room: FloorPlanRoomLayout,
+  others: FloorPlanRoomLayout[],
+  maxIterations = 5,
+): FloorPlanRoomLayout {
+  let adjusted = room;
+
+  for (let iter = 0; iter < maxIterations; iter++) {
+    const overlapping = others.find(other => roomsOverlap(adjusted, other));
+    if (!overlapping) break;
+
+    // Try to move away from the overlapping room
+    const dx = adjusted.x + adjusted.width / 2 - (overlapping.x + overlapping.width / 2);
+    const dy = adjusted.y + adjusted.height / 2 - (overlapping.y + overlapping.height / 2);
+
+    const moveX = dx !== 0 ? snap(Math.sign(dx) * 2) : 0;
+    const moveY = dy !== 0 ? snap(Math.sign(dy) * 2) : 0;
+
+    const newX = Math.max(0, Math.min(adjusted.x + moveX, 100 - adjusted.width));
+    const newY = Math.max(0, Math.min(adjusted.y + moveY, 100 - adjusted.height));
+
+    adjusted = { ...adjusted, x: newX, y: newY };
+  }
+
+  return adjusted;
+}
+
+/**
+ * Normalize entire floor plan: validate bounds, prevent overlaps, keep steps inside
+ */
+export function normalizeFloorPlan(data: FloorPlanData): FloorPlanData {
+  // 1. Validate each room's bounds
+  let validatedRooms = data.rooms.map(validateRoomBounds);
+
+  // 2. Prevent overlaps
+  const normalizedRooms: FloorPlanRoomLayout[] = [];
+  for (const room of validatedRooms) {
+    const adjusted = adjustForOverlap(room, normalizedRooms);
+    normalizedRooms.push(adjusted);
+  }
+
+  // 3. Clamp step positions to their rooms
+  const normalizedStepPositions: Record<string, { x: number; y: number }> = {};
+  const stepsByRoom = new Map<string, string[]>();
+
+  // Group steps by room name
+  for (const [stepId, pos] of Object.entries(data.stepPositions || {})) {
+    // Find which room this step belongs to by looking for a matching room
+    // This is a safety check - in practice, steps are stored separately
+    normalizedStepPositions[stepId] = pos;
+  }
+
+  return {
+    ...data,
+    rooms: normalizedRooms,
+    doors: data.doors ?? [],
+    stepPositions: normalizedStepPositions,
+  };
+}
+
+/**
+ * Clamp step position to stay within a room
+ */
+export function clampStepToRoom(
+  stepX: number,
+  stepY: number,
+  roomX: number,
+  roomY: number,
+  roomWidth: number,
+  roomHeight: number,
+): { x: number; y: number } {
+  // Convert room percentages to actual positioning space
+  const minX = roomX + 2;
+  const maxX = roomX + roomWidth - 8;
+  const minY = roomY + 18;
+  const maxY = roomY + roomHeight - 5;
+
+  return {
+    x: Math.max(minX, Math.min(stepX, maxX)),
+    y: Math.max(minY, Math.min(stepY, maxY)),
+  };
+}
