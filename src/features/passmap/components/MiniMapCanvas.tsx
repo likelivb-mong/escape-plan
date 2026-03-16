@@ -3,6 +3,14 @@ import type { ThemeStep } from '../types/passmap';
 import type { ThemeRoom } from '../types/passmap';
 import StepPin from './StepPin';
 
+// Grid snap configuration
+const GRID_SIZE = 5; // 5% grid
+
+// Snap value to nearest grid cell
+const snapToGrid = (value: number, gridSize: number = GRID_SIZE) => {
+  return Math.round(value / gridSize) * gridSize;
+};
+
 // Room border colors (cycle through for visual distinction)
 const ROOM_COLORS = [
   'rgba(168,130,85,0.5)',   // warm brown
@@ -131,6 +139,10 @@ export default function MiniMapCanvas({
       let newX = dragRef.current.origX + dpx;
       let newY = dragRef.current.origY + dpy;
 
+      // Snap to grid for stable alignment
+      newX = snapToGrid(newX);
+      newY = snapToGrid(newY);
+
       // Constrain to room boundaries if room exists
       if (room) {
         const stepSize = 2.5; // Approximate step pin size
@@ -146,6 +158,10 @@ export default function MiniMapCanvas({
         newX = Math.max(2, Math.min(98, newX));
         newY = Math.max(2, Math.min(98, newY));
       }
+
+      // Snap again after boundary constraints
+      newX = snapToGrid(newX);
+      newY = snapToGrid(newY);
 
       onStepMove?.(dragRef.current.stepId, newX, newY);
     };
@@ -189,6 +205,10 @@ export default function MiniMapCanvas({
         let newX = Math.max(0, Math.min(100 - roomDragRef.current.origWidth, roomDragRef.current.origX + dpx));
         let newY = Math.max(0, Math.min(100 - roomDragRef.current.origHeight, roomDragRef.current.origY + dpy));
 
+        // Snap to grid for stable alignment
+        newX = snapToGrid(newX);
+        newY = snapToGrid(newY);
+
         // Check and adjust for collision with other rooms
         const testRoom = {
           x: newX,
@@ -197,13 +217,13 @@ export default function MiniMapCanvas({
           height: roomDragRef.current.origHeight,
         };
         const adjustedRoom = getCollisionAdjustedPosition(testRoom, roomDragRef.current.roomName);
-        newX = adjustedRoom.x;
-        newY = adjustedRoom.y;
+        const finalX = snapToGrid(adjustedRoom.x);
+        const finalY = snapToGrid(adjustedRoom.y);
 
         const draggedData = {
           name: roomDragRef.current.roomName,
-          x: newX,
-          y: newY,
+          x: finalX,
+          y: finalY,
           width: roomDragRef.current.origWidth,
           height: roomDragRef.current.origHeight,
         };
@@ -213,6 +233,10 @@ export default function MiniMapCanvas({
         let newWidth = Math.max(8, Math.min(100 - roomDragRef.current.origX, roomDragRef.current.origWidth + dpx));
         let newHeight = Math.max(8, Math.min(100 - roomDragRef.current.origY, roomDragRef.current.origHeight + dpy));
 
+        // Snap to grid for stable alignment
+        newWidth = snapToGrid(newWidth);
+        newHeight = snapToGrid(newHeight);
+
         // Check and adjust for collision with other rooms
         const testRoom = {
           x: roomDragRef.current.origX,
@@ -221,14 +245,14 @@ export default function MiniMapCanvas({
           height: newHeight,
         };
         const adjustedRoom = getCollisionAdjustedPosition(testRoom, roomDragRef.current.roomName);
-        newWidth = adjustedRoom.width;
-        newHeight = adjustedRoom.height;
+        const finalWidth = snapToGrid(adjustedRoom.width);
+        const finalHeight = snapToGrid(adjustedRoom.height);
 
         const draggedData = {
           name: roomDragRef.current.roomName,
           x: roomDragRef.current.origX,
           y: roomDragRef.current.origY,
-          width: newWidth,
+          width: finalWidth,
           height: newHeight,
         };
         setDraggedRoom(draggedData);
@@ -268,17 +292,17 @@ export default function MiniMapCanvas({
       ref={containerRef}
       className="relative w-full h-full min-h-[400px] rounded-xl border border-white/10 bg-[#0a0b0e] overflow-hidden"
     >
-      {/* Grid background */}
+      {/* Grid background - snap-to-grid */}
       <div
         className="absolute inset-0"
         style={{
           backgroundImage: mapImage
             ? `url(${mapImage})`
             : `
-              linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
             `,
-          backgroundSize: mapImage ? 'cover' : '5% 5%',
+          backgroundSize: mapImage ? 'cover' : `${GRID_SIZE}% ${GRID_SIZE}%`,
           backgroundPosition: 'center',
         }}
       />
