@@ -30,6 +30,7 @@ export interface SavedProject {
   puzzleRecommendationGroups: PuzzleRecommendationGroup[];
   gameFlowDesign: GameFlowPlan | null;
   floorPlanData: FloorPlanData | null;
+  passmapLink?: { branchCode: string; themeId: string } | null;
 }
 
 export function listSavedProjects(): SavedProject[] {

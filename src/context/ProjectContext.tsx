@@ -54,6 +54,10 @@ interface ProjectContextValue {
   floorPlanData: FloorPlanData | null;
   setFloorPlanData: (data: FloorPlanData | null) => void;
 
+  // PassMap link (branchCode + themeId once synced)
+  passmapLink: { branchCode: string; themeId: string } | null;
+  setPassmapLink: (link: { branchCode: string; themeId: string } | null) => void;
+
   // Project brief (set from YouTube or manual flow)
   projectBrief: ProjectBrief | null;
   setProjectBrief: (brief: ProjectBrief | null) => void;
@@ -84,6 +88,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     useState<PuzzleRecommendationGroup[]>([]);
   const [gameFlowDesign, setGameFlowDesign] = useState<GameFlowPlan | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
+  const [passmapLink, setPassmapLink] = useState<{ branchCode: string; themeId: string } | null>(null);
   const [projectBrief, setProjectBrief] = useState<ProjectBrief | null>(null);
 
   const forkAsNewProject = useCallback(() => {
@@ -97,6 +102,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setPuzzleRecommendationGroups([]);
     setGameFlowDesign(null);
     setFloorPlanData(null);
+    setPassmapLink(null);
     setAiStoryProposals(null);
     setProjectBrief(null);
     setCells(createInitialCells());
@@ -125,6 +131,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       puzzleRecommendationGroups,
       gameFlowDesign,
       floorPlanData,
+      passmapLink,
     };
 
     upsertProject(project);
@@ -132,7 +139,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, [
     currentProjectId, projectName, selectedStory, puzzleFlowPlan,
-    gameFlowDesign, projectBrief, cells, puzzleRecommendationGroups, floorPlanData,
+    gameFlowDesign, projectBrief, cells, puzzleRecommendationGroups, floorPlanData, passmapLink,
   ]);
 
   const loadProject = useCallback((id: string): boolean => {
@@ -148,6 +155,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setPuzzleRecommendationGroups(saved.puzzleRecommendationGroups);
     setGameFlowDesign(saved.gameFlowDesign);
     setFloorPlanData(saved.floorPlanData);
+    setPassmapLink(saved.passmapLink ?? null);
     setProjectBrief(saved.projectBrief);
     return true;
   }, []);
@@ -174,6 +182,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         puzzleRecommendationGroups, setPuzzleRecommendationGroups,
         gameFlowDesign, setGameFlowDesign,
         floorPlanData, setFloorPlanData,
+        passmapLink, setPassmapLink,
         projectBrief, setProjectBrief,
         resetForNewProject,
         forkAsNewProject,
