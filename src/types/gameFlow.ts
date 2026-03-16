@@ -65,8 +65,10 @@ export interface GameFlowStep {
 }
 
 export interface GameFlowPlan {
-  storyId: string;
+  id?: string;
+  storyId?: string;
   title: string;
+  description?: string;
   rooms: string[];
   steps: GameFlowStep[];
 }
