@@ -19,7 +19,7 @@ const STORAGE_KEYS = {
 } as const;
 
 // Bump this when mock data changes to trigger re-seed
-const CURRENT_VERSION = '2';
+const CURRENT_VERSION = '3';
 
 // ── Initialize from mock if first load or version mismatch ──────────────────
 
