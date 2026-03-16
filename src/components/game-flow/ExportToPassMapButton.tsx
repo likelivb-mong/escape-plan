@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { GameFlowPlan } from '../../types/gameFlow';
 import { gameFlowToExchange, downloadExchangeJson } from '../../features/passmap/utils/passmap-exchange';
 import { MOCK_BRANCHES } from '../../features/passmap/mock/branches';
@@ -10,6 +10,19 @@ interface ExportToPassMapButtonProps {
 export default function ExportToPassMapButton({ plan }: ExportToPassMapButtonProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [exported, setExported] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showPicker]);
 
   const handleExport = (branchCode: string) => {
     const data = gameFlowToExchange(plan, branchCode);
@@ -20,7 +33,7 @@ export default function ExportToPassMapButton({ plan }: ExportToPassMapButtonPro
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         onClick={() => setShowPicker(!showPicker)}
         className={[
@@ -37,7 +50,7 @@ export default function ExportToPassMapButton({ plan }: ExportToPassMapButtonPro
       {showPicker && (
         <div className="absolute bottom-full mb-2 right-0 w-56 rounded-xl border border-white/10 bg-[#1a1a1f] shadow-xl overflow-hidden z-50">
           <div className="px-3 py-2 border-b border-white/5 text-caption text-white/40">
-            지점 선택
+            지점 선택 후 JSON 다운로드
           </div>
           {MOCK_BRANCHES.map((b) => (
             <button
