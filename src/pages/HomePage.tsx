@@ -271,17 +271,6 @@ export default function HomePage() {
         <p className="text-white/30 text-body leading-relaxed max-w-sm mx-auto">
           사건을 정의하고, 플레이어 경험을 설계하세요.
         </p>
-
-        {/* Quick links */}
-        <div className="mt-6 flex items-center justify-center">
-          <button
-            onClick={() => navigate('/projects')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/60 hover:border-white/[0.15] transition-all text-caption font-medium"
-          >
-            내 프로젝트
-            <span className="text-white/20">→</span>
-          </button>
-        </div>
       </div>
 
       {/* Main card */}
