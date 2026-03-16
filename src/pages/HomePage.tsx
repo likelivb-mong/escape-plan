@@ -119,7 +119,7 @@ export default function HomePage() {
     if (shouldNavigateAfterSave && projectBrief) {
       saveCurrentProject();
       setShouldNavigateAfterSave(false);
-      navigate('/theme-design');
+      navigate('/plan');
     }
   }, [shouldNavigateAfterSave, projectBrief, saveCurrentProject, navigate]);
 
@@ -255,6 +255,7 @@ export default function HomePage() {
       });
     }
 
+    // 상태 업데이트 후 저장 및 네비게이션
     // 상태 업데이트 후 저장 및 네비게이션
     setShouldNavigateAfterSave(true);
   };

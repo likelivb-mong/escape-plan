@@ -13,6 +13,7 @@ export default function GameFlowPage() {
     selectedStory,
     gameFlowDesign,
     setGameFlowDesign,
+    saveCurrentProject,
   } = useProject();
 
   // ── Temporary state (editing) vs. saved state ──────────────────────────────────
@@ -68,14 +69,18 @@ export default function GameFlowPage() {
       setGameFlowDesign(gamePlan);
       setHasChanges(false);
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setTimeout(() => {
+        setSaved(false);
+        saveCurrentProject();
+      }, 300);
     }
   };
 
   const handleGoToSetting = () => {
     if (gamePlan) {
-      setGameFlowDesign(gamePlan); // Always save before navigating
+      setGameFlowDesign(gamePlan);
       setHasChanges(false);
+      setTimeout(() => saveCurrentProject(), 0);
     }
     navigate('/setting');
   };

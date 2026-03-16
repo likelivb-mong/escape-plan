@@ -15,6 +15,13 @@ export default function MandalartPage() {
   const [editingCellId, setEditingCellId] = useState<string | null>(null);
   const [boardSize, setBoardSize] = useState(600);
   const boardContainerRef = useRef<HTMLDivElement>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 셀 변경 후 1.5초 debounce 자동 저장
+  const debounceSave = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => saveCurrentProject(), 1500);
+  }, [saveCurrentProject]);
 
   // ── Auto-fit board size to container ──────────────────────────────────────
   useEffect(() => {
@@ -150,8 +157,9 @@ export default function MandalartPage() {
 
         return updated;
       });
+      debounceSave();
     },
-    [setCells]
+    [setCells, debounceSave]
   );
 
   // ── Swap cells (drag-to-reposition) ───────────────────────────────────────
@@ -167,8 +175,9 @@ export default function MandalartPage() {
           return c;
         });
       });
+      debounceSave();
     },
-    [setCells]
+    [setCells, debounceSave]
   );
 
   // ── Theme ──────────────────────────────────────────────────────────────────
