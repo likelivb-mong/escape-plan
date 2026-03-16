@@ -556,3 +556,140 @@ export const STAGE_LABELS: Record<string, string> = {
   반전: '반전 (Twist)',
   결: '결 (Ending)',
 };
+
+// ── AI-powered Game Flow Generation ──────────────────────────────────────────
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+
+function buildMandalaPrompt(keywords: MandalartCellData[], story: StoryProposal): string {
+  const themed = keywords.filter((c) => !c.isCenter && c.text.trim());
+
+  const byTheme: Record<string, string[]> = {
+    '컨셉': [],
+    '연출/장치': [],
+    '단서/소품': [],
+    '기타': [],
+  };
+
+  themed.forEach((k) => {
+    if (k.theme === 'rose') byTheme['컨셉'].push(k.text);
+    else if (k.theme === 'sky') byTheme['연출/장치'].push(k.text);
+    else if (k.theme === 'amber') byTheme['단서/소품'].push(k.text);
+    else byTheme['기타'].push(k.text);
+  });
+
+  let kwCtx = '';
+  for (const [label, kws] of Object.entries(byTheme)) {
+    if (kws.length) kwCtx += `${label}: ${kws.join(', ')}\n`;
+  }
+
+  return `당신은 XCAPE 방탈출 게임 플로우 설계 전문가입니다.
+아래 스토리와 만다라트 키워드를 활용하여 방탈출 게임의 스텝 플로우를 설계하세요.
+
+【스토리】
+제목: ${story.title}
+설명: ${story.description}
+
+【만다라트 키워드】
+${kwCtx}
+
+【최신 트렌드 포함 요소】
+1. 몰입감 있는 오프닝 (호기심 유발)
+2. 단서 발견의 쾌감 (보상 시스템)
+3. 예상치 못한 반전 (스토리 전개)
+4. 협력 플레이 강제 (팀 플레이)
+5. 기술 장치 활용 (현대 감각)
+6. 시간 압박감 (긴장감)
+7. 명확한 엔딩 (만족감)
+
+각 스테이지별 10개 정도의 스텝을 생성하되:
+- 각 스텝은 고유한 puzzle/device/output을 가져야 함
+- 스텝의 내용/힌트는 만다라트 키워드 활용
+- 스텝은 단계적으로 어려워져야 함
+- 최소 40개 이상의 스텝 생성
+
+JSON 형식으로 다음과 같이 응답하세요:
+{
+  "steps": [
+    {
+      "stepNumber": 1,
+      "stageLabel": "기",
+      "title": "스텝 제목",
+      "description": "스텝 설명",
+      "problemMode": "decryption|input|find_order|multipart",
+      "answerType": "text|number|select",
+      "room": "방 이름",
+      "content": "퍼즐 내용",
+      "hint": "힌트",
+      "deviceSubtype": "electronic_pen|magnet|tagging|sensor|light|tv|moving_room|hidden_door|auto_trigger|keypad_device|phone_device|other",
+      "outputType": "door_open|hidden_compartment_open|led_on|tv_on|xkit_guide_revealed|item_acquired|next_room_open|ending_video|escape_clear"
+    }
+  ]
+}`;
+}
+
+export async function generateGameFlowFromMandala(
+  story: StoryProposal,
+  cells: MandalartCellData[],
+): Promise<GameFlowPlan> {
+  const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error('Missing VITE_GOOGLE_GEMINI_API_KEY');
+    // Fallback to default generation
+    return generateGameFlowFromStory(story, cells);
+  }
+
+  const client = new GoogleGenerativeAI(apiKey);
+  const prompt = buildMandalaPrompt(cells, story);
+
+  for (const model of MODELS) {
+    try {
+      const genModel = client.getGenerativeModel({ model });
+      const result = await genModel.generateContent(prompt);
+      const text = result.response.text();
+
+      // Extract JSON from response
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('No JSON found in response');
+
+      const data = JSON.parse(match[0]);
+      if (!data.steps || !Array.isArray(data.steps)) {
+        throw new Error('Invalid steps format');
+      }
+
+      // Convert to GameFlowPlan
+      const rooms = [...new Set(data.steps.map((s: any) => s.room))];
+      const steps: GameFlowStep[] = data.steps.map((s: any) => ({
+        id: `step-${s.stepNumber}`,
+        stepNumber: s.stepNumber,
+        stage: s.stageLabel,
+        title: s.title,
+        description: s.description,
+        content: s.content,
+        hint: s.hint,
+        room: s.room,
+        problemMode: s.problemMode || 'decryption',
+        answerType: s.answerType || 'text',
+        deviceSubtype: s.deviceSubtype || 'other',
+        outputType: s.outputType || 'item_acquired',
+      }));
+
+      return {
+        id: `game-flow-${Date.now()}`,
+        title: story.title,
+        description: story.description,
+        rooms,
+        steps,
+      };
+    } catch (err) {
+      console.warn(`Model ${model} failed:`, err);
+      continue;
+    }
+  }
+
+  // Fallback
+  console.warn('AI generation failed, using default');
+  return generateGameFlowFromStory(story, cells);
+}

@@ -4,10 +4,9 @@ import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import MandalartPage from './pages/MandalartPage';
 import StoryPage from './pages/StoryPage';
-import PuzzleFlowPage from './pages/PuzzleFlowPage';
-
-import DraftPage from './pages/DraftPage';
-import FloorPlanPage from './pages/FloorPlanPage';
+import GameFlowPage from './pages/GameFlowPage';
+import SettingPage from './pages/SettingPage';
+import PlanPage from './pages/PlanPage';
 import ScenarioPage from './pages/ScenarioPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDashboardPage from './pages/ProjectDashboardPage';
@@ -22,12 +21,12 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDashboardPage />} />
-            <Route path="/mandalart" element={<MandalartPage />} />
             <Route path="/story" element={<StoryPage />} />
+            <Route path="/mandalart" element={<MandalartPage />} />
+            <Route path="/game-flow" element={<GameFlowPage />} />
+            <Route path="/setting" element={<SettingPage />} />
+            <Route path="/plan" element={<PlanPage />} />
             <Route path="/scenario" element={<ScenarioPage />} />
-            <Route path="/puzzle-flow" element={<PuzzleFlowPage />} />
-            <Route path="/floor-plan" element={<FloorPlanPage />} />
-            <Route path="/draft" element={<DraftPage />} />
             {/* PassMap theme deep link (accessed from projects) */}
             <Route path="/passmap/:branchCode/:themeId" element={<PassMapThemePage />} />
           </Route>

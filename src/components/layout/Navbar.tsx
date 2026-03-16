@@ -2,14 +2,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useProject } from '../../context/ProjectContext';
 
 const WORKFLOW_STEPS = [
-  { path: '/story', label: '스토리' },
-  { path: '/mandalart', label: '만다라트' },
-  { path: '/puzzle-flow', label: '퍼즐 플로우' },
-  { path: '/floor-plan', label: '공간 배치' },
-  { path: '/draft', label: '기획안' },
+  { path: '/story', label: 'Story' },
+  { path: '/mandalart', label: 'Mandala Chart' },
+  { path: '/game-flow', label: 'Game Flow' },
+  { path: '/setting', label: 'Setting' },
+  { path: '/plan', label: 'Plan' },
 ];
 
-const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/puzzle-flow', '/floor-plan', '/draft'];
+const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/setting', '/plan'];
 
 export default function Navbar() {
   const location = useLocation();
