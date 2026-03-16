@@ -124,18 +124,6 @@ export default function GameFlowPage() {
 
         {/* ── Right actions ── */}
         <div className="flex items-center gap-2">
-          {/* Regenerate button */}
-          <button
-            onClick={handleRegenerate}
-            disabled={isRegenerating}
-            title="AI로 다시 생성"
-            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isRegenerating ? '생성 중...' : '🔄 다시 생성'}
-          </button>
-
-          <span className="h-3.5 w-px bg-white/10" />
-
           {/* Save button */}
           <button
             onClick={handleSave}
@@ -152,11 +140,9 @@ export default function GameFlowPage() {
             {saved ? '✓ 저장됨' : hasChanges ? '저장' : '저장됨'}
           </button>
 
-          <span className="h-3.5 w-px bg-white/10" />
-
           <button
             onClick={handleGoToSetting}
-            className="text-footnote text-white/35 hover:text-white/50 transition-colors"
+            className="px-4 py-1.5 rounded-lg bg-white text-black text-footnote font-semibold hover:bg-white/90 transition-colors"
           >
             Setting →
           </button>
