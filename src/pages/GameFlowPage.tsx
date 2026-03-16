@@ -116,23 +116,24 @@ export default function GameFlowPage() {
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {/* ── Page header ── */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <button
             onClick={() => navigate('/mandalart')}
-            className="text-white/30 hover:text-white/60 transition-colors text-subhead"
+            className="text-white/30 hover:text-white/60 transition-colors text-subhead flex-shrink-0"
           >
-            ← Mandala Chart
+            <span className="hidden sm:inline">← Mandala Chart</span>
+            <span className="sm:hidden">← Mandala</span>
           </button>
-          <span className="h-3.5 w-px bg-white/10" />
-          <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
-          <span className="h-3.5 w-px bg-white/10" />
-          <span className="text-footnote text-white/35 font-medium tracking-wide">
+          <span className="h-3.5 w-px bg-white/10 flex-shrink-0" />
+          <h1 className="text-body font-semibold text-white/85 truncate">{projectName}</h1>
+          <span className="hidden sm:block h-3.5 w-px bg-white/10 flex-shrink-0" />
+          <span className="hidden sm:block text-footnote text-white/35 font-medium tracking-wide flex-shrink-0">
             Game Flow
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={handleSave}
             disabled={!hasChanges}
@@ -150,9 +151,10 @@ export default function GameFlowPage() {
 
           <button
             onClick={handleGoToSetting}
-            className="px-4 py-1.5 rounded-lg bg-white text-black text-footnote font-semibold hover:bg-white/90 transition-colors"
+            className="px-3 sm:px-4 py-1.5 rounded-lg bg-white text-black text-footnote font-semibold hover:bg-white/90 transition-colors"
           >
-            Setting →
+            <span className="hidden sm:inline">Pass Map →</span>
+            <span className="sm:hidden">PassMap →</span>
           </button>
         </div>
       </div>

@@ -146,35 +146,35 @@ export default function StoryPage() {
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {/* Page header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0 gap-2">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <button
             onClick={() => navigate('/plan')}
-            className="text-white/30 hover:text-white/60 transition-colors text-subhead"
+            className="text-white/30 hover:text-white/60 transition-colors text-subhead flex-shrink-0"
           >
             ← Plan
           </button>
-          <span className="h-3.5 w-px bg-white/10" />
-          <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
-          <span className="h-3.5 w-px bg-white/10" />
-          <span className="text-footnote text-white/35 font-medium tracking-wide">
-            Story Proposals
+          <span className="h-3.5 w-px bg-white/10 flex-shrink-0" />
+          <h1 className="text-body font-semibold text-white/85 truncate">{projectName}</h1>
+          <span className="hidden sm:block h-3.5 w-px bg-white/10 flex-shrink-0" />
+          <span className="hidden sm:block text-footnote text-white/35 font-medium tracking-wide flex-shrink-0">
+            Story
           </span>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={() => saveCurrentProject()}
             className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
           >
             저장
           </button>
-          {/* Locked story indicator */}
+          {/* Locked story indicator — hidden on mobile */}
           {isStoryLocked && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-caption font-medium">
-              현재 스토리: {selectedStory.title}
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-caption font-medium max-w-[140px] truncate">
+              ✓ {selectedStory.title}
             </span>
           )}
 
@@ -186,21 +186,24 @@ export default function StoryPage() {
             {isAddingBatch ? (
               <>
                 <span className="inline-block w-3 h-3 border border-white/30 border-t-white/70 rounded-full animate-spin" />
-                생성 중…
+                <span className="hidden sm:inline">생성 중…</span>
               </>
             ) : (
-              <>+ NEW 스토리 생성</>
+              <><span className="hidden sm:inline">+ NEW </span>스토리</>
             )}
           </button>
 
           <button
             onClick={handleContinue}
             disabled={!selectedId}
-            className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-3 sm:px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 active:bg-white/80 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {isStoryLocked && selectedId && !proposals.find((p) => p.id === selectedId && p.id === selectedStory.id)
-              ? '새 프로젝트로 만다라트 →'
-              : '만다라트 편집 →'}
+            <span className="hidden sm:inline">
+              {isStoryLocked && selectedId && !proposals.find((p) => p.id === selectedId && p.id === selectedStory.id)
+                ? '새 프로젝트로 만다라트 →'
+                : '만다라트 편집 →'}
+            </span>
+            <span className="sm:hidden">다음 →</span>
           </button>
         </div>
       </div>

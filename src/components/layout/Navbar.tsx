@@ -2,11 +2,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useProject } from '../../context/ProjectContext';
 
 const WORKFLOW_STEPS = [
-  { path: '/plan', label: 'Plan' },
-  { path: '/story', label: 'Story' },
-  { path: '/mandalart', label: 'Mandala Chart' },
-  { path: '/game-flow', label: 'Game Flow' },
-  { path: '/setting', label: 'Pass Map' },
+  { path: '/plan',       label: 'Plan',         mobileLabel: 'Plan' },
+  { path: '/story',      label: 'Story',        mobileLabel: 'Story' },
+  { path: '/mandalart',  label: 'Mandala Chart', mobileLabel: 'Mandala' },
+  { path: '/game-flow',  label: 'Game Flow',    mobileLabel: 'Flow' },
+  { path: '/setting',    label: 'Pass Map',     mobileLabel: 'PassMap' },
 ];
 
 const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/setting', '/plan'];
@@ -23,8 +23,9 @@ export default function Navbar() {
   const currentStepIdx = WORKFLOW_STEPS.findIndex((s) => location.pathname.startsWith(s.path));
 
   return (
+    <>
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/[0.06]">
-      <div className="flex items-center justify-between px-5 h-12 max-w-[1440px] mx-auto">
+      <div className="flex items-center justify-between px-3 sm:px-5 h-12 max-w-[1440px] mx-auto">
         {/* Left: Brand */}
         <div className="flex items-center gap-3 min-w-0 flex-shrink-0">
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
@@ -57,7 +58,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Center: Workflow pipeline */}
+        {/* Center: Workflow pipeline (desktop only) */}
         {isInsideProject && (
           <div className="hidden md:flex items-center gap-0.5 px-1 py-0.5 rounded-lg">
             {WORKFLOW_STEPS.map((step, idx) => {
@@ -104,5 +105,35 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+
+    {/* Mobile bottom workflow navigation */}
+    {isInsideProject && (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden glass border-t border-white/[0.06]">
+        <div className="flex items-stretch h-13">
+          {WORKFLOW_STEPS.map((step) => {
+            const isActive = location.pathname.startsWith(step.path);
+            return (
+              <Link
+                key={step.path}
+                to={step.path}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-all ${
+                  isActive
+                    ? 'text-white bg-white/[0.07]'
+                    : 'text-white/30 hover:text-white/55 hover:bg-white/[0.03]'
+                }`}
+              >
+                {isActive && (
+                  <div className="w-4 h-0.5 rounded-full bg-white mb-0.5" />
+                )}
+                <span className="text-[9px] font-medium leading-tight tracking-wide">
+                  {step.mobileLabel}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    )}
+    </>
   );
 }

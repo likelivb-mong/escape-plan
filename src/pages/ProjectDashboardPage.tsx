@@ -199,9 +199,9 @@ export default function ProjectDashboardPage() {
 
         {/* ── Design Pipeline Header ── */}
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-body font-semibold text-white/60">테마 설계 파이프라인</h2>
+          <h2 className="text-body font-semibold text-white/60 flex-shrink-0">테마 설계 파이프라인</h2>
           <div className="h-px flex-1 bg-white/[0.05]" />
-          <span className="text-caption text-white/20">
+          <span className="hidden sm:block text-caption text-white/20 flex-shrink-0">
             기획안 → 스토리 → 만다라트 → 게임 플로우 → Pass Map
           </span>
         </div>
