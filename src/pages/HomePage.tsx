@@ -85,7 +85,7 @@ export default function HomePage() {
   const STEP_PROGRESS: Record<string, number> = {
     '영상 정보 가져오는 중...': 12,
     '자막 분석 중...': 30,
-    '서사 구조 분석 중 (자막 기반)...': 58,
+    '내용 서사 구조 분석 중...': 58,
     'AI가 서사 구조 분석 중...': 58,
     '방탈출 테마 생성 중...': 82,
   };

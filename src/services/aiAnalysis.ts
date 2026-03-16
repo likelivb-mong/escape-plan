@@ -137,9 +137,19 @@ function buildNarrativeExtractionPrompt(
 영상 제목: ${videoTitle}
 채널: ${channelName || '알 수 없음'}${transcriptSection}
 
-## 분석 지침
+## 콘텐츠 유형 유연 분석 지침
+이 영상은 어떤 유형이든 분석 가능합니다:
+- 범죄/미스터리/스릴러: 가해자·피해자·동기 중심으로 분석
+- 소설/웹소설 낭독: 원작 이야기의 인물·갈등·서사 흐름을 추출
+- 판타지/SF/로맨스/공포: 핵심 갈등과 세계관 중심으로 분석
+- 다큐/역사/실화: 실제 사건의 서사 구조로 재해석
+- 기타 콘텐츠: 이야기에서 갈등·긴장·반전 요소를 창의적으로 추출
+
+characters의 role은 고정되지 않습니다 — 주인공, 악역, 희생자, 조력자, 의문인물, 서술자 등 자유롭게 설정하세요.
+가해자·피해자 구도가 없으면 핵심 갈등 당사자들로 대체하세요.
+
 ${hasTranscript
-  ? '자막 텍스트를 기반으로 정밀하게 분석하세요. 실제 대사와 사건 흐름을 따르세요.'
+  ? '자막 텍스트를 기반으로 정밀하게 분석하세요. 실제 대사와 사건 흐름을 따르세요. 낭독 영상의 경우 낭독되는 이야기의 내용을 분석하세요.'
   : '제목과 채널명만으로 추론하세요. 장르 유사 콘텐츠를 참고해 서사를 재구성하세요.'}
 
 ### 타임라인 작성 규칙
@@ -236,6 +246,17 @@ function buildStoryGenerationPrompt(
 
 영상 제목: ${videoTitle}
 채널: ${channelName || '알 수 없음'}
+
+## 콘텐츠 유형별 investigation 필드 해석 지침
+범죄 영상이 아니어도 아래처럼 유연하게 채우세요:
+- perpetrator → 갈등을 유발하는 인물·세력·존재 (악역, 마왕, 운명, 사회구조 등)
+- victim → 갈등의 피해자 또는 주인공
+- motive → 사건·갈등의 핵심 원인 (복수, 생존, 사랑, 권력, 저주 등)
+- method → 갈등이 전개되는 방식 (전쟁, 배신, 마법, 음모 등)
+- scene → 핵심 사건이 발생하는 공간
+- clue → 이야기의 핵심 단서 또는 비밀
+- technique → 진실이 밝혀지는 방식
+소설/낭독 영상의 경우 원작 이야기의 요소를 방탈출 테마로 재해석하세요.
 
 ## 서사 분석 요약
 - ${narrative.summaryShort}
@@ -368,6 +389,16 @@ function buildPrompt(videoTitle: string, channelName: string): string {
   return `당신은 XCAPE 방탈출 테마 기획 전문가입니다. 아래 YouTube 영상 정보를 방탈출 게임으로 재해석하여 기획 데이터를 JSON으로 생성하세요.
 
 ${titleSection}
+
+## 콘텐츠 유형별 investigation 필드 해석 지침
+범죄 영상이 아니어도 아래처럼 유연하게 채우세요:
+- perpetrator → 갈등을 유발하는 인물·세력·존재 (악역, 마왕, 운명, 사회구조 등)
+- victim → 갈등의 피해자 또는 주인공
+- motive → 사건·갈등의 핵심 원인 (복수, 생존, 사랑, 권력, 저주 등)
+- method → 갈등이 전개되는 방식 (전쟁, 배신, 마법, 음모 등)
+- scene → 핵심 사건이 발생하는 공간
+- clue → 이야기의 핵심 단서 또는 비밀
+- technique → 진실이 밝혀지는 방식
 
 ${investigationRef}
 
@@ -589,7 +620,7 @@ export async function analyzeYoutube(
       const tr = await fetchYoutubeTranscript(videoId);
       if (tr.available && tr.segments.length > 0) {
         transcriptAvailable = true;
-        transcriptText = formatTranscriptForPrompt(tr.segments);
+        transcriptText = formatTranscriptForPrompt(tr.segments, 30000);
       }
     } catch { /* continue without transcript */ }
   }
@@ -600,7 +631,7 @@ export async function analyzeYoutube(
   const genAI = new GoogleGenerativeAI(apiKey);
 
   // 4. Pass 1 — Narrative extraction
-  step(transcriptAvailable ? '서사 구조 분석 중 (자막 기반)...' : 'AI가 서사 구조 분석 중...');
+  step(transcriptAvailable ? '내용 서사 구조 분석 중...' : 'AI가 서사 구조 분석 중...');
   let narrative: NarrativeAnalysis | undefined;
   try {
     const narrativePrompt = buildNarrativeExtractionPrompt(
