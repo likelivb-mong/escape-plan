@@ -75,6 +75,9 @@ export default function MiniMapCanvas({
       origY: step.y,
     };
 
+    // Find room boundaries for this step
+    const room = rooms?.find(r => r.name === step.zone);
+
     const handleMouseMove = (me: MouseEvent) => {
       if (!dragRef.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
@@ -83,8 +86,26 @@ export default function MiniMapCanvas({
       // Always convert to percentage delta
       const dpx = (dx / rect.width) * 100;
       const dpy = (dy / rect.height) * 100;
-      const newX = Math.max(2, Math.min(98, dragRef.current.origX + dpx));
-      const newY = Math.max(2, Math.min(98, dragRef.current.origY + dpy));
+
+      let newX = dragRef.current.origX + dpx;
+      let newY = dragRef.current.origY + dpy;
+
+      // Constrain to room boundaries if room exists
+      if (room) {
+        const stepSize = 2.5; // Approximate step pin size
+        const minX = room.x + stepSize;
+        const maxX = room.x + room.width - stepSize;
+        const minY = room.y + stepSize;
+        const maxY = room.y + room.height - stepSize;
+
+        newX = Math.max(minX, Math.min(maxX, newX));
+        newY = Math.max(minY, Math.min(maxY, newY));
+      } else {
+        // Fallback to canvas boundaries if no room
+        newX = Math.max(2, Math.min(98, newX));
+        newY = Math.max(2, Math.min(98, newY));
+      }
+
       onStepMove?.(dragRef.current.stepId, newX, newY);
     };
 
@@ -96,7 +117,7 @@ export default function MiniMapCanvas({
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-  }, [editable, onStepMove]);
+  }, [editable, onStepMove, rooms]);
 
   const handleRoomDragStart = useCallback((e: React.MouseEvent, room: ThemeRoom, dragType: 'move' | 'resize') => {
     if (!editable) return;
