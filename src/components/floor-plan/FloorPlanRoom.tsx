@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { GameFlowStep } from '../../types/gameFlow';
 import type { FloorPlanRoomLayout } from '../../types/floorPlan';
 import { AnswerTypeBadge } from '../game-flow/badges';
@@ -34,6 +34,7 @@ interface FloorPlanRoomProps {
   onMoveStart: (roomName: string, e: React.PointerEvent) => void;
   onResizeStart: (roomName: string, e: React.PointerEvent) => void;
   onUpdateStepPosition: (stepId: string, x: number, y: number) => void;
+  onRenameRoom?: (oldName: string, newName: string) => void;
 }
 
 export default function FloorPlanRoom({
@@ -45,9 +46,36 @@ export default function FloorPlanRoom({
   onMoveStart,
   onResizeStart,
   onUpdateStepPosition,
+  onRenameRoom,
 }: FloorPlanRoomProps) {
   const colors = ROOM_BG_COLORS[roomIndex % ROOM_BG_COLORS.length];
   const roomRef = useRef<HTMLDivElement>(null);
+
+  // Room name editing
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(layout.roomName);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const handleNameDoubleClick = useCallback((e: React.MouseEvent) => {
+    if (!isEditing) return;
+    e.stopPropagation();
+    setNameValue(layout.roomName);
+    setEditingName(true);
+    setTimeout(() => nameInputRef.current?.select(), 0);
+  }, [isEditing, layout.roomName]);
+
+  const commitRename = useCallback(() => {
+    const trimmed = nameValue.trim();
+    setEditingName(false);
+    if (trimmed && trimmed !== layout.roomName) {
+      onRenameRoom?.(layout.roomName, trimmed);
+    }
+  }, [nameValue, layout.roomName, onRenameRoom]);
+
+  const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') commitRename();
+    if (e.key === 'Escape') setEditingName(false);
+  }, [commitRename]);
 
   // Local step drag state
   const [stepDrag, setStepDrag] = useState<{
@@ -109,10 +137,26 @@ export default function FloorPlanRoom({
     >
       {/* Room header */}
       <div className={`px-2.5 py-1.5 ${colors.header} flex items-center justify-between flex-shrink-0`}>
-        <span className={`text-caption font-semibold ${colors.text} truncate`}>
-          {layout.roomName}
-        </span>
-        <span className="text-micro text-white/35">
+        {editingName ? (
+          <input
+            ref={nameInputRef}
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={handleNameKeyDown}
+            className={`text-caption font-semibold ${colors.text} bg-transparent border-b border-white/30 outline-none w-full mr-2`}
+            autoFocus
+          />
+        ) : (
+          <span
+            className={`text-caption font-semibold ${colors.text} truncate ${isEditing ? 'cursor-text hover:underline decoration-dotted underline-offset-2' : ''}`}
+            onDoubleClick={handleNameDoubleClick}
+            title={isEditing ? '더블클릭으로 이름 변경' : undefined}
+          >
+            {layout.roomName}
+          </span>
+        )}
+        <span className="text-micro text-white/35 flex-shrink-0">
           {steps.length}스텝
         </span>
       </div>

@@ -9,6 +9,7 @@ interface FloorPlanCanvasProps {
   floorPlan: FloorPlanData;
   onUpdateFloorPlan: (data: FloorPlanData) => void;
   isEditing: boolean;
+  onRenameRoom?: (oldName: string, newName: string) => void;
 }
 
 interface DragState {
@@ -36,6 +37,7 @@ export default function FloorPlanCanvas({
   floorPlan,
   onUpdateFloorPlan,
   isEditing,
+  onRenameRoom,
 }: FloorPlanCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -257,6 +259,7 @@ export default function FloorPlanCanvas({
             onMoveStart={handleRoomMoveStart}
             onResizeStart={handleRoomResizeStart}
             onUpdateStepPosition={handleUpdateStepPosition}
+            onRenameRoom={onRenameRoom}
           />
         ))}
 

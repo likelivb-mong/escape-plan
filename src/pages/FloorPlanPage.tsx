@@ -21,6 +21,7 @@ import {
   getDetailByStepId,
   saveStepsForTheme,
   saveDetailsForTheme,
+  updateTheme,
 } from '../features/passmap/utils/passmap-store';
 import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 
@@ -31,6 +32,7 @@ export default function FloorPlanPage() {
   const {
     projectName,
     gameFlowDesign,
+    setGameFlowDesign,
     floorPlanData,
     setFloorPlanData,
     passmapLink,
@@ -89,6 +91,52 @@ export default function FloorPlanPage() {
       setPmDetails(getDetailsByStepIds(steps.map((s) => s.id)));
     }, 50);
   };
+
+  // ── Room rename (propagates to GameFlow, FloorPlan, PassMap) ────────────────
+
+  const handleRenameRoom = useCallback((oldName: string, newName: string) => {
+    if (!gameFlowDesign) return;
+
+    // 1. Update GameFlowPlan: rooms array + step.room references
+    const updatedPlan = {
+      ...gameFlowDesign,
+      rooms: gameFlowDesign.rooms.map((r) => (r === oldName ? newName : r)),
+      steps: gameFlowDesign.steps.map((s) =>
+        s.room === oldName ? { ...s, room: newName } : s,
+      ),
+    };
+    setGameFlowDesign(updatedPlan);
+
+    // 2. Update FloorPlanData: room layout names
+    if (floorPlanData) {
+      setFloorPlanData({
+        ...floorPlanData,
+        rooms: floorPlanData.rooms.map((r) =>
+          r.roomName === oldName ? { ...r, roomName: newName } : r,
+        ),
+      });
+    }
+
+    // 3. Update PassMap store: step zones + theme rooms
+    if (passmapLink) {
+      // Update step zones
+      const updatedSteps = pmSteps.map((s) =>
+        s.zone === oldName ? { ...s, zone: newName } : s,
+      );
+      setPmSteps(updatedSteps);
+      saveStepsForTheme(passmapLink.themeId, updatedSteps);
+
+      // Update theme rooms
+      const theme = getThemeById(passmapLink.themeId);
+      if (theme?.rooms) {
+        updateTheme(passmapLink.themeId, {
+          rooms: theme.rooms.map((r) =>
+            r.name === oldName ? { ...r, name: newName } : r,
+          ),
+        });
+      }
+    }
+  }, [gameFlowDesign, floorPlanData, passmapLink, pmSteps, setGameFlowDesign, setFloorPlanData]);
 
   // ── PassMap interactions ─────────────────────────────────────────────────────
 
@@ -351,6 +399,7 @@ export default function FloorPlanPage() {
               floorPlan={floorPlanData}
               onUpdateFloorPlan={handleUpdateFloorPlan}
               isEditing={isEditing}
+              onRenameRoom={handleRenameRoom}
             />
           )}
         </div>
