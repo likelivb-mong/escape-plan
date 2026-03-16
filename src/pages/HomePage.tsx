@@ -75,11 +75,24 @@ export default function HomePage() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubeLoading, setYoutubeLoading] = useState(false);
   const [youtubeStep, setYoutubeStep] = useState('');
+  const [youtubeProgress, setYoutubeProgress] = useState(0);
   const [youtubeError, setYoutubeError] = useState('');
   const [youtubeAnalysisResult, setYoutubeAnalysisResult] = useState<any>(null);
   const [analyzeFromYoutube, setAnalyzeFromYoutube] = useState(false);
   const [preview, setPreview] = useState<VideoPreview | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const STEP_PROGRESS: Record<string, number> = {
+    '영상 정보 가져오는 중...': 12,
+    '자막 분석 중...': 30,
+    '서사 구조 분석 중 (자막 기반)...': 58,
+    'AI가 서사 구조 분석 중...': 58,
+    '방탈출 테마 생성 중...': 82,
+  };
+
+  useEffect(() => {
+    if (youtubeStep) setYoutubeProgress(STEP_PROGRESS[youtubeStep] ?? 50);
+  }, [youtubeStep]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -139,9 +152,11 @@ export default function HomePage() {
     const url = youtubeUrl.trim();
     if (!url) return;
     setYoutubeLoading(true);
+    setYoutubeProgress(0);
     setYoutubeError('');
     try {
       const result = await analyzeYoutube(url, setYoutubeStep);
+      setYoutubeProgress(100);
       setYoutubeAnalysisResult(result);
       // AI 분석에서 나온 프로젝트명 자동으로 설정
       setProjectName(result.projectName || '');
@@ -302,6 +317,7 @@ export default function HomePage() {
           preview={preview}
           youtubeLoading={youtubeLoading}
           youtubeStep={youtubeStep}
+          youtubeProgress={youtubeProgress}
           youtubeError={youtubeError}
           onAnalyzeYoutube={handleYoutubeAnalyze}
           analyzeFromYoutube={analyzeFromYoutube}
@@ -341,6 +357,7 @@ interface BuildTabProps {
   preview: VideoPreview | null;
   youtubeLoading: boolean;
   youtubeStep: string;
+  youtubeProgress: number;
   youtubeError: string;
   onAnalyzeYoutube: () => void;
   analyzeFromYoutube: boolean;
@@ -361,7 +378,7 @@ function BuildTab({
   onSubmit,
   selectedBranch, setSelectedBranch,
   youtubeUrl, setYoutubeUrl,
-  preview, youtubeLoading, youtubeStep, youtubeError,
+  preview, youtubeLoading, youtubeStep, youtubeProgress, youtubeError,
   onAnalyzeYoutube,
   analyzeFromYoutube, setAnalyzeFromYoutube,
   youtubeAnalysisResult,
@@ -392,29 +409,79 @@ function BuildTab({
             />
           </Field>
 
-          {preview && preview.title && (
-            <div className="flex items-center gap-3 bg-white/[0.04] rounded-lg p-3 border border-white/[0.06]">
-              <div className="flex-shrink-0 w-10 h-10 rounded bg-white/[0.08] overflow-hidden">
+          {/* ── Video preview card ── */}
+          {preview && !preview.metaLoading && preview.title && (
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+              <div className="relative w-full aspect-video bg-black/40">
                 <img
                   src={`https://img.youtube.com/vi/${preview.videoId}/mqdefault.jpg`}
-                  alt=""
-                  className="w-full h-full object-cover"
+                  alt={preview.title ?? ''}
+                  className="w-full h-full object-cover opacity-90"
                 />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-footnote font-medium text-white/70 truncate">{preview.title}</p>
-                {preview.channel && <p className="text-caption text-white/40 truncate">{preview.channel}</p>}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-2 left-3 right-3">
+                  <p className="text-footnote font-semibold text-white leading-snug line-clamp-2">{preview.title}</p>
+                  {preview.channel && (
+                    <p className="text-caption text-white/50 mt-0.5">{preview.channel}</p>
+                  )}
+                </div>
+                <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/70 text-[10px] text-white/60 font-mono">
+                  YouTube
+                </span>
               </div>
             </div>
           )}
 
-          <button
-            onClick={onAnalyzeYoutube}
-            disabled={!youtubeUrl.trim() || youtubeLoading}
-            className="py-2 rounded-lg text-body font-medium transition-all bg-white/[0.08] text-white hover:bg-white/[0.12] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {youtubeLoading ? `분석 중... ${youtubeStep ? `(${youtubeStep})` : ''}` : '📊 영상 분석하기'}
-          </button>
+          {preview && preview.metaLoading && (
+            <div className="h-8 flex items-center gap-2 text-caption text-white/30">
+              <div className="w-3 h-3 border border-white/20 border-t-white/50 rounded-full animate-spin" />
+              영상 정보 불러오는 중...
+            </div>
+          )}
+
+          {/* ── Analyze button ── */}
+          {!youtubeLoading && (
+            <button
+              onClick={onAnalyzeYoutube}
+              disabled={!preview?.title || youtubeLoading}
+              className="py-2.5 rounded-xl text-body font-semibold transition-all bg-white/[0.08] text-white/80 hover:bg-white/[0.13] hover:text-white active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              📊 영상 분석하기
+            </button>
+          )}
+
+          {/* ── Progress bar (loading) ── */}
+          {youtubeLoading && (
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-footnote text-white/50">{youtubeStep || '분석 준비 중...'}</span>
+                <span className="text-footnote font-mono text-white/40">{youtubeProgress}%</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-white/[0.07] overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-700 ease-out"
+                  style={{ width: `${youtubeProgress}%` }}
+                />
+              </div>
+              <div className="flex gap-1.5">
+                {['영상 정보', '자막 분석', '서사 분석', '테마 생성'].map((label, i) => {
+                  const thresholds = [12, 30, 58, 82];
+                  const done = youtubeProgress >= thresholds[i];
+                  const active = youtubeProgress >= (thresholds[i - 1] ?? 0) && youtubeProgress < thresholds[i];
+                  return (
+                    <div key={label} className="flex-1 flex flex-col items-center gap-1">
+                      <div className={`w-full h-0.5 rounded-full transition-all duration-500 ${
+                        done ? 'bg-violet-400/70' : active ? 'bg-violet-400/30' : 'bg-white/[0.07]'
+                      }`} />
+                      <span className={`text-[9px] text-center leading-tight transition-colors duration-300 ${
+                        done ? 'text-violet-300/70' : active ? 'text-white/50' : 'text-white/20'
+                      }`}>{label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {youtubeError && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-footnote">
@@ -422,21 +489,18 @@ function BuildTab({
             </div>
           )}
 
-          {youtubeAnalysisResult && (
-            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-300 text-footnote">
-              ✅ 분석 완료! 아래에서 "이 영상으로 시작" 옵션을 선택하세요.
-            </div>
-          )}
-
-          {youtubeAnalysisResult && (
-            <label className="flex items-center gap-2 cursor-pointer">
+          {youtubeAnalysisResult && !youtubeLoading && (
+            <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl border border-green-500/20 bg-green-500/[0.06] hover:bg-green-500/[0.09] transition-all">
               <input
                 type="checkbox"
                 checked={analyzeFromYoutube}
                 onChange={(e) => setAnalyzeFromYoutube(e.target.checked)}
-                className="w-4 h-4 rounded"
+                className="w-4 h-4 rounded accent-green-400"
               />
-              <span className="text-footnote text-white/60">이 YouTube 영상을 기반으로 테마 설계 시작</span>
+              <div>
+                <p className="text-footnote font-medium text-green-300/80">✅ 분석 완료 — 이 영상으로 테마 설계 시작</p>
+                <p className="text-caption text-white/30 mt-0.5">체크 후 하단 "테마 설계 시작 →" 버튼을 눌러주세요</p>
+              </div>
             </label>
           )}
         </div>
