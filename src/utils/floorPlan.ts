@@ -111,56 +111,98 @@ export function groupEntriesByRoom(
 
 /**
  * Ensure room stays within canvas bounds and has minimum size
+ * This is the STRICT validation - Room MUST fit inside [0, 100] x [0, 100]
  */
 export function validateRoomBounds(room: FloorPlanRoomLayout): FloorPlanRoomLayout {
   const MIN_SIZE = 8;
-  const MAX_SIZE = 95;
+  const MAX_SIZE = 100;
 
-  let x = Math.max(0, Math.min(room.x, 100 - MIN_SIZE));
-  let y = Math.max(0, Math.min(room.y, 100 - MIN_SIZE));
-  let width = Math.max(MIN_SIZE, Math.min(room.width, 100 - x));
-  let height = Math.max(MIN_SIZE, Math.min(room.height, 100 - y));
+  // 1. Clamp width and height first (absolute constraints)
+  let width = Math.max(MIN_SIZE, Math.min(room.width, MAX_SIZE));
+  let height = Math.max(MIN_SIZE, Math.min(room.height, MAX_SIZE));
+
+  // 2. Now clamp position so room + size doesn't exceed 100
+  let x = Math.max(0, Math.min(room.x, MAX_SIZE - width));
+  let y = Math.max(0, Math.min(room.y, MAX_SIZE - height));
 
   return { ...room, x, y, width, height };
 }
 
 /**
- * Check if two rooms overlap (with small tolerance)
+ * Check if two rooms overlap (no tolerance)
  */
-function roomsOverlap(r1: FloorPlanRoomLayout, r2: FloorPlanRoomLayout, tolerance = 0.5): boolean {
+function roomsOverlap(r1: FloorPlanRoomLayout, r2: FloorPlanRoomLayout): boolean {
   return !(
-    r1.x + r1.width + tolerance < r2.x ||
-    r2.x + r2.width + tolerance < r1.x ||
-    r1.y + r1.height + tolerance < r2.y ||
-    r2.y + r2.height + tolerance < r1.y
+    r1.x + r1.width <= r2.x ||
+    r2.x + r2.width <= r1.x ||
+    r1.y + r1.height <= r2.y ||
+    r2.y + r2.height <= r1.y
   );
 }
 
 /**
  * Adjust room to avoid overlaps with other rooms
+ * Uses a smarter algorithm that finds the best direction to move
  */
 function adjustForOverlap(
   room: FloorPlanRoomLayout,
   others: FloorPlanRoomLayout[],
-  maxIterations = 5,
 ): FloorPlanRoomLayout {
   let adjusted = room;
+  let attempts = 0;
+  const maxAttempts = 20;
 
-  for (let iter = 0; iter < maxIterations; iter++) {
+  while (attempts < maxAttempts) {
     const overlapping = others.find(other => roomsOverlap(adjusted, other));
     if (!overlapping) break;
 
-    // Try to move away from the overlapping room
-    const dx = adjusted.x + adjusted.width / 2 - (overlapping.x + overlapping.width / 2);
-    const dy = adjusted.y + adjusted.height / 2 - (overlapping.y + overlapping.height / 2);
+    // Find center-to-center vector
+    const centerX = adjusted.x + adjusted.width / 2;
+    const centerY = adjusted.y + adjusted.height / 2;
+    const otherCenterX = overlapping.x + overlapping.width / 2;
+    const otherCenterY = overlapping.y + overlapping.height / 2;
 
-    const moveX = dx !== 0 ? snap(Math.sign(dx) * 2) : 0;
-    const moveY = dy !== 0 ? snap(Math.sign(dy) * 2) : 0;
+    const dx = centerX - otherCenterX;
+    const dy = centerY - otherCenterY;
 
+    // Determine primary push direction
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    let moveX = 0;
+    let moveY = 0;
+
+    if (absDx > absDy) {
+      // Push horizontally more
+      moveX = dx > 0 ? 3 : -3;
+      moveY = dy > 0 ? 1 : -1;
+    } else {
+      // Push vertically more
+      moveX = dx > 0 ? 1 : -1;
+      moveY = dy > 0 ? 3 : -3;
+    }
+
+    // Apply movement and validate
     const newX = Math.max(0, Math.min(adjusted.x + moveX, 100 - adjusted.width));
     const newY = Math.max(0, Math.min(adjusted.y + moveY, 100 - adjusted.height));
 
-    adjusted = { ...adjusted, x: newX, y: newY };
+    // If we didn't actually move, try a different strategy
+    if (newX === adjusted.x && newY === adjusted.y) {
+      // Can't move further, try scaling down if possible
+      if (adjusted.width > 10 && adjusted.height > 10) {
+        adjusted = {
+          ...adjusted,
+          width: Math.max(8, adjusted.width - 2),
+          height: Math.max(8, adjusted.height - 2),
+        };
+      } else {
+        break; // Give up
+      }
+    } else {
+      adjusted = { ...adjusted, x: newX, y: newY };
+    }
+
+    attempts++;
   }
 
   return adjusted;
@@ -170,24 +212,22 @@ function adjustForOverlap(
  * Normalize entire floor plan: validate bounds, prevent overlaps, keep steps inside
  */
 export function normalizeFloorPlan(data: FloorPlanData): FloorPlanData {
-  // 1. Validate each room's bounds
+  // 1. Validate each room's bounds STRICTLY
   let validatedRooms = data.rooms.map(validateRoomBounds);
 
-  // 2. Prevent overlaps
+  // 2. Prevent overlaps with better algorithm
   const normalizedRooms: FloorPlanRoomLayout[] = [];
   for (const room of validatedRooms) {
+    // Re-validate after adjusting for overlaps
     const adjusted = adjustForOverlap(room, normalizedRooms);
-    normalizedRooms.push(adjusted);
+    const final = validateRoomBounds(adjusted);
+    normalizedRooms.push(final);
   }
 
   // 3. Clamp step positions to their rooms
   const normalizedStepPositions: Record<string, { x: number; y: number }> = {};
-  const stepsByRoom = new Map<string, string[]>();
 
-  // Group steps by room name
   for (const [stepId, pos] of Object.entries(data.stepPositions || {})) {
-    // Find which room this step belongs to by looking for a matching room
-    // This is a safety check - in practice, steps are stored separately
     normalizedStepPositions[stepId] = pos;
   }
 
