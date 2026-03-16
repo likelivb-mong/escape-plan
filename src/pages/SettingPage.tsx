@@ -39,6 +39,7 @@ export default function SettingPage() {
     setBranchCode,
     passmapLink,
     setPassmapLink,
+    saveCurrentProject,
   } = useProject();
 
   const [activeTab, setActiveTab] = useState<Tab>('passmap');
@@ -303,10 +304,10 @@ export default function SettingPage() {
             </button>
           )}
           <button
-            onClick={() => navigate('/plan')}
-            className="text-footnote text-white/35 hover:text-white/50 transition-colors"
+            onClick={() => { saveCurrentProject(); setSaveMessage('저장됨'); setTimeout(() => setSaveMessage(null), 1500); }}
+            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
           >
-            Plan 보기 →
+            저장
           </button>
         </div>
       </div>

@@ -275,7 +275,12 @@ export default function MandalartPage() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-footnote text-white/30">임시 저장됨</span>
+          <button
+            onClick={() => saveCurrentProject()}
+            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
+          >
+            저장
+          </button>
           <button
             onMouseDown={handleExamplePressStart}
             onMouseUp={handleExamplePressEnd}
