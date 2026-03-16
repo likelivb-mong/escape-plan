@@ -72,16 +72,10 @@ export default function GameFlowTab({
     });
   };
 
-  // ── Save to context and go to draft ────────────────────────────────────────
-  const handleSaveToDraft = () => {
+  // ── Save to context and go to setting ────────────────────────────────────────
+  const handleGoToSetting = () => {
     setGameFlowDesign(plan);
-    navigate('/draft');
-  };
-
-  // ── Go to floor plan ──────────────────────────────────────────────────────
-  const handleGoToFloorPlan = () => {
-    setGameFlowDesign(plan);
-    navigate('/floor-plan');
+    navigate('/setting');
   };
 
   return (
@@ -179,7 +173,7 @@ export default function GameFlowTab({
       </div>
 
       {/* ── Summary footer ── */}
-      <GameFlowSummaryBar steps={plan.steps} plan={plan} onSaveToDraft={handleSaveToDraft} onGoToFloorPlan={handleGoToFloorPlan} />
+      <GameFlowSummaryBar steps={plan.steps} plan={plan} onGoToSetting={handleGoToSetting} />
     </div>
   );
 }
@@ -312,13 +306,11 @@ function FilterSelect({
 function GameFlowSummaryBar({
   steps,
   plan,
-  onSaveToDraft,
-  onGoToFloorPlan,
+  onGoToSetting,
 }: {
   steps: GameFlowStep[];
   plan: GameFlowPlan;
-  onSaveToDraft: () => void;
-  onGoToFloorPlan: () => void;
+  onGoToSetting: () => void;
 }) {
   const xkitCount    = steps.filter((s) => s.answerType === 'xkit').length;
   const deviceCount  = steps.filter((s) => s.problemMode === 'device' || s.problemMode === 'clue_device').length;
@@ -336,16 +328,10 @@ function GameFlowSummaryBar({
       <div className="flex-1" />
 
       <button
-        onClick={onGoToFloorPlan}
-        className="px-4 py-2 rounded-full border border-white/[0.10] text-subhead text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
-      >
-        도면 / PassMap →
-      </button>
-      <button
-        onClick={onSaveToDraft}
+        onClick={onGoToSetting}
         className="px-4 py-2 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
       >
-        Draft로 보내기 →
+        Setting →
       </button>
     </div>
   );

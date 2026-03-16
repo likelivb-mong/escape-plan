@@ -15,12 +15,14 @@ export default function GameFlowPage() {
     setGameFlowDesign,
   } = useProject();
 
+  // ── Temporary state (editing) vs. saved state ──────────────────────────────────
   const [gamePlan, setGamePlan] = useState<GameFlowPlan | null>(gameFlowDesign ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // ── Auto-generate on mount ────────────────────────────────────────────────────
+  // ── Auto-generate on mount (if no plan exists) ─────────────────────────────────
   useEffect(() => {
     if (gamePlan) return; // Already has plan
     if (!selectedStory || !cells || cells.length === 0) return;
@@ -30,6 +32,7 @@ export default function GameFlowPage() {
       try {
         const plan = await generateGameFlowFromMandala(selectedStory, cells);
         setGamePlan(plan);
+        setHasChanges(false);
       } finally {
         setIsGenerating(false);
       }
@@ -44,6 +47,7 @@ export default function GameFlowPage() {
     try {
       const plan = await regenerateGameFlow(selectedStory, cells);
       setGamePlan(plan);
+      setHasChanges(true); // Mark as changed since user regenerated
     } finally {
       setIsRegenerating(false);
     }
@@ -51,6 +55,7 @@ export default function GameFlowPage() {
 
   const handleUpdatePlan = (newPlan: GameFlowPlan) => {
     setGamePlan(newPlan);
+    setHasChanges(true); // Mark as changed when user edits
   };
 
   const handleAddStep = (stageLabel: StageLabel) => {
@@ -61,9 +66,18 @@ export default function GameFlowPage() {
   const handleSave = () => {
     if (gamePlan) {
       setGameFlowDesign(gamePlan);
+      setHasChanges(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     }
+  };
+
+  const handleGoToSetting = () => {
+    if (gamePlan) {
+      setGameFlowDesign(gamePlan); // Always save before navigating
+      setHasChanges(false);
+    }
+    navigate('/setting');
   };
 
   // ── Empty state ──────────────────────────────────────────────────────────────
@@ -110,43 +124,38 @@ export default function GameFlowPage() {
 
         {/* ── Right actions ── */}
         <div className="flex items-center gap-2">
-          {/* Undo / Redo */}
-          <div className="flex items-center gap-0.5">
-            <button
-              disabled
-              title="준비 중"
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/[0.08] text-white/30 hover:text-white/65 hover:border-white/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed text-body"
-            >
-              ↩
-            </button>
-            <button
-              disabled
-              title="준비 중"
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-white/[0.08] text-white/30 hover:text-white/65 hover:border-white/20 transition-all disabled:opacity-20 disabled:cursor-not-allowed text-body"
-            >
-              ↪
-            </button>
-          </div>
+          {/* Regenerate button */}
+          <button
+            onClick={handleRegenerate}
+            disabled={isRegenerating}
+            title="AI로 다시 생성"
+            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isRegenerating ? '생성 중...' : '🔄 다시 생성'}
+          </button>
 
           <span className="h-3.5 w-px bg-white/10" />
 
-          {/* Save */}
+          {/* Save button */}
           <button
             onClick={handleSave}
+            disabled={!hasChanges}
             className={[
               'px-3 py-1.5 rounded-lg text-footnote font-medium transition-all duration-200 border',
               saved
                 ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300/80'
-                : 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70',
+                : hasChanges
+                ? 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
+                : 'border-white/[0.08] text-white/25 cursor-not-allowed',
             ].join(' ')}
           >
-            {saved ? '✓ 저장됨' : '저장'}
+            {saved ? '✓ 저장됨' : hasChanges ? '저장' : '저장됨'}
           </button>
 
           <span className="h-3.5 w-px bg-white/10" />
 
           <button
-            onClick={() => navigate('/setting')}
+            onClick={handleGoToSetting}
             className="text-footnote text-white/35 hover:text-white/50 transition-colors"
           >
             Setting →
