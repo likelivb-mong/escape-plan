@@ -30,6 +30,7 @@ interface MiniMapCanvasProps {
   rooms?: ThemeRoom[];
   editable?: boolean;
   onStepMove?: (stepId: string, x: number, y: number) => void;
+  onRoomUpdate?: (roomName: string, updates: Partial<ThemeRoom>) => void;
 }
 
 export default function MiniMapCanvas({
@@ -40,9 +41,11 @@ export default function MiniMapCanvas({
   rooms,
   editable = false,
   onStepMove,
+  onRoomUpdate,
 }: MiniMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ stepId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; dragType: 'move' | 'resize' } | null>(null);
 
   // Group steps by zone for step count per room
   const stepCountByZone = useMemo(() => {
@@ -89,6 +92,54 @@ export default function MiniMapCanvas({
     window.addEventListener('mouseup', handleMouseUp);
   }, [editable, onStepMove]);
 
+  const handleRoomDragStart = useCallback((e: React.MouseEvent, room: ThemeRoom, dragType: 'move' | 'resize') => {
+    if (!editable) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    roomDragRef.current = {
+      roomName: room.name,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: room.x,
+      origY: room.y,
+      dragType,
+    };
+
+    const handleMouseMove = (me: MouseEvent) => {
+      if (!roomDragRef.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const dx = me.clientX - roomDragRef.current.startX;
+      const dy = me.clientY - roomDragRef.current.startY;
+      const dpx = (dx / rect.width) * 100;
+      const dpy = (dy / rect.height) * 100;
+
+      if (roomDragRef.current.dragType === 'move') {
+        // Move room
+        const newX = Math.max(0, Math.min(98, roomDragRef.current.origX + dpx));
+        const newY = Math.max(0, Math.min(98, roomDragRef.current.origY + dpy));
+        onRoomUpdate?.(roomDragRef.current.roomName, { x: newX, y: newY });
+      } else {
+        // Resize room (from bottom-right corner)
+        const room = rooms?.find((r) => r.name === roomDragRef.current?.roomName);
+        if (room) {
+          const newWidth = Math.max(8, Math.min(100 - room.x, room.width + dpx));
+          const newHeight = Math.max(8, Math.min(100 - room.y, room.height + dpy));
+          onRoomUpdate?.(roomDragRef.current.roomName, { width: newWidth, height: newHeight });
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      roomDragRef.current = null;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, [editable, rooms, onRoomUpdate]);
+
   return (
     <div
       ref={containerRef}
@@ -118,7 +169,9 @@ export default function MiniMapCanvas({
         return (
           <div
             key={room.name}
-            className="absolute rounded-lg border"
+            className={`absolute rounded-lg border transition-colors ${
+              editable ? 'cursor-move' : ''
+            }`}
             style={{
               left: `${room.x}%`,
               top: `${room.y}%`,
@@ -127,9 +180,10 @@ export default function MiniMapCanvas({
               borderColor,
               backgroundColor: `${borderColor.replace(/[\d.]+\)$/, '0.06)')}`,
             }}
+            onMouseDown={(e) => handleRoomDragStart(e, room, 'move')}
           >
             {/* Room header */}
-            <div className="flex items-center justify-between px-2.5 py-1.5">
+            <div className="flex items-center justify-between px-2.5 py-1.5 select-none pointer-events-none">
               <span
                 className="text-xs font-bold tracking-wide"
                 style={{ color: nameColor }}
@@ -140,6 +194,19 @@ export default function MiniMapCanvas({
                 {count}스텝
               </span>
             </div>
+
+            {/* Resize handle (bottom-right corner) */}
+            {editable && (
+              <div
+                className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize"
+                style={{
+                  background: borderColor,
+                  borderRadius: '0 0 4px 0',
+                }}
+                onMouseDown={(e) => handleRoomDragStart(e, room, 'resize')}
+                title="드래그로 크기 조정"
+              />
+            )}
           </div>
         );
       })}

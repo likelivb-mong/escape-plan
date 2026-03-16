@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { generateInitialLayout, reconcileRooms } from '../utils/floorPlan';
 import type { FloorPlanData } from '../types/floorPlan';
-import type { ThemeStep, StepDetail, PassMapViewMode } from '../features/passmap/types/passmap';
+import type { ThemeStep, StepDetail, PassMapViewMode, ThemeRoom } from '../features/passmap/types/passmap';
 
 import FloorPlanCanvas from '../components/floor-plan/FloorPlanCanvas';
 import MiniMapCanvas from '../features/passmap/components/MiniMapCanvas';
@@ -96,6 +96,17 @@ export default function SettingPage() {
   const handleUpdateFloorPlan = (data: FloorPlanData) => {
     setFloorPlanData(data);
   };
+
+  // ── Room update (position & size) ─────────────────────────────────────────
+  const handleUpdateRoom = useCallback((roomName: string, updates: Partial<ThemeRoom>) => {
+    if (!passmapLink) return;
+    const theme = getThemeById(passmapLink.themeId);
+    if (!theme?.rooms) return;
+    const updatedRooms = theme.rooms.map((r) =>
+      r.name === roomName ? { ...r, ...updates } : r
+    );
+    updateTheme(passmapLink.themeId, { rooms: updatedRooms });
+  }, [passmapLink]);
 
   // ── Room rename (propagates to GameFlow, FloorPlan, PassMap) ────────────────
 
@@ -361,6 +372,7 @@ export default function SettingPage() {
                   rooms={theme?.rooms || []}
                   editable={isEditing}
                   onStepMove={isEditing ? handleStepMove : undefined}
+                  onRoomUpdate={isEditing ? handleUpdateRoom : undefined}
                 />
               </div>
               <div>
