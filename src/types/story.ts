@@ -34,6 +34,8 @@ export interface StoryProposal {
   logline: string;
   /** 2–3 sentence synopsis */
   synopsis: string;
+  /** Optional detailed description */
+  description?: string;
   /** 기/승/전/반전/결 beats */
   beats: StoryBeat[];
   meta: {

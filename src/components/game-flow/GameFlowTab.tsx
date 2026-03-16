@@ -7,6 +7,7 @@ interface GameFlowTabProps {
   isRegenerating: boolean;
   onRegenerate: () => void;
   onUpdatePlan: (plan: GameFlowPlan) => void;
+  onAddStep?: (stageLabel: string) => void;
 }
 
 export default function GameFlowTab({

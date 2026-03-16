@@ -660,7 +660,7 @@ export async function generateGameFlowFromMandala(
       }
 
       // Convert to GameFlowPlan
-      const rooms = [...new Set(data.steps.map((s: any) => s.room))];
+      const rooms: string[] = [...new Set(data.steps.map((s: any) => s.room))];
       const steps: GameFlowStep[] = data.steps.map((s: any) => ({
         id: `step-${s.stepNumber}`,
         stepNumber: s.stepNumber,

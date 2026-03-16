@@ -54,6 +54,10 @@ export interface GameFlowStep {
   clueTags: string[];
   deviceTags: string[];
   notes?: string;
+  // UI fields
+  description?: string;
+  hint?: string;
+  content?: string;
   // xkit-specific fields
   xkitPrompt?: string;
   xkitAnswer?: string;
