@@ -15,17 +15,20 @@ const STORAGE_KEYS = {
   themes: 'passmap-themes',
   steps: 'passmap-steps',
   details: 'passmap-details',
-  initialized: 'passmap-initialized',
+  version: 'passmap-version',
 } as const;
 
-// ── Initialize from mock if first load ──────────────────────────────────────
+// Bump this when mock data changes to trigger re-seed
+const CURRENT_VERSION = '2';
+
+// ── Initialize from mock if first load or version mismatch ──────────────────
 
 function ensureInitialized(): void {
-  if (localStorage.getItem(STORAGE_KEYS.initialized)) return;
+  if (localStorage.getItem(STORAGE_KEYS.version) === CURRENT_VERSION) return;
   localStorage.setItem(STORAGE_KEYS.themes, JSON.stringify(MOCK_THEMES));
   localStorage.setItem(STORAGE_KEYS.steps, JSON.stringify(MOCK_STEPS));
   localStorage.setItem(STORAGE_KEYS.details, JSON.stringify(MOCK_STEP_DETAILS));
-  localStorage.setItem(STORAGE_KEYS.initialized, '1');
+  localStorage.setItem(STORAGE_KEYS.version, CURRENT_VERSION);
 }
 
 // ── Generic read/write ──────────────────────────────────────────────────────
