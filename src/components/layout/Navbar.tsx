@@ -89,6 +89,18 @@ export default function Navbar() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* PassMap — always visible */}
+        <Link
+          to="/passmap"
+          className={`px-3 py-1 rounded-md text-caption font-medium transition-all ${
+            location.pathname.startsWith('/passmap')
+              ? 'text-violet-300/80 bg-violet-500/10'
+              : 'text-white/35 hover:text-violet-300/70 hover:bg-white/[0.05]'
+          }`}
+        >
+          PassMap
+        </Link>
+
         {/* 내 프로젝트 — always visible when not on /projects */}
         {!isProjects && !isHome && (
           <Link
