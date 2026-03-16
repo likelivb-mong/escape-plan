@@ -35,6 +35,7 @@ export default function FloorPlanPage() {
     setGameFlowDesign,
     floorPlanData,
     setFloorPlanData,
+    branchCode,
     passmapLink,
     setPassmapLink,
   } = useProject();
@@ -379,6 +380,7 @@ export default function FloorPlanPage() {
               floorPlan={floorPlanData}
               onLinked={handleLinked}
               currentLink={passmapLink}
+              defaultBranchCode={branchCode}
             />
           )}
           <button

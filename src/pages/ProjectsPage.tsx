@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import {
@@ -11,6 +11,10 @@ import {
   type TrashedProject,
   type CompletionLevel,
 } from '../utils/projectStorage';
+import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
+import ImportAIThemeButton from '../features/passmap/components/ImportAIThemeButton';
+import { getThemesByBranch, getStepsByTheme } from '../features/passmap/utils/passmap-store';
+import type { Theme } from '../features/passmap/types/passmap';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -61,6 +65,9 @@ function ProjectCard({ project, onOpen, onDelete }: ProjectCardProps) {
 
   const genres = (project.genres ?? []).map((g) => GENRE_KR[g] ?? g).join(' · ');
   const playTimes = (project.playTimes ?? []).join('/');
+  const branchName = project.branchCode
+    ? MOCK_BRANCHES.find((b) => b.code === project.branchCode)?.name
+    : null;
 
   return (
     <div className="group relative flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.10] transition-all overflow-hidden shadow-subtle">
@@ -86,6 +93,11 @@ function ProjectCard({ project, onOpen, onDelete }: ProjectCardProps) {
 
         {/* Meta tags */}
         <div className="flex flex-wrap gap-1.5">
+          {branchName && (
+            <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-caption text-white/50 font-medium">
+              {branchName}
+            </span>
+          )}
           {genres && (
             <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-caption text-white/40">
               {genres}
@@ -142,6 +154,46 @@ function ProjectCard({ project, onOpen, onDelete }: ProjectCardProps) {
   );
 }
 
+// Standalone PassMap theme card (not linked to a project)
+function StandaloneThemeCard({ theme, branchCode }: { theme: Theme; branchCode: string }) {
+  const navigate = useNavigate();
+  const steps = getStepsByTheme(theme.id);
+  const completeCount = steps.filter((s) => s.status === 'complete').length;
+  const pct = steps.length > 0 ? Math.round((completeCount / steps.length) * 100) : 0;
+
+  return (
+    <div className="group relative flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.10] transition-all overflow-hidden shadow-subtle">
+      <div className="flex flex-col flex-1 p-5 gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-title3 font-semibold text-white/90 truncate">{theme.name}</h3>
+            <p className="text-subhead text-white/35 mt-0.5">PassMap 테마</p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-white/40">
+            <span className="text-footnote font-medium">{steps.length}개 스텝</span>
+          </span>
+        </div>
+        {steps.length > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+              <div className="h-full rounded-full bg-white/30 transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="text-[10px] text-white/20">{pct}%</span>
+          </div>
+        )}
+      </div>
+      <div className="px-5 pb-4 flex items-center justify-end border-t border-white/[0.05] pt-3 mt-auto">
+        <button
+          onClick={() => navigate(`/passmap/${branchCode}/${theme.id}`)}
+          className="px-4 py-1.5 rounded-lg bg-white/[0.08] text-white/70 text-subhead font-medium hover:bg-white/[0.12] hover:text-white active:scale-[0.98] transition-all"
+        >
+          PassMap 열기
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TrashIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -171,13 +223,44 @@ export default function ProjectsPage() {
   const [trashed, setTrashed] = useState<TrashedProject[]>([]);
   const [showTrash, setShowTrash] = useState(false);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
+  const [branchFilter, setBranchFilter] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = () => {
     setProjects(listSavedProjects());
     setTrashed(listTrashedProjects());
   };
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); }, [refreshKey]);
+
+  // Get standalone PassMap themes (not linked to any project) for current branch filter
+  const standaloneThemes = useMemo(() => {
+    if (!branchFilter) return [];
+    const themes = getThemesByBranch(branchFilter);
+    const linkedThemeIds = new Set(
+      projects
+        .filter((p) => p.passmapLink)
+        .map((p) => p.passmapLink!.themeId),
+    );
+    return themes.filter((t) => !linkedThemeIds.has(t.id));
+  }, [branchFilter, projects, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Filter projects by branch
+  const filteredProjects = useMemo(() => {
+    if (!branchFilter) return projects;
+    return projects.filter((p) => p.branchCode === branchFilter);
+  }, [projects, branchFilter]);
+
+  // Count projects per branch
+  const branchCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of projects) {
+      if (p.branchCode) {
+        counts[p.branchCode] = (counts[p.branchCode] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [projects]);
 
   const handleOpen = (project: SavedProject) => {
     navigate(`/projects/${project.id}`);
@@ -207,38 +290,108 @@ export default function ProjectsPage() {
   return (
     <div className="min-h-[calc(100vh-3rem)] px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
       {/* Header */}
-      <div className="max-w-5xl mx-auto mb-8">
+      <div className="max-w-5xl mx-auto mb-6">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-title1 font-bold text-white/90">내 프로젝트</h1>
+            <h1 className="text-title1 font-bold text-white/90">프로젝트</h1>
             <p className="text-subhead text-white/30 mt-1">
               {projects.length > 0
                 ? `${projects.length}개의 테마 프로젝트`
                 : '저장된 프로젝트가 없습니다'}
             </p>
           </div>
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 active:scale-[0.98] transition-all"
-          >
-            <PlusIcon />
-            새 테마
-          </button>
+          <div className="flex items-center gap-2">
+            {branchFilter && (
+              <ImportAIThemeButton
+                branchCode={branchFilter}
+                onImported={() => setRefreshKey((k) => k + 1)}
+              />
+            )}
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 active:scale-[0.98] transition-all"
+            >
+              <PlusIcon />
+              새 테마
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Active Projects Grid or Empty state */}
+      {/* Branch Filter Tabs */}
+      <div className="max-w-5xl mx-auto mb-6">
+        <div className="flex items-center gap-1 flex-wrap">
+          <button
+            onClick={() => setBranchFilter(null)}
+            className={`px-3 py-1.5 rounded-lg text-caption font-medium transition-all ${
+              branchFilter === null
+                ? 'bg-white/[0.10] text-white'
+                : 'text-white/30 hover:text-white/55 hover:bg-white/[0.04]'
+            }`}
+          >
+            전체
+          </button>
+          {MOCK_BRANCHES.map((branch) => {
+            const count = branchCounts[branch.code] || 0;
+            const themes = getThemesByBranch(branch.code);
+            const hasContent = count > 0 || themes.length > 0;
+            return (
+              <button
+                key={branch.code}
+                onClick={() => setBranchFilter(branchFilter === branch.code ? null : branch.code)}
+                className={`px-3 py-1.5 rounded-lg text-caption font-medium transition-all ${
+                  branchFilter === branch.code
+                    ? 'bg-white/[0.10] text-white'
+                    : hasContent
+                    ? 'text-white/40 hover:text-white/60 hover:bg-white/[0.04]'
+                    : 'text-white/15 hover:text-white/30 hover:bg-white/[0.02]'
+                }`}
+              >
+                {branch.name}
+                {hasContent && (
+                  <span className="ml-1 text-[10px] text-white/20">
+                    {count + themes.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content */}
       <div className="max-w-5xl mx-auto">
-        {projects.length === 0 ? (
-          <EmptyState onNewProject={() => navigate('/')} />
+        {filteredProjects.length === 0 && standaloneThemes.length === 0 ? (
+          branchFilter ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+              <p className="text-body text-white/40">
+                이 지점에 등록된 프로젝트가 없습니다.
+              </p>
+              <button
+                onClick={() => navigate('/')}
+                className="text-caption text-white/30 hover:text-white/50 transition-colors"
+              >
+                새 테마 만들기 →
+              </button>
+            </div>
+          ) : (
+            <EmptyState />
+          )
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
                 onOpen={handleOpen}
                 onDelete={handleMoveToTrash}
+              />
+            ))}
+            {standaloneThemes.map((theme) => (
+              <StandaloneThemeCard
+                key={theme.id}
+                theme={theme}
+                branchCode={branchFilter!}
               />
             ))}
           </div>
@@ -373,7 +526,8 @@ function TrashCard({ project, onRestore, onPermanentDelete }: TrashCardProps) {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-function EmptyState({ onNewProject: _ }: { onNewProject: () => void }) {
+function EmptyState() {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
       <div className="w-16 h-16 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-2xl">
@@ -382,9 +536,15 @@ function EmptyState({ onNewProject: _ }: { onNewProject: () => void }) {
       <div>
         <p className="text-title3 font-semibold text-white/60">아직 저장된 프로젝트가 없어요</p>
         <p className="text-body text-white/30 mt-1.5">
-          Draft 페이지에서 "Save Draft"를 누르면 여기에 저장됩니다
+          새 테마를 만들어 설계를 시작하세요
         </p>
       </div>
+      <button
+        onClick={() => navigate('/')}
+        className="mt-2 px-5 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 active:scale-[0.98] transition-all"
+      >
+        새 테마 만들기
+      </button>
     </div>
   );
 }

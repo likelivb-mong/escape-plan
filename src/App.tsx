@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProjectProvider } from './context/ProjectContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
@@ -11,8 +11,6 @@ import FloorPlanPage from './pages/FloorPlanPage';
 import ScenarioPage from './pages/ScenarioPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDashboardPage from './pages/ProjectDashboardPage';
-import PassMapHomePage from './features/passmap/pages/PassMapHomePage';
-import PassMapBranchPage from './features/passmap/pages/PassMapBranchPage';
 import PassMapThemePage from './features/passmap/pages/PassMapThemePage';
 
 export default function App() {
@@ -30,9 +28,9 @@ export default function App() {
             <Route path="/puzzle-flow" element={<PuzzleFlowPage />} />
             <Route path="/floor-plan" element={<FloorPlanPage />} />
             <Route path="/draft" element={<DraftPage />} />
-            {/* PassMap Manager */}
-            <Route path="/passmap" element={<PassMapHomePage />} />
-            <Route path="/passmap/:branchCode" element={<PassMapBranchPage />} />
+            {/* PassMap — merged into projects; keep theme route for deep links */}
+            <Route path="/passmap" element={<Navigate to="/projects" replace />} />
+            <Route path="/passmap/:branchCode" element={<Navigate to="/projects" replace />} />
             <Route path="/passmap/:branchCode/:themeId" element={<PassMapThemePage />} />
           </Route>
         </Routes>

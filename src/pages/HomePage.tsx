@@ -11,6 +11,7 @@ import { populateMandalartFromScenario } from '../utils/mandalartFromScenario';
 import { generateStoryProposalsFromScenario } from '../utils/storyFromScenario';
 import ScenarioForm from '../components/scenario/ScenarioForm';
 import StoryBeatsInput from '../components/home/StoryBeatsInput';
+import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 
 // ── YouTube URL 파싱 ──────────────────────────────────────────────────────────
 
@@ -62,6 +63,7 @@ export default function HomePage() {
     setCells,
     setAiStoryProposals,
     setProjectBrief,
+    setBranchCode: setCtxBranchCode,
     saveCurrentProject,
     projectBrief,
     resetForNewProject,
@@ -69,6 +71,7 @@ export default function HomePage() {
 
   const [activeTab, setActiveTab] = useState<TabKey>('build');
   const [shouldNavigateAfterSave, setShouldNavigateAfterSave] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<string>(MOCK_BRANCHES[0].code);
 
   // ── YouTube state ────────────────────────────────────────────────────────
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -143,6 +146,7 @@ export default function HomePage() {
       setYoutubeStep('보드 생성 중...');
       await new Promise((r) => setTimeout(r, 200));
       setCtxProjectName(result.projectName);
+      setCtxBranchCode(selectedBranch);
       setCells(result.cells);
       setAiStoryProposals(result.stories);
       setProjectBrief({
@@ -194,6 +198,7 @@ export default function HomePage() {
     resetForNewProject();
 
     setCtxProjectName(name);
+    setCtxBranchCode(selectedBranch);
 
     // If scenario form has data, use scenario-based generation
     if (scenarioResult) {
@@ -264,14 +269,7 @@ export default function HomePage() {
         </p>
 
         {/* Quick links */}
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <button
-            onClick={() => navigate('/passmap')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/60 hover:border-white/[0.15] transition-all text-caption font-medium"
-          >
-            PassMap Manager
-            <span className="text-white/20">→</span>
-          </button>
+        <div className="mt-6 flex items-center justify-center">
           <button
             onClick={() => navigate('/projects')}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/60 hover:border-white/[0.15] transition-all text-caption font-medium"
@@ -309,6 +307,8 @@ export default function HomePage() {
               youtubeStep={youtubeStep}
               youtubeError={youtubeError}
               onGenerate={handleYoutubeGenerate}
+              selectedBranch={selectedBranch}
+              setSelectedBranch={setSelectedBranch}
             />
           ) : (
             <BuildTab
@@ -330,6 +330,8 @@ export default function HomePage() {
               beats={beats}
               setBeats={setBeats}
               onSubmit={handleBuildSubmit}
+              selectedBranch={selectedBranch}
+              setSelectedBranch={setSelectedBranch}
             />
           )}
         </div>
@@ -365,11 +367,14 @@ interface YouTubeTabProps {
   youtubeStep: string;
   youtubeError: string;
   onGenerate: () => void;
+  selectedBranch: string;
+  setSelectedBranch: (v: string) => void;
 }
 
-function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtubeStep, youtubeError, onGenerate }: YouTubeTabProps) {
+function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtubeStep, youtubeError, onGenerate, selectedBranch, setSelectedBranch }: YouTubeTabProps) {
   return (
     <div className="flex flex-col gap-3">
+      <BranchSelector selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
       <label className="text-subhead text-white/40 font-medium tracking-wide uppercase">
         YouTube URL
       </label>
@@ -458,6 +463,8 @@ interface BuildTabProps {
   beats: Record<string, string>;
   setBeats: (b: Record<string, string>) => void;
   onSubmit: () => void;
+  selectedBranch: string;
+  setSelectedBranch: (v: string) => void;
 }
 
 function BuildTab({
@@ -471,6 +478,7 @@ function BuildTab({
   synopsis, setSynopsis,
   beats, setBeats,
   onSubmit,
+  selectedBranch, setSelectedBranch,
 }: BuildTabProps) {
   const [openSection, setOpenSection] = useState<string>('basic');
 
@@ -488,6 +496,7 @@ function BuildTab({
       />
       {openSection === 'basic' && (
         <div className="flex flex-col gap-4 pl-1">
+          <BranchSelector selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
           <Field label="프로젝트 이름">
             <input
               type="text"
@@ -672,6 +681,29 @@ function TogglePill({ active, onClick, children }: { active: boolean; onClick: (
     >
       {children}
     </button>
+  );
+}
+
+function BranchSelector({ selectedBranch, setSelectedBranch }: { selectedBranch: string; setSelectedBranch: (v: string) => void }) {
+  return (
+    <Field label="지점 선택">
+      <div className="flex flex-wrap gap-1.5">
+        {MOCK_BRANCHES.map((b) => (
+          <button
+            key={b.code}
+            type="button"
+            onClick={() => setSelectedBranch(b.code)}
+            className={`px-3 py-1.5 rounded-full text-subhead font-medium transition-all duration-200 border ${
+              selectedBranch === b.code
+                ? 'bg-white text-black border-white'
+                : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
+            }`}
+          >
+            {b.name}
+          </button>
+        ))}
+      </div>
+    </Field>
   );
 }
 
