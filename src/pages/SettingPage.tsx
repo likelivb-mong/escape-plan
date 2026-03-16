@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import { generateInitialLayout, reconcileRooms } from '../utils/floorPlan';
+import { generateInitialLayout, reconcileRooms, normalizeFloorPlan } from '../utils/floorPlan';
 import type { FloorPlanData } from '../types/floorPlan';
 import type { ThemeStep, StepDetail, PassMapViewMode, ThemeRoom } from '../features/passmap/types/passmap';
 
@@ -57,10 +57,14 @@ export default function SettingPage() {
   useEffect(() => {
     if (!gameFlowDesign) return;
     if (!floorPlanData) {
-      setFloorPlanData(generateInitialLayout(gameFlowDesign.rooms));
+      // Generate & validate
+      const initial = generateInitialLayout(gameFlowDesign.rooms);
+      setFloorPlanData(normalizeFloorPlan(initial));
     } else {
+      // Reconcile & validate
       const reconciled = reconcileRooms(floorPlanData, gameFlowDesign.rooms);
-      if (reconciled !== floorPlanData) setFloorPlanData(reconciled);
+      const normalized = normalizeFloorPlan(reconciled);
+      if (normalized !== floorPlanData) setFloorPlanData(normalized);
     }
   }, [gameFlowDesign]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -94,7 +98,8 @@ export default function SettingPage() {
   }, [passmapLink]);
 
   const handleUpdateFloorPlan = (data: FloorPlanData) => {
-    setFloorPlanData(data);
+    // Always validate & normalize before saving
+    setFloorPlanData(normalizeFloorPlan(data));
   };
 
   // ── Room update (position & size) ─────────────────────────────────────────

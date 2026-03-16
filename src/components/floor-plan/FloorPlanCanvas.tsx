@@ -45,13 +45,36 @@ export default function FloorPlanCanvas({
 
   // ── Validate and normalize floor plan before rendering ─────────────────────
   const validatedFloorPlan = useMemo(() => {
-    // Always apply strict validation before rendering
+    // Multi-stage validation for maximum safety
+    // Stage 1: Validate each room individually
     const validated = {
       ...floorPlan,
       rooms: floorPlan.rooms.map(validateRoomBounds),
     };
-    // Also apply overlap resolution
-    return normalizeFloorPlan(validated);
+
+    // Stage 2: Apply overlap resolution
+    let normalized = normalizeFloorPlan(validated);
+
+    // Stage 3: Final verification - ensure ALL rooms are within bounds
+    // If any room is still out of bounds, apply emergency fix
+    const finalRooms = normalized.rooms.map(room => {
+      const x = Math.max(0, Math.min(room.x, 100 - room.width));
+      const y = Math.max(0, Math.min(room.y, 100 - room.height));
+      const width = Math.max(8, Math.min(room.width, 100));
+      const height = Math.max(8, Math.min(room.height, 100));
+
+      // If any correction was made, log it
+      if (x !== room.x || y !== room.y || width !== room.width || height !== room.height) {
+        console.warn(`[FloorPlanCanvas] Emergency correction for room "${room.roomName}":`, {
+          before: { x: room.x, y: room.y, w: room.width, h: room.height },
+          after: { x, y, w: width, h: height },
+        });
+      }
+
+      return { ...room, x, y, width, height };
+    });
+
+    return { ...normalized, rooms: finalRooms };
   }, [floorPlan]);
 
   const doors = validatedFloorPlan.doors ?? [];
@@ -229,7 +252,7 @@ export default function FloorPlanCanvas({
       {/* Canvas info */}
       <div className="flex items-center gap-3 px-1 flex-shrink-0">
         <span className="text-caption text-white/35">
-          {floorPlan.rooms.length}개 공간 배치
+          {validatedFloorPlan.rooms.length}개 공간 배치
         </span>
         {doors.length > 0 && (
           <span className="text-caption text-white/30">
