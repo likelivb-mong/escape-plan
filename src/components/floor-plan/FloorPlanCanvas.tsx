@@ -275,12 +275,17 @@ export default function FloorPlanCanvas({
       {/* Canvas container */}
       <div
         ref={containerRef}
-        className={`relative flex-1 min-h-[400px] rounded-2xl border overflow-hidden transition-colors duration-200 ${
+        className={`relative rounded-2xl border overflow-hidden transition-colors duration-200 ${
           isEditing
             ? 'border-white/[0.15] bg-white/[0.03]'
             : 'border-white/[0.07] bg-white/[0.01]'
         }`}
         style={{
+          // ⚠️ CRITICAL: Fixed size ensures accurate percentage calculations
+          // 600x600px square canvas - prevents resize issues and floating point errors
+          width: '100%',
+          maxWidth: '600px',
+          aspectRatio: '1',
           backgroundImage: [
             isEditing
               ? 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px)'
@@ -290,8 +295,7 @@ export default function FloorPlanCanvas({
               : 'linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)',
           ].join(', '),
           backgroundSize: '5% 5%',
-          // ⚠️ EMERGENCY: Clip all content to container bounds
-          // This is a safety net for any room that somehow exceeds bounds
+          // ⚠️ ABSOLUTE: Clip all content to container bounds
           clipPath: 'inset(0)',
         }}
         onPointerMove={isEditing ? handlePointerMove : undefined}
