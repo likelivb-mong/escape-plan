@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo } from 'react';
+import { useRef, useCallback, useMemo, useState } from 'react';
 import type { ThemeStep } from '../types/passmap';
 import type { ThemeRoom } from '../types/passmap';
 import StepPin from './StepPin';
@@ -47,7 +47,10 @@ export default function MiniMapCanvas({
 }: MiniMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ stepId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; origWidth: number; origHeight: number; dragType: 'move' | 'resize'; pendingX?: number; pendingY?: number; pendingWidth?: number; pendingHeight?: number } | null>(null);
+  const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; origWidth: number; origHeight: number; dragType: 'move' | 'resize' } | null>(null);
+
+  // State for dragging room display (enables visual feedback during drag)
+  const [draggedRoom, setDraggedRoom] = useState<{ name: string; x: number; y: number; width: number; height: number } | null>(null);
 
   // Group steps by zone for step count per room
   const stepCountByZone = useMemo(() => {
@@ -118,30 +121,41 @@ export default function MiniMapCanvas({
       const dpx = (dx / rect.width) * 100;
       const dpy = (dy / rect.height) * 100;
 
-      // Store pending values but don't call callbacks (avoid excessive re-renders)
+      // Update state for visual feedback
       if (roomDragRef.current.dragType === 'move') {
         const newX = Math.max(0, Math.min(100 - roomDragRef.current.origWidth, roomDragRef.current.origX + dpx));
         const newY = Math.max(0, Math.min(100 - roomDragRef.current.origHeight, roomDragRef.current.origY + dpy));
-        roomDragRef.current.pendingX = newX;
-        roomDragRef.current.pendingY = newY;
+        setDraggedRoom({
+          name: roomDragRef.current.roomName,
+          x: newX,
+          y: newY,
+          width: roomDragRef.current.origWidth,
+          height: roomDragRef.current.origHeight,
+        });
       } else {
         const newWidth = Math.max(8, Math.min(100 - roomDragRef.current.origX, roomDragRef.current.origWidth + dpx));
         const newHeight = Math.max(8, Math.min(100 - roomDragRef.current.origY, roomDragRef.current.origHeight + dpy));
-        roomDragRef.current.pendingWidth = newWidth;
-        roomDragRef.current.pendingHeight = newHeight;
+        setDraggedRoom({
+          name: roomDragRef.current.roomName,
+          x: roomDragRef.current.origX,
+          y: roomDragRef.current.origY,
+          width: newWidth,
+          height: newHeight,
+        });
       }
     };
 
     const handleMouseUp = () => {
-      if (roomDragRef.current) {
+      if (roomDragRef.current && draggedRoom) {
         // Call callbacks only once when drag ends
-        if (roomDragRef.current.dragType === 'move' && roomDragRef.current.pendingX !== undefined && roomDragRef.current.pendingY !== undefined) {
-          onRoomMove?.(roomDragRef.current.roomName, roomDragRef.current.pendingX - roomDragRef.current.origX, roomDragRef.current.pendingY - roomDragRef.current.origY);
-        } else if (roomDragRef.current.dragType === 'resize' && roomDragRef.current.pendingWidth !== undefined && roomDragRef.current.pendingHeight !== undefined) {
-          onRoomUpdate?.(roomDragRef.current.roomName, { width: roomDragRef.current.pendingWidth, height: roomDragRef.current.pendingHeight });
+        if (roomDragRef.current.dragType === 'move') {
+          onRoomMove?.(roomDragRef.current.roomName, draggedRoom.x - roomDragRef.current.origX, draggedRoom.y - roomDragRef.current.origY);
+        } else {
+          onRoomUpdate?.(roomDragRef.current.roomName, { width: draggedRoom.width, height: draggedRoom.height });
         }
       }
       roomDragRef.current = null;
+      setDraggedRoom(null);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -176,12 +190,12 @@ export default function MiniMapCanvas({
         const nameColor = ROOM_NAME_COLORS[i % ROOM_NAME_COLORS.length];
         const count = stepCountByZone.get(room.name) || room.stepCount;
 
-        // Use pending values during drag, otherwise use room values
-        const isDragging = roomDragRef.current?.roomName === room.name;
-        const displayX = isDragging && roomDragRef.current?.pendingX !== undefined ? roomDragRef.current.pendingX : room.x;
-        const displayY = isDragging && roomDragRef.current?.pendingY !== undefined ? roomDragRef.current.pendingY : room.y;
-        const displayWidth = isDragging && roomDragRef.current?.pendingWidth !== undefined ? roomDragRef.current.pendingWidth : room.width;
-        const displayHeight = isDragging && roomDragRef.current?.pendingHeight !== undefined ? roomDragRef.current.pendingHeight : room.height;
+        // Use dragged state during drag, otherwise use room values
+        const isDragging = draggedRoom?.name === room.name;
+        const displayX = isDragging ? draggedRoom.x : room.x;
+        const displayY = isDragging ? draggedRoom.y : room.y;
+        const displayWidth = isDragging ? draggedRoom.width : room.width;
+        const displayHeight = isDragging ? draggedRoom.height : room.height;
 
         return (
           <div
