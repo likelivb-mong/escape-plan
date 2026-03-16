@@ -150,10 +150,10 @@ export default function StoryPage() {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => navigate('/projects')}
+            onClick={() => navigate('/plan')}
             className="text-white/30 hover:text-white/60 transition-colors text-subhead"
           >
-            ← 내 프로젝트
+            ← Plan
           </button>
           <span className="h-3.5 w-px bg-white/10" />
           <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
@@ -165,6 +165,12 @@ export default function StoryPage() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => saveCurrentProject()}
+            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
+          >
+            저장
+          </button>
           {/* Locked story indicator */}
           {isStoryLocked && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-caption font-medium">

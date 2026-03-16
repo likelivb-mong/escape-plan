@@ -6,6 +6,7 @@ interface StoryPageHeaderProps {
   isAddingBatch: boolean;
   onAddNewBatch: () => void;
   onContinue: () => void;
+  onSave?: () => void;
 }
 
 export default function StoryPageHeader({
@@ -14,6 +15,7 @@ export default function StoryPageHeader({
   isAddingBatch,
   onAddNewBatch,
   onContinue,
+  onSave,
 }: StoryPageHeaderProps) {
   const navigate = useNavigate();
 
@@ -22,10 +24,10 @@ export default function StoryPageHeader({
       {/* ── Breadcrumb ── */}
       <div className="flex items-center gap-2.5">
         <button
-          onClick={() => navigate('/projects')}
+          onClick={() => navigate('/plan')}
           className="text-white/30 hover:text-white/60 transition-colors text-subhead"
         >
-          ← 내 프로젝트
+          ← Plan
         </button>
         <span className="h-3.5 w-px bg-white/10" />
         <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
@@ -37,6 +39,14 @@ export default function StoryPageHeader({
 
       {/* ── Actions ── */}
       <div className="flex items-center gap-3">
+        {onSave && (
+          <button
+            onClick={onSave}
+            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
+          >
+            저장
+          </button>
+        )}
         <button
           onClick={onAddNewBatch}
           disabled={isAddingBatch}
