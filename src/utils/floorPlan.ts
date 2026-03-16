@@ -141,68 +141,80 @@ function roomsOverlap(r1: FloorPlanRoomLayout, r2: FloorPlanRoomLayout): boolean
 }
 
 /**
- * Adjust room to avoid overlaps with other rooms
- * Uses a smarter algorithm that finds the best direction to move
+ * Resolve overlaps between all rooms using force-directed algorithm
+ * Each overlapping pair pushes away from each other
  */
-function adjustForOverlap(
-  room: FloorPlanRoomLayout,
-  others: FloorPlanRoomLayout[],
-): FloorPlanRoomLayout {
-  let adjusted = room;
-  let attempts = 0;
-  const maxAttempts = 20;
+function resolveAllOverlaps(rooms: FloorPlanRoomLayout[]): FloorPlanRoomLayout[] {
+  let adjusted = rooms.map(r => ({ ...r }));
+  let iterationCount = 0;
+  const maxIterations = 50;
+  const minChange = 0.1; // Stop if changes are negligible
 
-  while (attempts < maxAttempts) {
-    const overlapping = others.find(other => roomsOverlap(adjusted, other));
-    if (!overlapping) break;
+  while (iterationCount < maxIterations) {
+    let totalChange = 0;
+    const movements: { [key: string]: { dx: number; dy: number } } = {};
 
-    // Find center-to-center vector
-    const centerX = adjusted.x + adjusted.width / 2;
-    const centerY = adjusted.y + adjusted.height / 2;
-    const otherCenterX = overlapping.x + overlapping.width / 2;
-    const otherCenterY = overlapping.y + overlapping.height / 2;
-
-    const dx = centerX - otherCenterX;
-    const dy = centerY - otherCenterY;
-
-    // Determine primary push direction
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-
-    let moveX = 0;
-    let moveY = 0;
-
-    if (absDx > absDy) {
-      // Push horizontally more
-      moveX = dx > 0 ? 3 : -3;
-      moveY = dy > 0 ? 1 : -1;
-    } else {
-      // Push vertically more
-      moveX = dx > 0 ? 1 : -1;
-      moveY = dy > 0 ? 3 : -3;
+    // Initialize movements
+    for (const room of adjusted) {
+      movements[room.roomName] = { dx: 0, dy: 0 };
     }
 
-    // Apply movement and validate
-    const newX = Math.max(0, Math.min(adjusted.x + moveX, 100 - adjusted.width));
-    const newY = Math.max(0, Math.min(adjusted.y + moveY, 100 - adjusted.height));
+    // Calculate repulsive forces between overlapping rooms
+    for (let i = 0; i < adjusted.length; i++) {
+      for (let j = i + 1; j < adjusted.length; j++) {
+        const r1 = adjusted[i];
+        const r2 = adjusted[j];
 
-    // If we didn't actually move, try a different strategy
-    if (newX === adjusted.x && newY === adjusted.y) {
-      // Can't move further, try scaling down if possible
-      if (adjusted.width > 10 && adjusted.height > 10) {
-        adjusted = {
-          ...adjusted,
-          width: Math.max(8, adjusted.width - 2),
-          height: Math.max(8, adjusted.height - 2),
-        };
-      } else {
-        break; // Give up
+        if (roomsOverlap(r1, r2)) {
+          // Calculate overlap amount
+          const overlapX = Math.min(r1.x + r1.width, r2.x + r2.width) - Math.max(r1.x, r2.x);
+          const overlapY = Math.min(r1.y + r1.height, r2.y + r2.height) - Math.max(r1.y, r2.y);
+
+          // Calculate centers
+          const c1x = r1.x + r1.width / 2;
+          const c1y = r1.y + r1.height / 2;
+          const c2x = r2.x + r2.width / 2;
+          const c2y = r2.y + r2.height / 2;
+
+          // Direction from r2 to r1
+          let dx = c1x - c2x;
+          let dy = c1y - c2y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+          // Normalize and scale by overlap amount
+          const pushForce = Math.max(overlapX, overlapY) / 10 + 1;
+          dx = (dx / dist) * pushForce;
+          dy = (dy / dist) * pushForce;
+
+          // Apply forces (opposite directions)
+          movements[r1.roomName].dx += dx;
+          movements[r1.roomName].dy += dy;
+          movements[r2.roomName].dx -= dx;
+          movements[r2.roomName].dy -= dy;
+        }
       }
-    } else {
-      adjusted = { ...adjusted, x: newX, y: newY };
     }
 
-    attempts++;
+    // Apply movements to all rooms
+    let changed = false;
+    for (let i = 0; i < adjusted.length; i++) {
+      const room = adjusted[i];
+      const move = movements[room.roomName];
+
+      if (Math.abs(move.dx) > minChange || Math.abs(move.dy) > minChange) {
+        changed = true;
+        totalChange += Math.abs(move.dx) + Math.abs(move.dy);
+
+        // Apply movement with bounds checking
+        const newX = Math.max(0, Math.min(room.x + move.dx, 100 - room.width));
+        const newY = Math.max(0, Math.min(room.y + move.dy, 100 - room.height));
+
+        adjusted[i] = { ...room, x: newX, y: newY };
+      }
+    }
+
+    if (!changed || totalChange < minChange) break;
+    iterationCount++;
   }
 
   return adjusted;
@@ -215,18 +227,46 @@ export function normalizeFloorPlan(data: FloorPlanData): FloorPlanData {
   // 1. Validate each room's bounds STRICTLY
   let validatedRooms = data.rooms.map(validateRoomBounds);
 
-  // 2. Prevent overlaps with better algorithm
-  const normalizedRooms: FloorPlanRoomLayout[] = [];
-  for (const room of validatedRooms) {
-    // Re-validate after adjusting for overlaps
-    const adjusted = adjustForOverlap(room, normalizedRooms);
-    const final = validateRoomBounds(adjusted);
-    normalizedRooms.push(final);
+  // 2. Resolve ALL overlaps simultaneously using force-directed algorithm
+  let normalizedRooms = resolveAllOverlaps(validatedRooms);
+
+  // 3. Final validation pass to ensure bounds
+  normalizedRooms = normalizedRooms.map(validateRoomBounds);
+
+  // 4. One more overlap check - if still overlapping, scale down problematic rooms
+  let stillOverlapping = true;
+  let safetyIterations = 0;
+  while (stillOverlapping && safetyIterations < 5) {
+    stillOverlapping = false;
+    for (let i = 0; i < normalizedRooms.length; i++) {
+      for (let j = i + 1; j < normalizedRooms.length; j++) {
+        if (roomsOverlap(normalizedRooms[i], normalizedRooms[j])) {
+          stillOverlapping = true;
+          // Scale down both rooms slightly
+          if (normalizedRooms[i].width > 8 && normalizedRooms[i].height > 8) {
+            normalizedRooms[i] = {
+              ...normalizedRooms[i],
+              width: Math.max(8, normalizedRooms[i].width - 1),
+              height: Math.max(8, normalizedRooms[i].height - 1),
+            };
+          }
+          if (normalizedRooms[j].width > 8 && normalizedRooms[j].height > 8) {
+            normalizedRooms[j] = {
+              ...normalizedRooms[j],
+              width: Math.max(8, normalizedRooms[j].width - 1),
+              height: Math.max(8, normalizedRooms[j].height - 1),
+            };
+          }
+        }
+      }
+    }
+    // Re-validate after scaling
+    normalizedRooms = normalizedRooms.map(validateRoomBounds);
+    safetyIterations++;
   }
 
-  // 3. Clamp step positions to their rooms
+  // 5. Step positions
   const normalizedStepPositions: Record<string, { x: number; y: number }> = {};
-
   for (const [stepId, pos] of Object.entries(data.stepPositions || {})) {
     normalizedStepPositions[stepId] = pos;
   }
