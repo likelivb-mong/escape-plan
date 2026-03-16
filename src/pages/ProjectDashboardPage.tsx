@@ -19,13 +19,23 @@ interface Stage {
 
 const STAGES: Stage[] = [
   {
+    key: 'plan',
+    label: '기획안',
+    description: '테마 설계 기획서 작성 및 편집',
+    designerNote: '장르·시놉시스·기승전반결 구조로 테마의 뼈대를 완성',
+    path: '/plan',
+    requiredLevel: null,
+    stepNumber: 1,
+    accentColor: 'indigo',
+  },
+  {
     key: 'story',
     label: '스토리 제안',
     description: 'AI 스토리 제안을 검토하고 선택',
     designerNote: '기승전반결 구조로 플레이어 감정 곡선을 설계',
     path: '/story',
     requiredLevel: null,
-    stepNumber: 1,
+    stepNumber: 2,
     accentColor: 'sky',
   },
   {
@@ -35,47 +45,27 @@ const STAGES: Stage[] = [
     designerNote: '세계관의 핵심 요소를 시각적으로 펼쳐 빠짐없이 정리',
     path: '/mandalart',
     requiredLevel: null,
-    stepNumber: 2,
+    stepNumber: 3,
     accentColor: 'amber',
   },
   {
     key: 'game-flow',
-    label: 'Game Flow',
+    label: '게임 플로우',
     description: '퍼즐 배치와 게임 흐름 설계',
     designerNote: '단서 발견 → 해석 → 연결의 자연스러운 흐름',
     path: '/game-flow',
     requiredLevel: null,
-    stepNumber: 3,
+    stepNumber: 4,
     accentColor: 'violet',
   },
   {
-    key: 'setting',
-    label: '공간 배치도',
-    description: '방 구조와 동선 설계',
-    designerNote: '플레이어의 탐색 동선과 시야 발견 포인트 배치',
+    key: 'passmap',
+    label: 'Pass Map',
+    description: '공간 배치 · 운영 매뉴얼 · 스텝 상태 관리',
+    designerNote: '플레이어 동선과 현장 운영 데이터를 통합 관리',
     path: '/setting',
-    requiredLevel: null,
-    stepNumber: 4,
-    accentColor: 'emerald',
-  },
-  {
-    key: 'plan',
-    label: '기획안',
-    description: '최종 기획안 정리 및 내보내기',
-    designerNote: '제작팀에게 전달할 수 있는 완성된 테마 문서',
-    path: '/plan',
     requiredLevel: null,
     stepNumber: 5,
-    accentColor: 'indigo',
-  },
-  {
-    key: 'passmap',
-    label: 'PassMap',
-    description: '운영 매뉴얼 · 스텝 상태 관리',
-    designerNote: '제작 완료 후 현장 운영 데이터를 관리',
-    path: '/setting',
-    requiredLevel: null,
-    stepNumber: 6,
     accentColor: 'emerald',
   },
 ];
@@ -212,7 +202,7 @@ export default function ProjectDashboardPage() {
           <h2 className="text-body font-semibold text-white/60">테마 설계 파이프라인</h2>
           <div className="h-px flex-1 bg-white/[0.05]" />
           <span className="text-caption text-white/20">
-            스토리 → 만다라트 → 퍼즐 → 공간 → 기획안 → PassMap
+            기획안 → 스토리 → 만다라트 → 게임 플로우 → Pass Map
           </span>
         </div>
 
