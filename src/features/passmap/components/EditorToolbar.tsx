@@ -16,36 +16,36 @@ export default function EditorToolbar({
   isSaving,
 }: EditorToolbarProps) {
   return (
-    <div className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-white/5">
-      <span className="text-caption text-white/40 mr-2">EDITOR</span>
+    <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+      <span className="text-[10px] text-white/25 font-medium tracking-widest mr-2">EDIT</span>
 
       <button
         onClick={() => onAddStep('puzzle')}
-        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-all border border-indigo-500/30"
+        className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-all"
       >
-        + ● Puzzle
+        + Puzzle
       </button>
       <button
         onClick={() => onAddStep('lock')}
-        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-all border border-amber-500/30"
+        className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-all"
       >
-        + 🔒 Lock
+        + Lock
       </button>
       <button
         onClick={() => onAddStep('device')}
-        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 transition-all border border-sky-500/30"
+        className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-all"
       >
-        + ★ Device
+        + Device
       </button>
 
-      <div className="w-px h-6 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-white/[0.06] mx-1" />
 
       <button
         onClick={onDeleteStep}
         disabled={!hasSelection}
-        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-all border border-rose-500/30 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
       >
-        Delete
+        삭제
       </button>
 
       <div className="flex-1" />
@@ -53,9 +53,9 @@ export default function EditorToolbar({
       <button
         onClick={onSave}
         disabled={isSaving}
-        className="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition-all border border-emerald-500/30 disabled:opacity-50"
+        className="px-4 py-1.5 rounded-lg text-[11px] font-bold bg-white/[0.08] text-white/70 hover:bg-white/[0.12] hover:text-white transition-all disabled:opacity-50"
       >
-        {isSaving ? 'Saving...' : 'Save'}
+        {isSaving ? '저장 중...' : '저장'}
       </button>
     </div>
   );

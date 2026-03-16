@@ -11,34 +11,38 @@ export default function ThemeList({ themes, branchCode }: ThemeListProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {themes.map((theme) => {
         const steps = getStepsByTheme(theme.id);
         const stepCount = steps.length;
         const completeCount = steps.filter((s) => s.status === 'complete').length;
+        const pct = stepCount > 0 ? Math.round((completeCount / stepCount) * 100) : 0;
 
         return (
           <button
             key={theme.id}
             onClick={() => navigate(`/passmap/${branchCode}/${theme.id}`)}
-            className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-5 text-left transition-all hover:border-sky-500/50 hover:bg-white/10"
+            className="group w-full flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 text-left transition-all hover:border-white/[0.12] hover:bg-white/[0.04]"
           >
-            <div>
-              <div className="text-body text-white font-medium">{theme.name}</div>
-              <div className="text-caption text-white/40 mt-1">
-                {stepCount} steps · {completeCount} 완료
+            <div className="flex-1 min-w-0">
+              <div className="text-body text-white/75 font-medium">{theme.name}</div>
+              <div className="text-caption text-white/30 mt-0.5">
+                {stepCount}개 스텝 · {completeCount} 완료
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 flex-shrink-0">
               {stepCount > 0 && (
-                <div className="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-emerald-500 transition-all"
-                    style={{ width: `${(completeCount / stepCount) * 100}%` }}
-                  />
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-white/20">{pct}%</span>
+                  <div className="w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-white/30 transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
               )}
-              <span className="text-white/30 text-lg">→</span>
+              <span className="text-white/15 group-hover:text-white/40 transition-colors text-caption">→</span>
             </div>
           </button>
         );

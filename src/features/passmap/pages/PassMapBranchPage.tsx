@@ -14,12 +14,12 @@ export default function PassMapBranchPage() {
 
   if (!branch) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="text-white/40 text-center py-20">
           지점을 찾을 수 없습니다.
           <button
             onClick={() => navigate('/passmap')}
-            className="block mx-auto mt-4 text-indigo-400 hover:text-indigo-300 transition-colors"
+            className="block mx-auto mt-4 text-white/50 hover:text-white/70 transition-colors"
           >
             ← 지점 목록으로
           </button>
@@ -33,24 +33,22 @@ export default function PassMapBranchPage() {
   void refreshKey; // used to force re-render
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-10">
         <button
           onClick={() => navigate('/passmap')}
-          className="text-white/30 hover:text-white/60 text-sm mb-4 inline-block transition-colors"
+          className="text-white/20 hover:text-white/50 text-caption mb-4 inline-block transition-colors"
         >
           ← 지점 목록
         </button>
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-baseline gap-3">
-              <h1 className="text-display text-white font-bold">{branch.name}</h1>
-              <span className="text-title3 text-white/30 font-mono">{branch.code}</span>
+            <h1 className="text-title1 text-white/90 font-bold tracking-tight">{branch.name}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-caption text-white/20 font-mono">{branch.code}</span>
+              <span className="text-caption text-white/30">{themes.length}개 테마</span>
             </div>
-            <p className="text-body text-white/50 mt-2">
-              {themes.length}개 테마
-            </p>
           </div>
           <ImportAIThemeButton
             branchCode={branch.code}
@@ -63,7 +61,7 @@ export default function PassMapBranchPage() {
       {themes.length > 0 ? (
         <ThemeList themes={themes} branchCode={branch.code} />
       ) : (
-        <div className="text-white/30 text-center py-12 border border-white/5 rounded-xl">
+        <div className="text-white/30 text-center py-12 border border-white/[0.06] rounded-xl bg-white/[0.02]">
           등록된 테마가 없습니다. AI Flow JSON을 Import 해보세요.
         </div>
       )}
