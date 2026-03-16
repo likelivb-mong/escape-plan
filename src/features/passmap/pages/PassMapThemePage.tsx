@@ -270,6 +270,7 @@ export default function PassMapThemePage() {
               selectedStepId={selectedStepId}
               onSelectStep={handleSelectStep}
               mapImage={theme.mapImage || undefined}
+              rooms={theme.rooms}
               editable={viewMode === 'editor'}
               onStepMove={viewMode === 'editor' ? handleStepMove : undefined}
             />
