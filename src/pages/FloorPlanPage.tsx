@@ -7,7 +7,6 @@ import type { ThemeStep, StepDetail, PassMapViewMode } from '../features/passmap
 
 import FloorPlanCanvas from '../components/floor-plan/FloorPlanCanvas';
 import PassMapTable from '../components/floor-plan/PassMapTable';
-import SyncToPassMapButton from '../features/passmap/components/SyncToPassMapButton';
 import MiniMapCanvas from '../features/passmap/components/MiniMapCanvas';
 import StepListPanel from '../features/passmap/components/StepListPanel';
 import StepDetailCard from '../features/passmap/components/StepDetailCard';
@@ -24,6 +23,7 @@ import {
   updateTheme,
 } from '../features/passmap/utils/passmap-store';
 import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
+import { syncFloorPlanToPassMap, findMatchingTheme } from '../features/passmap/utils/floorplan-sync';
 
 type Tab = 'floor' | 'passmap';
 
@@ -62,17 +62,29 @@ export default function FloorPlanPage() {
     }
   }, [gameFlowDesign]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Load PassMap data when linked ───────────────────────────────────────────
-  const loadPassMapData = useCallback(() => {
-    if (!passmapLink) return;
-    const steps = getStepsByTheme(passmapLink.themeId);
+  // ── Auto-sync to PassMap when branchCode + floorPlan are ready ──────────────
+  useEffect(() => {
+    if (!branchCode || !gameFlowDesign || !floorPlanData) return;
+    // Already linked → just load data
+    if (passmapLink) {
+      const steps = getStepsByTheme(passmapLink.themeId);
+      setPmSteps(steps);
+      setPmDetails(getDetailsByStepIds(steps.map((s) => s.id)));
+      return;
+    }
+    // Auto-sync: check for existing or create new
+    const existing = findMatchingTheme(branchCode, gameFlowDesign.title);
+    const result = syncFloorPlanToPassMap(
+      gameFlowDesign,
+      floorPlanData,
+      branchCode,
+      existing?.id,
+    );
+    setPassmapLink({ branchCode, themeId: result.themeId });
+    const steps = getStepsByTheme(result.themeId);
     setPmSteps(steps);
     setPmDetails(getDetailsByStepIds(steps.map((s) => s.id)));
-  }, [passmapLink]);
-
-  useEffect(() => {
-    loadPassMapData();
-  }, [loadPassMapData]);
+  }, [branchCode, gameFlowDesign, floorPlanData, passmapLink, setPassmapLink]);
 
   // When linked, default to passmap view
   useEffect(() => {
@@ -81,16 +93,6 @@ export default function FloorPlanPage() {
 
   const handleUpdateFloorPlan = (data: FloorPlanData) => {
     setFloorPlanData(data);
-  };
-
-  const handleLinked = (branchCode: string, themeId: string) => {
-    setPassmapLink({ branchCode, themeId });
-    // Reload data after sync
-    setTimeout(() => {
-      const steps = getStepsByTheme(themeId);
-      setPmSteps(steps);
-      setPmDetails(getDetailsByStepIds(steps.map((s) => s.id)));
-    }, 50);
   };
 
   // ── Room rename (propagates to GameFlow, FloorPlan, PassMap) ────────────────
@@ -373,15 +375,6 @@ export default function FloorPlanPage() {
             >
               {isEditing ? '✓ 수정 완료' : '✏ 도면 수정'}
             </button>
-          )}
-          {floorPlanData && (
-            <SyncToPassMapButton
-              plan={gameFlowDesign}
-              floorPlan={floorPlanData}
-              onLinked={handleLinked}
-              currentLink={passmapLink}
-              defaultBranchCode={branchCode}
-            />
           )}
           <button
             onClick={() => navigate('/draft')}
