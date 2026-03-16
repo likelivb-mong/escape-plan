@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ThemeList from '../components/ThemeList';
 import ImportAIThemeButton from '../components/ImportAIThemeButton';
 import { MOCK_BRANCHES } from '../mock/branches';
-import { MOCK_THEMES } from '../mock/themes';
+import { getThemesByBranch } from '../utils/passmap-store';
 
 export default function PassMapBranchPage() {
   const { branchCode } = useParams<{ branchCode: string }>();
@@ -11,7 +11,6 @@ export default function PassMapBranchPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const branch = MOCK_BRANCHES.find((b) => b.code === branchCode);
-  const themes = MOCK_THEMES.filter((t) => t.branchCode === branchCode);
 
   if (!branch) {
     return (
@@ -28,6 +27,10 @@ export default function PassMapBranchPage() {
       </div>
     );
   }
+
+  // Re-read from store on every render / refreshKey change
+  const themes = getThemesByBranch(branch.code);
+  void refreshKey; // used to force re-render
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -57,15 +60,13 @@ export default function PassMapBranchPage() {
       </div>
 
       {/* Theme List */}
-      <div key={refreshKey}>
-        {themes.length > 0 ? (
-          <ThemeList themes={themes} branchCode={branch.code} />
-        ) : (
-          <div className="text-white/30 text-center py-12 border border-white/5 rounded-xl">
-            등록된 테마가 없습니다. AI Flow JSON을 Import 해보세요.
-          </div>
-        )}
-      </div>
+      {themes.length > 0 ? (
+        <ThemeList themes={themes} branchCode={branch.code} />
+      ) : (
+        <div className="text-white/30 text-center py-12 border border-white/5 rounded-xl">
+          등록된 테마가 없습니다. AI Flow JSON을 Import 해보세요.
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { ThemeStep, StepType, PassMapViewMode } from '../types/passmap';
+import type { ThemeStep, StepType, StepDetail, PassMapViewMode } from '../types/passmap';
 import { MOCK_BRANCHES } from '../mock/branches';
-import { MOCK_THEMES } from '../mock/themes';
-import { MOCK_STEPS, MOCK_STEP_DETAILS } from '../mock/steps';
+import {
+  getThemeById,
+  getStepsByTheme,
+  getDetailsByStepIds,
+  getDetailByStepId,
+  saveStepsForTheme,
+  saveDetailsForTheme,
+} from '../utils/passmap-store';
 import StepListPanel from '../components/StepListPanel';
 import MiniMapCanvas from '../components/MiniMapCanvas';
 import StepDetailCard from '../components/StepDetailCard';
@@ -21,23 +27,45 @@ export default function PassMapThemePage() {
   const navigate = useNavigate();
 
   const branch = MOCK_BRANCHES.find((b) => b.code === branchCode);
-  const theme = MOCK_THEMES.find((t) => t.id === themeId);
+  const theme = themeId ? getThemeById(themeId) : undefined;
 
+  // Load steps + details from store
+  const [steps, setSteps] = useState<ThemeStep[]>([]);
+  const [details, setDetails] = useState<StepDetail[]>([]);
   const [viewMode, setViewMode] = useState<PassMapViewMode>('map');
-  const [steps, setSteps] = useState<ThemeStep[]>(
-    () => MOCK_STEPS.filter((s) => s.themeId === themeId)
-  );
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  // Initialize from store
+  useEffect(() => {
+    if (!themeId) return;
+    const loadedSteps = getStepsByTheme(themeId);
+    setSteps(loadedSteps);
+    const stepIds = loadedSteps.map((s) => s.id);
+    setDetails(getDetailsByStepIds(stepIds));
+  }, [themeId]);
 
   const selectedStep = steps.find((s) => s.id === selectedStepId) || null;
   const selectedDetail = selectedStep
-    ? MOCK_STEP_DETAILS.find((d) => d.stepId === selectedStep.id)
+    ? details.find((d) => d.stepId === selectedStep.id) || getDetailByStepId(selectedStep.id)
     : undefined;
+
+  // ── Step selection (shared across MAP/FLOW/EDITOR) ────────────────────────
 
   const handleSelectStep = useCallback((step: ThemeStep) => {
     setSelectedStepId(step.id);
   }, []);
+
+  // ── FLOW → MAP bridge: click step in FLOW, switch to MAP ──────────────────
+
+  const handleFlowStepClick = useCallback((step: ThemeStep) => {
+    setSelectedStepId(step.id);
+    // If user wants to see it on map, they can switch tab
+    // Selection persists across tabs
+  }, []);
+
+  // ── Status change ─────────────────────────────────────────────────────────
 
   const handleStatusChange = useCallback((stepId: string, status: ThemeStep['status']) => {
     setSteps((prev) =>
@@ -45,11 +73,15 @@ export default function PassMapThemePage() {
     );
   }, []);
 
+  // ── Editor: move step ─────────────────────────────────────────────────────
+
   const handleStepMove = useCallback((stepId: string, x: number, y: number) => {
     setSteps((prev) =>
       prev.map((s) => (s.id === stepId ? { ...s, x, y } : s))
     );
   }, []);
+
+  // ── Editor: add step ──────────────────────────────────────────────────────
 
   const handleAddStep = useCallback((type: StepType) => {
     const maxNum = steps.reduce((m, s) => Math.max(m, s.stepNumber), 0);
@@ -64,21 +96,50 @@ export default function PassMapThemePage() {
       y: 200 + Math.random() * 100,
       status: 'unchecked',
     };
+    const newDetail: StepDetail = {
+      stepId: newStep.id,
+      answer: '',
+      input: '',
+      output: '',
+      resetMethod: '',
+      memo: '',
+    };
     setSteps((prev) => [...prev, newStep]);
+    setDetails((prev) => [...prev, newDetail]);
     setSelectedStepId(newStep.id);
   }, [steps, themeId]);
+
+  // ── Editor: delete step ───────────────────────────────────────────────────
 
   const handleDeleteStep = useCallback(() => {
     if (!selectedStepId) return;
     setSteps((prev) => prev.filter((s) => s.id !== selectedStepId));
+    setDetails((prev) => prev.filter((d) => d.stepId !== selectedStepId));
     setSelectedStepId(null);
   }, [selectedStepId]);
 
+  // ── Editor: save to localStorage ──────────────────────────────────────────
+
   const handleSave = useCallback(() => {
+    if (!themeId) return;
     setIsSaving(true);
-    // Mock save
-    setTimeout(() => setIsSaving(false), 800);
+    saveStepsForTheme(themeId, steps);
+    saveDetailsForTheme(themeId, details);
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaveMessage('저장 완료');
+      setTimeout(() => setSaveMessage(null), 2000);
+    }, 300);
+  }, [themeId, steps, details]);
+
+  // ── Tab switch with "Go to MAP" from FLOW ─────────────────────────────────
+
+  const handleViewModeChange = useCallback((mode: PassMapViewMode) => {
+    setViewMode(mode);
+    // Selection persists — no reset needed
   }, []);
+
+  // ── Not found ─────────────────────────────────────────────────────────────
 
   if (!branch || !theme) {
     return (
@@ -108,24 +169,35 @@ export default function PassMapThemePage() {
             ← {branch.name}
           </button>
           <h1 className="text-title1 text-white font-bold">{theme.name}</h1>
-          <span className="text-caption text-white/30 font-mono">{branch.code} · {theme.id}</span>
+          <div className="flex items-center gap-3 mt-1">
+            <span className="text-caption text-white/30 font-mono">{branch.code} · {theme.id}</span>
+            <span className="text-caption text-white/20">·</span>
+            <span className="text-caption text-white/40">{steps.length} steps</span>
+          </div>
         </div>
 
         {/* View Mode Tabs */}
-        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
-          {VIEW_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setViewMode(tab.key)}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                viewMode === tab.key
-                  ? 'bg-white/15 text-white'
-                  : 'text-white/40 hover:text-white/70'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          {saveMessage && (
+            <span className="text-caption text-emerald-400/80 animate-[fadeIn_200ms]">
+              {saveMessage}
+            </span>
+          )}
+          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+            {VIEW_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => handleViewModeChange(tab.key)}
+                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  viewMode === tab.key
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/40 hover:text-white/70'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -150,8 +222,19 @@ export default function PassMapThemePage() {
             <FlowPanel
               steps={steps}
               selectedStepId={selectedStepId}
-              onSelectStep={handleSelectStep}
+              onSelectStep={handleFlowStepClick}
             />
+            {/* Go to MAP button */}
+            {selectedStepId && (
+              <div className="mt-4 pt-3 border-t border-white/5">
+                <button
+                  onClick={() => { setViewMode('map'); }}
+                  className="text-caption text-sky-400/60 hover:text-sky-400 transition-colors"
+                >
+                  → MAP에서 보기
+                </button>
+              </div>
+            )}
           </div>
           {/* Detail Card */}
           <div>

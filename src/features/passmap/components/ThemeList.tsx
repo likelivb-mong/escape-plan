@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { Theme } from '../types/passmap';
-import { MOCK_STEPS } from '../mock/steps';
+import { getStepsByTheme } from '../utils/passmap-store';
 
 interface ThemeListProps {
   themes: Theme[];
@@ -13,10 +13,9 @@ export default function ThemeList({ themes, branchCode }: ThemeListProps) {
   return (
     <div className="space-y-3">
       {themes.map((theme) => {
-        const stepCount = MOCK_STEPS.filter((s) => s.themeId === theme.id).length;
-        const completeCount = MOCK_STEPS.filter(
-          (s) => s.themeId === theme.id && s.status === 'complete'
-        ).length;
+        const steps = getStepsByTheme(theme.id);
+        const stepCount = steps.length;
+        const completeCount = steps.filter((s) => s.status === 'complete').length;
 
         return (
           <button
