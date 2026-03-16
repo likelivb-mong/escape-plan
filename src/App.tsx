@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProjectProvider } from './context/ProjectContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
@@ -28,9 +28,7 @@ export default function App() {
             <Route path="/puzzle-flow" element={<PuzzleFlowPage />} />
             <Route path="/floor-plan" element={<FloorPlanPage />} />
             <Route path="/draft" element={<DraftPage />} />
-            {/* PassMap — merged into projects; keep theme route for deep links */}
-            <Route path="/passmap" element={<Navigate to="/projects" replace />} />
-            <Route path="/passmap/:branchCode" element={<Navigate to="/projects" replace />} />
+            {/* PassMap theme deep link (accessed from projects) */}
             <Route path="/passmap/:branchCode/:themeId" element={<PassMapThemePage />} />
           </Route>
         </Routes>
