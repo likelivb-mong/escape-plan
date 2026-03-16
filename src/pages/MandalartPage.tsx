@@ -222,6 +222,29 @@ export default function MandalartPage() {
     [cells, selectedCellIds]
   );
 
+  // ── Empty state: story must be selected ────────────────────────────────────
+  if (!selectedStory) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 px-6">
+        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-title2">
+          📋
+        </div>
+        <div className="text-center">
+          <p className="text-body font-semibold text-white/70 mb-1">스토리가 선택되지 않았습니다.</p>
+          <p className="text-subhead text-white/35 leading-relaxed">
+            먼저 스토리를 선택한 후 만다라트를 작성할 수 있습니다.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/story')}
+          className="mt-2 px-4 py-2 rounded-full border border-white/[0.12] text-subhead text-white/50 hover:border-white/25 hover:text-white/70 transition-all"
+        >
+          스토리 선택하러 →
+        </button>
+      </div>
+    );
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
