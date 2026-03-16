@@ -3,6 +3,7 @@
  *
  * Placed on FloorPlanPage. Opens a branch selector,
  * then syncs GameFlowPlan + FloorPlanData → PassMap store directly.
+ * Saves the passmapLink back to ProjectContext for bidirectional sync.
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -16,6 +17,10 @@ import type { SyncResult } from '../utils/floorplan-sync';
 interface SyncToPassMapButtonProps {
   plan: GameFlowPlan;
   floorPlan: FloorPlanData;
+  /** Called after sync to save the link in ProjectContext */
+  onLinked?: (branchCode: string, themeId: string) => void;
+  /** If already linked, show the linked branch */
+  currentLink?: { branchCode: string; themeId: string } | null;
 }
 
 type DialogState =
@@ -24,51 +29,54 @@ type DialogState =
   | { type: 'conflict'; branchCode: string; branchName: string; existingId: string; existingName: string }
   | { type: 'success'; result: SyncResult; branchCode: string };
 
-export default function SyncToPassMapButton({ plan, floorPlan }: SyncToPassMapButtonProps) {
+export default function SyncToPassMapButton({ plan, floorPlan, onLinked, currentLink }: SyncToPassMapButtonProps) {
   const navigate = useNavigate();
   const [dialog, setDialog] = useState<DialogState>({ type: 'closed' });
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     if (dialog.type === 'closed') return;
     const handleClick = (e: MouseEvent) => {
-      if (overlayRef.current === e.target) {
-        setDialog({ type: 'closed' });
-      }
+      if (overlayRef.current === e.target) setDialog({ type: 'closed' });
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [dialog.type]);
 
+  const finishSync = (result: SyncResult, branchCode: string) => {
+    onLinked?.(branchCode, result.themeId);
+    setDialog({ type: 'success', result, branchCode });
+  };
+
   const handleBranchSelect = (branchCode: string, branchName: string) => {
-    // Check for existing theme with same name
     const existing = findMatchingTheme(branchCode, plan.title);
     if (existing) {
       setDialog({
-        type: 'conflict',
-        branchCode,
-        branchName,
-        existingId: existing.id,
-        existingName: existing.name,
+        type: 'conflict', branchCode, branchName,
+        existingId: existing.id, existingName: existing.name,
       });
     } else {
-      // Create new
       const result = syncFloorPlanToPassMap(plan, floorPlan, branchCode);
-      setDialog({ type: 'success', result, branchCode });
+      finishSync(result, branchCode);
     }
   };
 
   const handleOverwrite = () => {
     if (dialog.type !== 'conflict') return;
     const result = syncFloorPlanToPassMap(plan, floorPlan, dialog.branchCode, dialog.existingId);
-    setDialog({ type: 'success', result, branchCode: dialog.branchCode });
+    finishSync(result, dialog.branchCode);
   };
 
   const handleCreateNew = () => {
     if (dialog.type !== 'conflict') return;
     const result = syncFloorPlanToPassMap(plan, floorPlan, dialog.branchCode);
-    setDialog({ type: 'success', result, branchCode: dialog.branchCode });
+    finishSync(result, dialog.branchCode);
+  };
+
+  const handleResync = () => {
+    if (!currentLink) return;
+    const result = syncFloorPlanToPassMap(plan, floorPlan, currentLink.branchCode, currentLink.themeId);
+    finishSync(result, currentLink.branchCode);
   };
 
   const handleGoToPassMap = () => {
@@ -76,15 +84,46 @@ export default function SyncToPassMapButton({ plan, floorPlan }: SyncToPassMapBu
     navigate(`/passmap/${dialog.branchCode}/${dialog.result.themeId}`);
   };
 
+  const linkedBranch = currentLink
+    ? MOCK_BRANCHES.find((b) => b.code === currentLink.branchCode)
+    : null;
+
   return (
     <>
-      <button
-        onClick={() => setDialog({ type: 'branch-select' })}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/5 text-violet-300/70 text-footnote font-medium hover:bg-violet-500/10 hover:border-violet-500/30 hover:text-violet-300 transition-all"
-      >
-        <span className="text-xs">🗺️</span>
-        PassMap 연동
-      </button>
+      {currentLink ? (
+        <div className="inline-flex items-center gap-1">
+          <button
+            onClick={handleResync}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-l-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-300/70 text-footnote font-medium hover:bg-emerald-500/10 hover:text-emerald-300 transition-all"
+            title="현재 연동된 PassMap에 최신 데이터 동기화"
+          >
+            <span className="text-xs">↻</span>
+            동기화
+          </button>
+          <button
+            onClick={() => navigate(`/passmap/${currentLink.branchCode}/${currentLink.themeId}`)}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 border-y border-r border-emerald-500/20 bg-emerald-500/5 text-emerald-300/50 text-footnote hover:text-emerald-300 transition-all"
+            title={`${linkedBranch?.name ?? currentLink.branchCode} PassMap 열기`}
+          >
+            <span className="text-xs">→</span>
+          </button>
+          <button
+            onClick={() => setDialog({ type: 'branch-select' })}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-r-full border-y border-r border-white/10 bg-white/[0.02] text-white/30 text-footnote hover:text-white/50 transition-all"
+            title="다른 지점에 연동"
+          >
+            <span className="text-[10px]">⚙</span>
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setDialog({ type: 'branch-select' })}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/5 text-violet-300/70 text-footnote font-medium hover:bg-violet-500/10 hover:border-violet-500/30 hover:text-violet-300 transition-all"
+        >
+          <span className="text-xs">🗺️</span>
+          PassMap 연동
+        </button>
+      )}
 
       {/* Dialog overlay */}
       {dialog.type !== 'closed' && (
@@ -93,13 +132,12 @@ export default function SyncToPassMapButton({ plan, floorPlan }: SyncToPassMapBu
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
         >
           <div className="bg-[#12141a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            {/* Branch Select */}
             {dialog.type === 'branch-select' && (
               <>
                 <div className="px-5 pt-5 pb-3">
                   <h3 className="text-body font-bold text-white/90">PassMap 연동</h3>
                   <p className="text-caption text-white/40 mt-1">
-                    연동할 지점을 선택하세요. 공간 배치 데이터가 해당 지점의 PassMap에 자동으로 반영됩니다.
+                    연동할 지점을 선택하세요. 이후 편집 시 자동으로 양쪽 모두 반영됩니다.
                   </p>
                 </div>
                 <div className="px-5 pb-5 space-y-1.5">
@@ -125,7 +163,6 @@ export default function SyncToPassMapButton({ plan, floorPlan }: SyncToPassMapBu
               </>
             )}
 
-            {/* Conflict */}
             {dialog.type === 'conflict' && (
               <>
                 <div className="px-5 pt-5 pb-3">
@@ -162,7 +199,6 @@ export default function SyncToPassMapButton({ plan, floorPlan }: SyncToPassMapBu
               </>
             )}
 
-            {/* Success */}
             {dialog.type === 'success' && (
               <>
                 <div className="px-5 pt-5 pb-3">
