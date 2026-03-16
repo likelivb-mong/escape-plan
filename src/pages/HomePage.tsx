@@ -119,7 +119,7 @@ export default function HomePage() {
     if (shouldNavigateAfterSave && projectBrief) {
       saveCurrentProject();
       setShouldNavigateAfterSave(false);
-      navigate('/story');
+      navigate('/theme-design');
     }
   }, [shouldNavigateAfterSave, projectBrief, saveCurrentProject, navigate]);
 

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProjectProvider } from './context/ProjectContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
+import ThemeDesignPage from './pages/ThemeDesignPage';
 import MandalartPage from './pages/MandalartPage';
 import StoryPage from './pages/StoryPage';
 import GameFlowPage from './pages/GameFlowPage';
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDashboardPage />} />
+            <Route path="/theme-design" element={<ThemeDesignPage />} />
             <Route path="/story" element={<StoryPage />} />
             <Route path="/mandalart" element={<MandalartPage />} />
             <Route path="/game-flow" element={<GameFlowPage />} />
