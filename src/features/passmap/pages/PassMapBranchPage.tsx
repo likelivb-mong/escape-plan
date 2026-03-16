@@ -1,0 +1,58 @@
+import { useParams, useNavigate } from 'react-router-dom';
+import ThemeList from '../components/ThemeList';
+import { MOCK_BRANCHES } from '../mock/branches';
+import { MOCK_THEMES } from '../mock/themes';
+
+export default function PassMapBranchPage() {
+  const { branchCode } = useParams<{ branchCode: string }>();
+  const navigate = useNavigate();
+
+  const branch = MOCK_BRANCHES.find((b) => b.code === branchCode);
+  const themes = MOCK_THEMES.filter((t) => t.branchCode === branchCode);
+
+  if (!branch) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="text-white/40 text-center py-20">
+          지점을 찾을 수 없습니다.
+          <button
+            onClick={() => navigate('/passmap')}
+            className="block mx-auto mt-4 text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            ← 지점 목록으로
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <button
+          onClick={() => navigate('/passmap')}
+          className="text-white/30 hover:text-white/60 text-sm mb-4 inline-block transition-colors"
+        >
+          ← 지점 목록
+        </button>
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-display text-white font-bold">{branch.name}</h1>
+          <span className="text-title3 text-white/30 font-mono">{branch.code}</span>
+        </div>
+        <p className="text-body text-white/50 mt-2">
+          {themes.length}개 테마
+        </p>
+      </div>
+
+      {/* Theme List */}
+      {themes.length > 0 ? (
+        <ThemeList themes={themes} branchCode={branch.code} />
+      ) : (
+        <div className="text-white/30 text-center py-12 border border-white/5 rounded-xl">
+          등록된 테마가 없습니다.
+        </div>
+      )}
+    </div>
+  );
+}

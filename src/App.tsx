@@ -11,6 +11,9 @@ import FloorPlanPage from './pages/FloorPlanPage';
 import ScenarioPage from './pages/ScenarioPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDashboardPage from './pages/ProjectDashboardPage';
+import PassMapHomePage from './features/passmap/pages/PassMapHomePage';
+import PassMapBranchPage from './features/passmap/pages/PassMapBranchPage';
+import PassMapThemePage from './features/passmap/pages/PassMapThemePage';
 
 export default function App() {
   return (
@@ -28,6 +31,10 @@ export default function App() {
             <Route path="/puzzle-recommendations" element={<PuzzleRecommendationsPage />} />
             <Route path="/floor-plan" element={<FloorPlanPage />} />
             <Route path="/draft" element={<DraftPage />} />
+            {/* PassMap Manager */}
+            <Route path="/passmap" element={<PassMapHomePage />} />
+            <Route path="/passmap/:branchCode" element={<PassMapBranchPage />} />
+            <Route path="/passmap/:branchCode/:themeId" element={<PassMapThemePage />} />
           </Route>
         </Routes>
       </BrowserRouter>
