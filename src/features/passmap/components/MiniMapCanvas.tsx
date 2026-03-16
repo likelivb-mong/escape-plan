@@ -170,7 +170,7 @@ export default function MiniMapCanvas({
         return (
           <div
             key={room.name}
-            className={`absolute rounded-lg border transition-colors ${
+            className={`absolute rounded-lg transition-colors ${
               editable ? 'cursor-move' : ''
             }`}
             style={{
@@ -178,7 +178,7 @@ export default function MiniMapCanvas({
               top: `${room.y}%`,
               width: `${room.width}%`,
               height: `${room.height}%`,
-              borderColor,
+              border: `1px solid ${borderColor}`,
               backgroundColor: `${borderColor.replace(/[\d.]+\)$/, '0.06)')}`,
             }}
             onMouseDown={(e) => handleRoomDragStart(e, room, 'move')}
