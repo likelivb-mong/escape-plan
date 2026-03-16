@@ -60,10 +60,9 @@ export default function ImportAIThemeButton({ branchCode, onImported }: ImportAI
 
         const data = raw as PassMapExchangeData;
 
-        // Verify branchCode matches
+        // If branchCode in file differs, use the current branch
         if (data.branchCode !== branchCode) {
-          setError(`지점 코드 불일치 — 파일: ${data.branchCode}, 현재: ${branchCode}`);
-          return;
+          data.branchCode = branchCode;
         }
 
         if (data.steps.length === 0) {

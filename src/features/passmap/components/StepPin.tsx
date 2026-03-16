@@ -7,10 +7,9 @@ interface StepPinProps {
   onClick: (step: ThemeStep) => void;
   draggable?: boolean;
   onDragStart?: (e: React.MouseEvent, step: ThemeStep) => void;
-  usePercentage?: boolean;
 }
 
-export default function StepPin({ step, isSelected, onClick, draggable, onDragStart, usePercentage }: StepPinProps) {
+export default function StepPin({ step, isSelected, onClick, draggable, onDragStart }: StepPinProps) {
   const color = STATUS_COLORS[step.status];
   const icon = STEP_TYPE_ICONS[step.type];
 
@@ -21,8 +20,8 @@ export default function StepPin({ step, isSelected, onClick, draggable, onDragSt
         ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
       `}
       style={{
-        left: usePercentage ? `${step.x}%` : step.x,
-        top: usePercentage ? `${step.y}%` : step.y,
+        left: `${step.x}%`,
+        top: `${step.y}%`,
         backgroundColor: `${color}22`,
         borderColor: color,
         borderWidth: 1,

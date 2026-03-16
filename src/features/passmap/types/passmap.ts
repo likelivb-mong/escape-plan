@@ -60,7 +60,7 @@ export const STATUS_COLORS: Record<StepStatus, string> = {
 
 // Step type icon mapping
 export const STEP_TYPE_ICONS: Record<StepType, string> = {
-  puzzle: '●',
+  puzzle: '🧩',
   lock: '🔒',
-  device: '★',
+  device: '⚙️',
 };

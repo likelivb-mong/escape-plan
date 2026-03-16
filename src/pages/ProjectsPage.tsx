@@ -13,7 +13,7 @@ import {
 } from '../utils/projectStorage';
 import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 import ImportAIThemeButton from '../features/passmap/components/ImportAIThemeButton';
-import { getThemesByBranch, getStepsByTheme } from '../features/passmap/utils/passmap-store';
+import { getThemesByBranch, getStepsByTheme, subscribeToStoreChanges } from '../features/passmap/utils/passmap-store';
 import type { Theme } from '../features/passmap/types/passmap';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -232,6 +232,11 @@ export default function ProjectsPage() {
   };
 
   useEffect(() => { refresh(); }, [refreshKey]);
+
+  // Subscribe to store changes (e.g. from import, delete theme)
+  useEffect(() => {
+    return subscribeToStoreChanges(() => setRefreshKey((k) => k + 1));
+  }, []);
 
   // Get standalone PassMap themes (not linked to any project) for current branch filter
   const standaloneThemes = useMemo(() => {
