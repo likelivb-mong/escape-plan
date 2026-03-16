@@ -162,16 +162,26 @@ export default function FloorPlanCanvas({
       const updatedRooms = floorPlan.rooms.map(room => {
         if (room.roomName !== dragState.id) return room;
         if (dragState.mode === 'move') {
+          const newX = snap(clamp(dragState.startX + dx, 0, 100 - room.width));
+          const newY = snap(clamp(dragState.startY + dy, 0, 100 - room.height));
           return {
             ...room,
-            x: snap(clamp(dragState.startX + dx, 0, 100 - room.width)),
-            y: snap(clamp(dragState.startY + dy, 0, 100 - room.height)),
+            x: newX,
+            y: newY,
           };
         } else {
+          // For resize: clamp size first, then position
+          const newWidth = snap(clamp(dragState.startW + dx, 8, 100));
+          const newHeight = snap(clamp(dragState.startH + dy, 8, 100));
+          // If room would go out of bounds, adjust position
+          const newX = Math.max(0, Math.min(room.x, 100 - newWidth));
+          const newY = Math.max(0, Math.min(room.y, 100 - newHeight));
           return {
             ...room,
-            width: snap(clamp(dragState.startW + dx, 8, 100 - room.x)),
-            height: snap(clamp(dragState.startH + dy, 8, 100 - room.y)),
+            x: newX,
+            y: newY,
+            width: newWidth,
+            height: newHeight,
           };
         }
       });
