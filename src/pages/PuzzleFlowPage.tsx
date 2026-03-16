@@ -295,7 +295,6 @@ export default function PuzzleFlowPage() {
             isRegenerating={isRegenGame}
             onRegenerate={handleRegenGame}
             onUpdatePlan={handleUpdateGamePlan}
-            onAddStep={handleAddStep}
           />
         ) : (
           <div className="flex flex-1 items-center justify-center">
