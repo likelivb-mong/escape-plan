@@ -46,14 +46,14 @@ export default function StoryPage() {
     const initial =
       aiStoryProposals && aiStoryProposals.length > 0
         ? aiStoryProposals
-        : generateStoryProposals(allKeywords, themeTitle, [0, 0, 0]);
+        : [];
     return Object.fromEntries(initial.map((p) => [p.id, 0]));
   });
 
   const [proposals, setProposals] = useState<StoryProposal[]>(() =>
     aiStoryProposals && aiStoryProposals.length > 0
       ? aiStoryProposals
-      : generateStoryProposals(allKeywords, themeTitle, [0, 0, 0]),
+      : [],
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
