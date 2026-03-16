@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { generateGameFlowFromMandala, regenerateGameFlow } from '../utils/gameFlow';
-import type { GameFlowPlan, StageLabel } from '../types/gameFlow';
+import type { GameFlowPlan } from '../types/gameFlow';
 import GameFlowTab from '../components/game-flow/GameFlowTab';
 
 export default function GameFlowPage() {
@@ -57,11 +57,6 @@ export default function GameFlowPage() {
   const handleUpdatePlan = (newPlan: GameFlowPlan) => {
     setGamePlan(newPlan);
     setHasChanges(true); // Mark as changed when user edits
-  };
-
-  const handleAddStep = (stageLabel: StageLabel) => {
-    if (!gamePlan) return;
-    // Implementation for adding step
   };
 
   const handleSave = () => {
@@ -168,7 +163,6 @@ export default function GameFlowPage() {
           isRegenerating={isRegenerating}
           onRegenerate={handleRegenerate}
           onUpdatePlan={handleUpdatePlan}
-          onAddStep={handleAddStep}
         />
       ) : null}
     </div>
