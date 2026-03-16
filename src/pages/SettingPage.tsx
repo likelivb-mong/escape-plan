@@ -286,16 +286,13 @@ export default function SettingPage() {
               )}
             </div>
             <div className="flex gap-0.5 bg-white/[0.04] rounded-lg p-0.5">
-              {(['map', 'flow', 'editor'] as const).map((m) => (
+              {(['map', 'flow'] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => {
-                    if (m === 'map' || m === 'flow') {
-                      setFloorViewMode(m === 'map' ? 'map' : 'flow');
-                      setPmViewMode(m);
-                    } else {
-                      setPmViewMode(m);
-                    }
+                    setFloorViewMode(m);
+                    setPmViewMode(m);
+                    setIsEditing(false);
                   }}
                   className={`px-4 py-1.5 rounded-md text-[11px] font-semibold tracking-wide transition-all ${
                     pmViewMode === m ? 'bg-white/[0.10] text-white' : 'text-white/30 hover:text-white/55'
@@ -307,8 +304,8 @@ export default function SettingPage() {
             </div>
           </div>
 
-          {/* Editor toolbar */}
-          {pmViewMode === 'editor' && (
+          {/* Editor toolbar (visible when editing on MAP view) */}
+          {pmViewMode === 'map' && isEditing && (
             <div className="mb-4">
               <EditorToolbar
                 onAddStep={handleAddStep}
@@ -351,22 +348,20 @@ export default function SettingPage() {
               </div>
             </div>
           ) : (
-            /* MAP & EDITOR view */
+            /* MAP view */
             <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_280px] gap-4 flex-1 min-h-0">
               <div className="bg-white/[0.02] rounded-xl border border-white/10 p-3 max-h-[600px] overflow-hidden">
                 <StepListPanel steps={pmSteps} selectedStepId={selectedStepId} onSelectStep={handleSelectStep} />
               </div>
               <div className="min-h-[500px]">
-                {floorViewMode === 'map' && (
-                  <MiniMapCanvas
-                    steps={pmSteps}
-                    selectedStepId={selectedStepId}
-                    onSelectStep={handleSelectStep}
-                    rooms={theme?.rooms || []}
-                    editable={pmViewMode === 'editor'}
-                    onStepMove={pmViewMode === 'editor' ? handleStepMove : undefined}
-                  />
-                )}
+                <MiniMapCanvas
+                  steps={pmSteps}
+                  selectedStepId={selectedStepId}
+                  onSelectStep={handleSelectStep}
+                  rooms={theme?.rooms || []}
+                  editable={isEditing}
+                  onStepMove={isEditing ? handleStepMove : undefined}
+                />
               </div>
               <div>
                 {selectedStep ? (
