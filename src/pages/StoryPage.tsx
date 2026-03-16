@@ -53,7 +53,7 @@ export default function StoryPage() {
   const [proposals, setProposals] = useState<StoryProposal[]>(() =>
     aiStoryProposals && aiStoryProposals.length > 0
       ? aiStoryProposals
-      : [],
+      : selectedStory ? [selectedStory] : [],
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);

@@ -320,7 +320,31 @@ export default function PlanPage() {
     );
   }
 
-  if (!doc || !status) return null;
+  // ── Story 선택 완료, GameFlow 있음, PuzzleFlow 미완성 ────────────────────────
+  if (!doc || !status) {
+    return (
+      <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+        {header}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-3xl">
+            {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
+            {selectedStory && <SelectedStorySection story={selectedStory} />}
+            {gameFlowDesign && (
+              <DraftGameFlowSection
+                plan={gameFlowDesign}
+                onUpdatePlan={setGameFlowDesign}
+              />
+            )}
+            <NextStepBanner
+              message="Setting에서 룸 구성을 완성하면 기획서가 마무리됩니다."
+              buttonLabel="Setting →"
+              onClick={() => navigate('/setting')}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── 전체 완성 상태 ────────────────────────────────────────────────────────────
   return (
