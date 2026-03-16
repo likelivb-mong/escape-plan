@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ThemeList from '../components/ThemeList';
+import ImportAIThemeButton from '../components/ImportAIThemeButton';
 import { MOCK_BRANCHES } from '../mock/branches';
 import { MOCK_THEMES } from '../mock/themes';
 
 export default function PassMapBranchPage() {
   const { branchCode } = useParams<{ branchCode: string }>();
   const navigate = useNavigate();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const branch = MOCK_BRANCHES.find((b) => b.code === branchCode);
   const themes = MOCK_THEMES.filter((t) => t.branchCode === branchCode);
@@ -36,23 +39,33 @@ export default function PassMapBranchPage() {
         >
           ← 지점 목록
         </button>
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-display text-white font-bold">{branch.name}</h1>
-          <span className="text-title3 text-white/30 font-mono">{branch.code}</span>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-display text-white font-bold">{branch.name}</h1>
+              <span className="text-title3 text-white/30 font-mono">{branch.code}</span>
+            </div>
+            <p className="text-body text-white/50 mt-2">
+              {themes.length}개 테마
+            </p>
+          </div>
+          <ImportAIThemeButton
+            branchCode={branch.code}
+            onImported={() => setRefreshKey((k) => k + 1)}
+          />
         </div>
-        <p className="text-body text-white/50 mt-2">
-          {themes.length}개 테마
-        </p>
       </div>
 
       {/* Theme List */}
-      {themes.length > 0 ? (
-        <ThemeList themes={themes} branchCode={branch.code} />
-      ) : (
-        <div className="text-white/30 text-center py-12 border border-white/5 rounded-xl">
-          등록된 테마가 없습니다.
-        </div>
-      )}
+      <div key={refreshKey}>
+        {themes.length > 0 ? (
+          <ThemeList themes={themes} branchCode={branch.code} />
+        ) : (
+          <div className="text-white/30 text-center py-12 border border-white/5 rounded-xl">
+            등록된 테마가 없습니다. AI Flow JSON을 Import 해보세요.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

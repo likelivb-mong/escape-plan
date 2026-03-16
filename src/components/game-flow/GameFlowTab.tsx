@@ -4,6 +4,7 @@ import type { GameFlowPlan, GameFlowStep, ProblemMode, AnswerType, StageLabel } 
 import { useProject } from '../../context/ProjectContext';
 import StepListPanel from './StepListPanel';
 import StepDetailPanel from './StepDetailPanel';
+import ExportToPassMapButton from './ExportToPassMapButton';
 
 interface GameFlowTabProps {
   plan: GameFlowPlan;
@@ -179,7 +180,7 @@ export default function GameFlowTab({
       </div>
 
       {/* ── Summary footer ── */}
-      <GameFlowSummaryBar steps={plan.steps} onSaveToDraft={handleSaveToDraft} onGoToFloorPlan={handleGoToFloorPlan} />
+      <GameFlowSummaryBar steps={plan.steps} plan={plan} onSaveToDraft={handleSaveToDraft} onGoToFloorPlan={handleGoToFloorPlan} />
     </div>
   );
 }
@@ -311,10 +312,12 @@ function FilterSelect({
 
 function GameFlowSummaryBar({
   steps,
+  plan,
   onSaveToDraft,
   onGoToFloorPlan,
 }: {
   steps: GameFlowStep[];
+  plan: GameFlowPlan;
   onSaveToDraft: () => void;
   onGoToFloorPlan: () => void;
 }) {
@@ -333,6 +336,7 @@ function GameFlowSummaryBar({
 
       <div className="flex-1" />
 
+      <ExportToPassMapButton plan={plan} />
       <button
         onClick={onGoToFloorPlan}
         className="px-4 py-2 rounded-full border border-white/[0.10] text-subhead text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
