@@ -7,15 +7,25 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
   const [unlocked, setUnlocked] = useState(false);
   const [input, setInput] = useState('');
   const [error, setError] = useState(false);
+  const [remember, setRemember] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY) === 'ok') setUnlocked(true);
+    if (
+      localStorage.getItem(SESSION_KEY) === 'ok' ||
+      sessionStorage.getItem(SESSION_KEY) === 'ok'
+    ) {
+      setUnlocked(true);
+    }
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input === CORRECT) {
-      sessionStorage.setItem(SESSION_KEY, 'ok');
+      if (remember) {
+        localStorage.setItem(SESSION_KEY, 'ok');
+      } else {
+        sessionStorage.setItem(SESSION_KEY, 'ok');
+      }
       setUnlocked(true);
     } else {
       setError(true);
@@ -44,6 +54,15 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
           }`}
         />
         {error && <p className="text-xs text-red-400/70 -mt-2">비밀번호가 틀렸습니다</p>}
+        <label className="flex items-center gap-2 cursor-pointer -mt-1">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="w-3.5 h-3.5 rounded accent-white/60"
+          />
+          <span className="text-xs text-white/30">자동 로그인</span>
+        </label>
         <button
           type="submit"
           className="px-6 py-2 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
