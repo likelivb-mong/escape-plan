@@ -52,18 +52,23 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
-// ── Default step positions (grid layout to avoid overlap) ──────────────────────
+// ── Default step positions (grid layout within room bounds) ──────────────────────
 
 function getDefaultPos(index: number): { x: number; y: number } {
-  // 2-column grid layout to prevent overlaps
-  // Each step gets roughly 16% width per column, 18% height per row
+  // ⚠️ CRITICAL: Calculate positions as percentages WITHIN the room (0-100%)
+  // This ensures steps always stay inside the room container, even with overflow: hidden
+  // Position is relative to room's content area, NOT the canvas
   const cols = 2;
   const col = index % cols;
   const row = Math.floor(index / cols);
 
+  // Room structure: header (12%) + content area (88%)
+  // Keep y positions within content bounds to prevent overflow:hidden cutoff
+  const contentStartY = 12; // Start below header
+
   return {
-    x: 3 + col * 48,      // Column 1: x=3%, Column 2: x=51%
-    y: 20 + row * 18,     // Row 0: y=20%, Row 1: y=38%, Row 2: y=56%, etc
+    x: 3 + col * 48,              // x: 3% and 51% within room width
+    y: contentStartY + row * 16,   // y: spaced by 16% within room content (12%, 28%, 44%, 60%, 76%)
   };
 }
 
