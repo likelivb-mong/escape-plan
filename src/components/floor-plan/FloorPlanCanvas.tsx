@@ -74,6 +74,19 @@ export default function FloorPlanCanvas({
       return { ...room, x, y, width, height };
     });
 
+    // 🔍 DIAGNOSTIC: Log final room positions
+    console.log('📍 [FloorPlanCanvas] Final room positions:', finalRooms.map(r => ({
+      name: r.roomName,
+      x: Math.round(r.x * 10) / 10,
+      y: Math.round(r.y * 10) / 10,
+      w: Math.round(r.width * 10) / 10,
+      h: Math.round(r.height * 10) / 10,
+      x_end: Math.round((r.x + r.width) * 10) / 10,
+      y_end: Math.round((r.y + r.height) * 10) / 10,
+      valid_x: r.x >= 0 && r.x + r.width <= 100,
+      valid_y: r.y >= 0 && r.y + r.height <= 100,
+    })));
+
     return { ...normalized, rooms: finalRooms };
   }, [floorPlan]);
 
