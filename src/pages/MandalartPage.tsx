@@ -256,10 +256,10 @@ export default function MandalartPage() {
             예시 보기
           </button>
           <button
-            onClick={() => navigate('/puzzle-flow')}
+            onClick={() => navigate('/game-flow')}
             className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
           >
-            퍼즐 설계로 →
+            Game Flow →
           </button>
         </div>
       </div>
