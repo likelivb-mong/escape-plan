@@ -24,7 +24,8 @@ import {
 import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 import { syncFloorPlanToPassMap, findMatchingTheme } from '../features/passmap/utils/floorplan-sync';
 
-type Tab = 'floor' | 'passmap';
+type Tab = 'passmap';
+type FloorViewMode = 'map' | 'flow';
 
 export default function FloorPlanPage() {
   const navigate = useNavigate();
@@ -40,8 +41,9 @@ export default function FloorPlanPage() {
     setPassmapLink,
   } = useProject();
 
-  const [activeTab, setActiveTab] = useState<Tab>('floor');
+  const [activeTab, setActiveTab] = useState<Tab>('passmap');
   const [isEditing, setIsEditing] = useState(false);
+  const [floorViewMode, setFloorViewMode] = useState<FloorViewMode>('map');
 
   // PassMap state (when linked)
   const [pmSteps, setPmSteps] = useState<ThemeStep[]>([]);
@@ -227,111 +229,6 @@ export default function FloorPlanPage() {
     );
   }
 
-  // ── Linked PassMap view ─────────────────────────────────────────────────────
-  const renderPassMapView = () => {
-    if (!passmapLink || !theme) return null;
-
-    return (
-      <div className="flex flex-col flex-1 min-h-0 px-4 sm:px-6 py-4">
-        {/* PassMap view mode tabs */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-caption text-white/30">
-              {linkedBranch?.name} · {theme.name}
-            </span>
-            {saveMessage && (
-              <span className="text-caption text-emerald-400/80">{saveMessage}</span>
-            )}
-          </div>
-          <div className="flex gap-0.5 bg-white/[0.04] rounded-lg p-0.5">
-            {(['map', 'flow', 'editor'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setPmViewMode(m)}
-                className={`px-4 py-1.5 rounded-md text-[11px] font-semibold tracking-wide transition-all ${
-                  pmViewMode === m ? 'bg-white/[0.10] text-white' : 'text-white/30 hover:text-white/55'
-                }`}
-              >
-                {m.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Editor toolbar */}
-        {pmViewMode === 'editor' && (
-          <div className="mb-4">
-            <EditorToolbar
-              onAddStep={handleAddStep}
-              onDeleteStep={handleDeleteStep}
-              onSave={handleSave}
-              hasSelection={!!selectedStepId}
-              isSaving={isSaving}
-            />
-          </div>
-        )}
-
-        {/* FLOW view */}
-        {pmViewMode === 'flow' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
-            <div className="lg:col-span-2 bg-white/[0.02] rounded-xl border border-white/10 p-4 overflow-y-auto">
-              <FlowPanel
-                steps={pmSteps}
-                selectedStepId={selectedStepId}
-                onSelectStep={handleSelectStep}
-              />
-              {selectedStepId && (
-                <div className="mt-4 pt-3 border-t border-white/5">
-                  <button
-                    onClick={() => setPmViewMode('map')}
-                    className="text-caption text-sky-400/60 hover:text-sky-400 transition-colors"
-                  >
-                    → MAP에서 보기
-                  </button>
-                </div>
-              )}
-            </div>
-            <div>
-              {selectedStep ? (
-                <StepDetailCard step={selectedStep} detail={selectedDetail} onStatusChange={handleStatusChange} />
-              ) : (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-white/30 text-center text-sm">
-                  Step을 선택하세요
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          /* MAP & EDITOR view */
-          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_280px] gap-4 flex-1 min-h-0">
-            <div className="bg-white/[0.02] rounded-xl border border-white/10 p-3 max-h-[600px] overflow-hidden">
-              <StepListPanel steps={pmSteps} selectedStepId={selectedStepId} onSelectStep={handleSelectStep} />
-            </div>
-            <div className="min-h-[500px]">
-              <MiniMapCanvas
-                steps={pmSteps}
-                selectedStepId={selectedStepId}
-                onSelectStep={handleSelectStep}
-                rooms={theme.rooms}
-                editable={pmViewMode === 'editor'}
-                onStepMove={pmViewMode === 'editor' ? handleStepMove : undefined}
-              />
-            </div>
-            <div>
-              {selectedStep ? (
-                <StepDetailCard step={selectedStep} detail={selectedDetail} onStatusChange={handleStatusChange} />
-              ) : (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-white/30 text-center text-sm">
-                  Step을 선택하세요
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)] print:h-auto print:overflow-visible">
 
@@ -348,23 +245,13 @@ export default function FloorPlanPage() {
           <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
           <span className="h-3.5 w-px bg-white/10" />
           <span className="text-footnote text-white/35 font-medium tracking-wide">
-            공간 배치 / PassMap
+            Pass Map
           </span>
-        </div>
-
-        {/* ── Tab bar ── */}
-        <div className="flex items-center gap-1 p-0.5 rounded-full border border-white/[0.08] bg-white/[0.02]">
-          <TabButton active={activeTab === 'floor'} onClick={() => setActiveTab('floor')}>
-            도면
-          </TabButton>
-          <TabButton active={activeTab === 'passmap'} onClick={() => setActiveTab('passmap')}>
-            PassMap
-          </TabButton>
         </div>
 
         {/* ── Right actions ── */}
         <div className="flex items-center gap-2">
-          {activeTab === 'floor' && (
+          {passmapLink && floorViewMode === 'map' && (
             <button
               onClick={() => setIsEditing(prev => !prev)}
               className={`px-3 py-1.5 rounded-full border text-footnote font-medium transition-all duration-150 ${
@@ -373,7 +260,7 @@ export default function FloorPlanPage() {
                   : 'border-white/[0.12] text-white/45 hover:border-white/25 hover:text-white/70'
               }`}
             >
-              {isEditing ? '✓ 수정 완료' : '✏ 도면 수정'}
+              {isEditing ? '✓ 수정 완료' : '✏ 편집'}
             </button>
           )}
           <button
@@ -385,21 +272,114 @@ export default function FloorPlanPage() {
         </div>
       </div>
 
-      {/* ── Tab content ── */}
-      {activeTab === 'floor' ? (
-        <div className="flex flex-col flex-1 overflow-hidden min-h-0 px-4 sm:px-6 py-4 sm:py-5">
-          {floorPlanData && (
-            <FloorPlanCanvas
-              plan={gameFlowDesign}
-              floorPlan={floorPlanData}
-              onUpdateFloorPlan={handleUpdateFloorPlan}
-              isEditing={isEditing}
-              onRenameRoom={handleRenameRoom}
-            />
+      {/* ── Content ── */}
+      {passmapLink ? (
+        <div className="flex flex-col flex-1 min-h-0 px-4 sm:px-6 py-4">
+          {/* PassMap view mode tabs */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-caption text-white/30">
+                {linkedBranch?.name} · {theme?.name}
+              </span>
+              {saveMessage && (
+                <span className="text-caption text-emerald-400/80">{saveMessage}</span>
+              )}
+            </div>
+            <div className="flex gap-0.5 bg-white/[0.04] rounded-lg p-0.5">
+              {(['map', 'flow', 'editor'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    if (m === 'map' || m === 'flow') {
+                      setFloorViewMode(m === 'map' ? 'map' : 'flow');
+                      setPmViewMode(m);
+                    } else {
+                      setPmViewMode(m);
+                    }
+                  }}
+                  className={`px-4 py-1.5 rounded-md text-[11px] font-semibold tracking-wide transition-all ${
+                    pmViewMode === m ? 'bg-white/[0.10] text-white' : 'text-white/30 hover:text-white/55'
+                  }`}
+                >
+                  {m.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Editor toolbar */}
+          {pmViewMode === 'editor' && (
+            <div className="mb-4">
+              <EditorToolbar
+                onAddStep={handleAddStep}
+                onDeleteStep={handleDeleteStep}
+                onSave={handleSave}
+                hasSelection={!!selectedStepId}
+                isSaving={isSaving}
+              />
+            </div>
+          )}
+
+          {/* FLOW view */}
+          {pmViewMode === 'flow' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
+              <div className="lg:col-span-2 bg-white/[0.02] rounded-xl border border-white/10 p-4 overflow-y-auto">
+                <FlowPanel
+                  steps={pmSteps}
+                  selectedStepId={selectedStepId}
+                  onSelectStep={handleSelectStep}
+                />
+                {selectedStepId && (
+                  <div className="mt-4 pt-3 border-t border-white/5">
+                    <button
+                      onClick={() => setPmViewMode('map')}
+                      className="text-caption text-sky-400/60 hover:text-sky-400 transition-colors"
+                    >
+                      → MAP에서 보기
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div>
+                {selectedStep ? (
+                  <StepDetailCard step={selectedStep} detail={selectedDetail} onStatusChange={handleStatusChange} />
+                ) : (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-white/30 text-center text-sm">
+                    Step을 선택하세요
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* MAP & EDITOR view */
+            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_280px] gap-4 flex-1 min-h-0">
+              <div className="bg-white/[0.02] rounded-xl border border-white/10 p-3 max-h-[600px] overflow-hidden">
+                <StepListPanel steps={pmSteps} selectedStepId={selectedStepId} onSelectStep={handleSelectStep} />
+              </div>
+              <div className="min-h-[500px]">
+                {floorViewMode === 'map' && (
+                  <MiniMapCanvas
+                    steps={pmSteps}
+                    selectedStepId={selectedStepId}
+                    onSelectStep={handleSelectStep}
+                    rooms={theme?.rooms || []}
+                    editable={pmViewMode === 'editor'}
+                    onStepMove={pmViewMode === 'editor' ? handleStepMove : undefined}
+                  />
+                )}
+              </div>
+              <div>
+                {selectedStep ? (
+                  <StepDetailCard step={selectedStep} detail={selectedDetail} onStatusChange={handleStatusChange} />
+                ) : (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-white/30 text-center text-sm">
+                    Step을 선택하세요
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
-      ) : passmapLink ? (
-        renderPassMapView()
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6">
           <p className="text-body text-white/50">PassMap 연동을 위해 지점을 선택하세요</p>
