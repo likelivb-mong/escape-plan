@@ -10,6 +10,10 @@ import {
   fetchYoutubeTranscript,
   formatTranscriptForPrompt,
 } from '../utils/youtubeTranscript';
+import {
+  fetchYouTubeMetadata,
+  inferMetadataFromId,
+} from '../utils/youtubeMetadata';
 
 // ── Mandalart position mappings ───────────────────────────────────────────────
 
@@ -350,10 +354,20 @@ function buildPrompt(videoTitle: string, channelName: string): string {
   const investigationRef = buildInvestigationPromptSection();
   const questRef = buildQuestTaxonomyPromptSection();
 
+  // If title is unknown, request more creative interpretation
+  const titleSection = videoTitle === '알 수 없는 영상'
+    ? `## ⚠️ 영상 정보 추출 불가
+이 YouTube 영상의 정보를 자동으로 가져올 수 없었습니다.
+대신 다음과 같이 창의적으로 재해석하여 방탈출 테마를 생성하세요:
+- 영상의 가능한 장르나 주제를 추론
+- 방탈출의 오리지널 스토리로 완전히 재창작
+- XCAPE의 프레임워크에 맞는 고유한 테마 개발`
+    : `영상 제목: ${videoTitle}
+채널: ${channelName || '알 수 없음'}`;
+
   return `당신은 XCAPE 방탈출 테마 기획 전문가입니다. 아래 YouTube 영상 정보를 방탈출 게임으로 재해석하여 기획 데이터를 JSON으로 생성하세요.
 
-영상 제목: ${videoTitle}
-채널: ${channelName || '알 수 없음'}
+${titleSection}
 
 ${investigationRef}
 
@@ -554,16 +568,20 @@ export async function analyzeYoutube(
   step('영상 정보 가져오는 중...');
   let videoTitle = '알 수 없는 영상';
   let channelName = '';
-  try {
-    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(youtubeUrl)}`);
-    const meta = await res.json();
-    if (meta.title)       videoTitle  = meta.title;
-    if (meta.author_name) channelName = meta.author_name;
-  } catch { /* continue */ }
+
+  const videoId = extractVideoId(youtubeUrl);
+  if (videoId) {
+    try {
+      const metadata = await fetchYouTubeMetadata(videoId);
+      if (metadata) {
+        videoTitle = metadata.title || '알 수 없는 영상';
+        channelName = metadata.channelName || '';
+      }
+    } catch { /* continue */ }
+  }
 
   // 2. Fetch YouTube transcript
   step('자막 분석 중...');
-  const videoId = extractVideoId(youtubeUrl);
   let transcriptAvailable = false;
   let transcriptText = '';
   if (videoId) {
