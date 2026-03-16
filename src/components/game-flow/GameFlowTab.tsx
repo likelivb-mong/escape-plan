@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { GameFlowPlan, GameFlowStep, ProblemMode, AnswerType, StageLabel } from '../../types/gameFlow';
+import type { GameFlowPlan, GameFlowStep, StageLabel } from '../../types/gameFlow';
 import { useProject } from '../../context/ProjectContext';
 import StepListPanel from './StepListPanel';
 import StepDetailPanel from './StepDetailPanel';
@@ -20,25 +19,20 @@ export default function GameFlowTab({
   onUpdatePlan,
   onAddStep,
 }: GameFlowTabProps) {
-  const navigate = useNavigate();
   const { setGameFlowDesign } = useProject();
 
   const [selectedId, setSelectedId] = useState<string | null>(
     plan.steps[0]?.id ?? null,
   );
   const [filterRoom, setFilterRoom] = useState<string>('all');
-  const [filterMode, setFilterMode] = useState<ProblemMode | 'all'>('all');
-  const [filterType, setFilterType] = useState<AnswerType | 'all'>('all');
 
   // ── Filtered steps ──────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return plan.steps.filter((s) => {
       if (filterRoom !== 'all' && s.room !== filterRoom) return false;
-      if (filterMode !== 'all' && s.problemMode !== filterMode) return false;
-      if (filterType !== 'all' && s.answerType !== filterType) return false;
       return true;
     });
-  }, [plan.steps, filterRoom, filterMode, filterType]);
+  }, [plan.steps, filterRoom]);
 
   const selectedStep = plan.steps.find((s) => s.id === selectedId) ?? null;
   const selectedIndex = filtered.findIndex((s) => s.id === selectedId);
@@ -72,74 +66,23 @@ export default function GameFlowTab({
     });
   };
 
-  // ── Save to context and go to setting ────────────────────────────────────────
-  const handleGoToSetting = () => {
-    setGameFlowDesign(plan);
-    navigate('/setting');
-  };
-
   return (
     <div className="flex flex-col flex-1 overflow-hidden min-h-0">
 
       {/* ── Filter bar ── */}
-      <div className="flex items-center gap-3 px-5 py-2.5 border-b border-white/[0.06] flex-shrink-0 flex-wrap">
+      <div className="flex items-center gap-3 px-5 py-2.5 border-b border-white/[0.06] flex-shrink-0">
         {/* Stats */}
-        <span className="text-caption text-white/35 mr-1">
-          {filtered.length} / {plan.steps.length} 스텝
+        <span className="text-caption text-white/35">
+          {filtered.length} / {plan.steps.length}
         </span>
 
-        {/* Room filter + rename */}
+        {/* Room filter only */}
         <RoomFilterChips
           rooms={plan.rooms}
           filterRoom={filterRoom}
           onFilterChange={setFilterRoom}
           onRenameRoom={handleRenameRoom}
         />
-
-        {/* Mode filter */}
-        <FilterSelect
-          label="방식"
-          value={filterMode}
-          onChange={(v) => setFilterMode(v as ProblemMode | 'all')}
-          options={[
-            { value: 'all', label: '전체 방식' },
-            { value: 'clue', label: '단서 해석' },
-            { value: 'device', label: '장치 조작' },
-            { value: 'clue_device', label: '단서+장치' },
-          ]}
-        />
-
-        {/* Answer type filter */}
-        <FilterSelect
-          label="정답"
-          value={filterType}
-          onChange={(v) => setFilterType(v as AnswerType | 'all')}
-          options={[
-            { value: 'all', label: '전체 유형' },
-            { value: 'key', label: '열쇠' },
-            { value: 'number_4', label: '숫자 4자리' },
-            { value: 'number_3', label: '숫자 3자리' },
-            { value: 'alphabet_5', label: '알파벳 5자리' },
-            { value: 'keypad', label: '키패드' },
-            { value: 'xkit', label: 'X-KIT' },
-            { value: 'auto', label: '자동' },
-          ]}
-        />
-
-        <div className="flex-1" />
-
-        {/* Regenerate */}
-        <button
-          onClick={onRegenerate}
-          disabled={isRegenerating}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/[0.09] text-caption text-white/35 hover:text-white/60 hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          {isRegenerating ? (
-            <><span className="w-2.5 h-2.5 border border-white/25 border-t-white/60 rounded-full animate-spin" /> 재생성 중…</>
-          ) : (
-            <>↺ 플로우 재생성</>
-          )}
-        </button>
       </div>
 
       {/* ── Main split layout ── */}
@@ -172,8 +115,6 @@ export default function GameFlowTab({
         </div>
       </div>
 
-      {/* ── Summary footer ── */}
-      <GameFlowSummaryBar steps={plan.steps} plan={plan} onGoToSetting={handleGoToSetting} />
     </div>
   );
 }
@@ -273,75 +214,3 @@ function RoomFilterChips({
   );
 }
 
-// ── Filter select ─────────────────────────────────────────────────────────────
-
-function FilterSelect({
-  label: _label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="px-2 py-1 rounded-lg border border-white/[0.09] bg-transparent text-caption text-white/50 hover:border-white/20 transition-colors cursor-pointer appearance-none"
-    >
-      {options.map((o) => (
-        <option key={o.value} value={o.value} className="bg-[#111] text-white/70">
-          {o.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-// ── Summary footer bar ────────────────────────────────────────────────────────
-
-function GameFlowSummaryBar({
-  steps,
-  plan,
-  onGoToSetting,
-}: {
-  steps: GameFlowStep[];
-  plan: GameFlowPlan;
-  onGoToSetting: () => void;
-}) {
-  const xkitCount    = steps.filter((s) => s.answerType === 'xkit').length;
-  const deviceCount  = steps.filter((s) => s.problemMode === 'device' || s.problemMode === 'clue_device').length;
-  const autoCount    = steps.filter((s) => s.answerType === 'auto').length;
-
-  return (
-    <div className="flex-shrink-0 px-5 py-3 border-t border-white/[0.06] flex items-center gap-5">
-      <div className="flex items-center gap-4">
-        <Stat label="총 스텝" value={String(steps.length)} />
-        <Stat label="X-KIT" value={String(xkitCount)} />
-        <Stat label="장치 포함" value={String(deviceCount)} />
-        <Stat label="자동 출력" value={String(autoCount)} />
-      </div>
-
-      <div className="flex-1" />
-
-      <button
-        onClick={onGoToSetting}
-        className="px-4 py-2 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
-      >
-        Setting →
-      </button>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-caption text-white/35">{label}</span>
-      <span className="text-footnote font-semibold text-white/60">{value}</span>
-    </div>
-  );
-}
