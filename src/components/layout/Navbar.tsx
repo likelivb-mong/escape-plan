@@ -6,7 +6,7 @@ const WORKFLOW_STEPS = [
   { path: '/story', label: 'Story' },
   { path: '/mandalart', label: 'Mandala Chart' },
   { path: '/game-flow', label: 'Game Flow' },
-  { path: '/setting', label: 'Setting' },
+  { path: '/setting', label: 'Pass Map' },
 ];
 
 const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/setting', '/plan'];
