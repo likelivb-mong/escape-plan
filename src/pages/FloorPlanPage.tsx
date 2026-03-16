@@ -7,6 +7,7 @@ import type { FloorPlanData } from '../types/floorPlan';
 
 import FloorPlanCanvas from '../components/floor-plan/FloorPlanCanvas';
 import PassMapTable from '../components/floor-plan/PassMapTable';
+import SyncToPassMapButton from '../features/passmap/components/SyncToPassMapButton';
 
 type Tab = 'floor' | 'passmap';
 
@@ -107,6 +108,9 @@ export default function FloorPlanPage() {
             >
               {isEditing ? '✓ 수정 완료' : '✏ 도면 수정'}
             </button>
+          )}
+          {floorPlanData && (
+            <SyncToPassMapButton plan={gameFlowDesign} floorPlan={floorPlanData} />
           )}
           <button
             onClick={() => navigate('/draft')}
