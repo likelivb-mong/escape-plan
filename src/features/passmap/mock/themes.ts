@@ -14,6 +14,7 @@ export const MOCK_THEMES: Theme[] = [
   { id: 'nwxc-t1', branchCode: 'NWXC', name: '사라진 유산', mapImage: '' },
   { id: 'nwxc-t2', branchCode: 'NWXC', name: '블랙아웃', mapImage: '' },
   { id: 'nwxc-t3', branchCode: 'NWXC', name: '귀신의 집', mapImage: '' },
+  { id: 'nwxc-sw', branchCode: 'NWXC', name: '침묵의 목격자', mapImage: '' },
 
   // GNXC 강남점
   { id: 'gnxc-t1', branchCode: 'GNXC', name: '프리즌 브레이크', mapImage: '' },
