@@ -2,7 +2,8 @@
  * PassMap Store
  *
  * localStorage-backed data store for PassMap Manager.
- * Initializes from mock data on first load, then persists all changes.
+ * Initializes from mock data on first load, merges on version bump.
+ * Emits change events so React components can re-render on data updates.
  */
 
 import type { Theme, ThemeStep, StepDetail } from '../types/passmap';
@@ -18,28 +19,78 @@ const STORAGE_KEYS = {
   version: 'passmap-version',
 } as const;
 
-// Bump this when mock data changes to trigger re-seed
-const CURRENT_VERSION = '4';
+// Bump this when mock data changes to trigger merge of new mocks
+const CURRENT_VERSION = '5';
 
-// ── Initialize from mock if first load or version mismatch ──────────────────
+// ── Change event system ─────────────────────────────────────────────────────
+// Allows React components to subscribe to store changes
+
+type StoreChangeListener = () => void;
+const listeners = new Set<StoreChangeListener>();
+
+export function subscribeToStoreChanges(listener: StoreChangeListener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function notifyListeners(): void {
+  listeners.forEach((fn) => fn());
+}
+
+// ── Initialize: merge mock data with existing user data ─────────────────────
 
 function ensureInitialized(): void {
-  if (localStorage.getItem(STORAGE_KEYS.version) === CURRENT_VERSION) return;
-  localStorage.setItem(STORAGE_KEYS.themes, JSON.stringify(MOCK_THEMES));
-  localStorage.setItem(STORAGE_KEYS.steps, JSON.stringify(MOCK_STEPS));
-  localStorage.setItem(STORAGE_KEYS.details, JSON.stringify(MOCK_STEP_DETAILS));
+  const stored = localStorage.getItem(STORAGE_KEYS.version);
+  if (stored === CURRENT_VERSION) return;
+
+  if (!stored) {
+    // First ever load: seed everything from mock
+    localStorage.setItem(STORAGE_KEYS.themes, JSON.stringify(MOCK_THEMES));
+    localStorage.setItem(STORAGE_KEYS.steps, JSON.stringify(MOCK_STEPS));
+    localStorage.setItem(STORAGE_KEYS.details, JSON.stringify(MOCK_STEP_DETAILS));
+  } else {
+    // Version bump: merge new mock data without overwriting user data
+    const existingThemes = readListRaw<Theme>(STORAGE_KEYS.themes);
+    const existingSteps = readListRaw<ThemeStep>(STORAGE_KEYS.steps);
+    const existingDetails = readListRaw<StepDetail>(STORAGE_KEYS.details);
+
+    const existingThemeIds = new Set(existingThemes.map((t) => t.id));
+    const existingStepIds = new Set(existingSteps.map((s) => s.id));
+    const existingDetailStepIds = new Set(existingDetails.map((d) => d.stepId));
+
+    // Add only new mock entries that don't exist in user data
+    const newThemes = MOCK_THEMES.filter((t) => !existingThemeIds.has(t.id));
+    const newSteps = MOCK_STEPS.filter((s) => !existingStepIds.has(s.id));
+    const newDetails = MOCK_STEP_DETAILS.filter((d) => !existingDetailStepIds.has(d.stepId));
+
+    if (newThemes.length > 0) {
+      writeList(STORAGE_KEYS.themes, [...existingThemes, ...newThemes]);
+    }
+    if (newSteps.length > 0) {
+      writeList(STORAGE_KEYS.steps, [...existingSteps, ...newSteps]);
+    }
+    if (newDetails.length > 0) {
+      writeList(STORAGE_KEYS.details, [...existingDetails, ...newDetails]);
+    }
+  }
+
   localStorage.setItem(STORAGE_KEYS.version, CURRENT_VERSION);
 }
 
 // ── Generic read/write ──────────────────────────────────────────────────────
 
-function readList<T>(key: string): T[] {
-  ensureInitialized();
+/** Read without init check (used during init itself) */
+function readListRaw<T>(key: string): T[] {
   try {
     return JSON.parse(localStorage.getItem(key) || '[]');
   } catch {
     return [];
   }
+}
+
+function readList<T>(key: string): T[] {
+  ensureInitialized();
+  return readListRaw<T>(key);
 }
 
 function writeList<T>(key: string, data: T[]): void {
@@ -64,6 +115,7 @@ export function addTheme(theme: Theme): void {
   const themes = getAllThemes();
   themes.push(theme);
   writeList(STORAGE_KEYS.themes, themes);
+  notifyListeners();
 }
 
 export function updateTheme(themeId: string, updates: Partial<Theme>): void {
@@ -71,6 +123,21 @@ export function updateTheme(themeId: string, updates: Partial<Theme>): void {
     t.id === themeId ? { ...t, ...updates } : t,
   );
   writeList(STORAGE_KEYS.themes, themes);
+  notifyListeners();
+}
+
+export function deleteTheme(themeId: string): void {
+  // Remove theme
+  const themes = getAllThemes().filter((t) => t.id !== themeId);
+  writeList(STORAGE_KEYS.themes, themes);
+
+  // Remove associated steps and details
+  const stepIds = getStepsByTheme(themeId).map((s) => s.id);
+  removeStepsByTheme(themeId);
+  if (stepIds.length > 0) {
+    removeDetailsByStepIds(stepIds);
+  }
+  notifyListeners();
 }
 
 // ── Steps ───────────────────────────────────────────────────────────────────
@@ -87,12 +154,14 @@ export function saveStepsForTheme(themeId: string, steps: ThemeStep[]): void {
   const all = getAllSteps().filter((s) => s.themeId !== themeId);
   all.push(...steps);
   writeList(STORAGE_KEYS.steps, all);
+  notifyListeners();
 }
 
 export function addSteps(steps: ThemeStep[]): void {
   const all = getAllSteps();
   all.push(...steps);
   writeList(STORAGE_KEYS.steps, all);
+  notifyListeners();
 }
 
 export function removeStepsByTheme(themeId: string): void {
@@ -126,12 +195,14 @@ export function saveDetailsForTheme(themeId: string, details: StepDetail[]): voi
   const all = getAllDetails().filter((d) => !themeStepIds.has(d.stepId));
   all.push(...details);
   writeList(STORAGE_KEYS.details, all);
+  notifyListeners();
 }
 
 export function addDetails(details: StepDetail[]): void {
   const all = getAllDetails();
   all.push(...details);
   writeList(STORAGE_KEYS.details, all);
+  notifyListeners();
 }
 
 export function removeDetailsByStepIds(stepIds: string[]): void {

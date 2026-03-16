@@ -76,19 +76,30 @@ export function downloadExchangeJson(data: PassMapExchangeData): void {
 
 // ── Import: Exchange JSON → PassMap ThemeStep[] + StepDetail[] ───────────────
 
+/**
+ * Distribute steps in a grid using percentage-based coordinates (0-100).
+ * Leaves margins and spreads evenly across the canvas.
+ */
 function distributeStepPositions(count: number): Array<{ x: number; y: number }> {
   const positions: Array<{ x: number; y: number }> = [];
-  const cols = Math.ceil(Math.sqrt(count));
-  const spacing = 120;
-  const offsetX = 100;
-  const offsetY = 80;
+  if (count === 0) return positions;
+
+  const cols = Math.min(count, Math.ceil(Math.sqrt(count)));
+  const rows = Math.ceil(count / cols);
+
+  const marginX = 10; // % from edges
+  const marginY = 8;
+  const usableW = 100 - marginX * 2;
+  const usableH = 100 - marginY * 2;
+  const cellW = cols > 1 ? usableW / (cols - 1) : 0;
+  const cellH = rows > 1 ? usableH / (rows - 1) : 0;
 
   for (let i = 0; i < count; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
     positions.push({
-      x: offsetX + col * spacing + (row % 2 === 1 ? spacing / 2 : 0),
-      y: offsetY + row * spacing,
+      x: marginX + col * cellW + (row % 2 === 1 ? cellW * 0.3 : 0),
+      y: marginY + row * cellH,
     });
   }
   return positions;

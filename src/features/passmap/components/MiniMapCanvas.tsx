@@ -71,11 +71,11 @@ export default function MiniMapCanvas({
       const rect = containerRef.current.getBoundingClientRect();
       const dx = me.clientX - dragRef.current.startX;
       const dy = me.clientY - dragRef.current.startY;
-      // Convert pixel delta to percentage delta
+      // Always convert to percentage delta
       const dpx = (dx / rect.width) * 100;
       const dpy = (dy / rect.height) * 100;
-      const newX = Math.max(0, Math.min(100, dragRef.current.origX + dpx));
-      const newY = Math.max(0, Math.min(100, dragRef.current.origY + dpy));
+      const newX = Math.max(2, Math.min(98, dragRef.current.origX + dpx));
+      const newY = Math.max(2, Math.min(98, dragRef.current.origY + dpy));
       onStepMove?.(dragRef.current.stepId, newX, newY);
     };
 
@@ -149,7 +149,7 @@ export default function MiniMapCanvas({
         <div className="absolute top-4 left-4 text-xs text-white/10 font-mono">MAP VIEW</div>
       )}
 
-      {/* Step pins — percentage-based when rooms exist */}
+      {/* Step pins — always percentage-based (coordinates are normalized on load) */}
       {steps.map((step) => (
         <StepPin
           key={step.id}
@@ -158,14 +158,13 @@ export default function MiniMapCanvas({
           onClick={onSelectStep}
           draggable={editable}
           onDragStart={editable ? handleDragStart : undefined}
-          usePercentage={hasRooms}
         />
       ))}
 
       {/* Empty state */}
       {steps.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-white/20 text-sm">
-          No steps to display
+          Step이 없습니다
         </div>
       )}
     </div>
