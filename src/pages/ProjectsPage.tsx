@@ -7,6 +7,7 @@ import {
   restoreFromTrash,
   permanentlyDelete,
   emptyTrash,
+  upsertProject,
   type SavedProject,
   type TrashedProject,
   type CompletionLevel,
@@ -15,6 +16,9 @@ import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 import ImportAIThemeButton from '../features/passmap/components/ImportAIThemeButton';
 import { getThemesByBranch, getStepsByTheme, subscribeToStoreChanges } from '../features/passmap/utils/passmap-store';
 import type { Theme } from '../features/passmap/types/passmap';
+import { createExampleCells, EXAMPLE_PROJECT_NAME } from '../data/mockMandalart';
+import { STORY_VARIANTS } from '../data/mockStories';
+import { STAGE_TITLES, OBJECTIVES } from '../data/mockPuzzleFlow';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -93,11 +97,6 @@ function ProjectCard({ project, onOpen, onDelete }: ProjectCardProps) {
 
         {/* Meta tags */}
         <div className="flex flex-wrap gap-1.5">
-          {branchName && (
-            <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-caption text-white/50 font-medium">
-              {branchName}
-            </span>
-          )}
           {genres && (
             <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-caption text-white/40">
               {genres}
@@ -230,6 +229,119 @@ export default function ProjectsPage() {
     setProjects(listSavedProjects());
     setTrashed(listTrashedProjects());
   };
+
+  // Initialize with SAMPLE project if no projects exist
+  useEffect(() => {
+    const existing = listSavedProjects();
+    if (existing.length === 0) {
+      // Clear trash too
+      localStorage.removeItem('xcape-projects-trash');
+
+      // Create SAMPLE project
+      const storyVariant = STORY_VARIANTS[0][0]; // Use first story from slot 0
+      const now = new Date().toISOString();
+      const sampleProject: SavedProject = {
+        id: 'sample-' + crypto.randomUUID(),
+        name: 'SAMPLE',
+        savedAt: now,
+        updatedAt: now,
+        storyTitle: storyVariant.title,
+        genres: ['mystery'],
+        playTimes: [60],
+        synopsis: storyVariant.logline,
+        completionLevel: 'draft' as const,
+        branchCode: 'XYNP',
+        projectBrief: {
+          source: 'manual',
+          videoId: null,
+          videoTitle: null,
+          videoChannel: null,
+          synopsis: storyVariant.logline,
+          beats: storyVariant.beats,
+          genres: ['mystery'],
+          playTimes: [60],
+          investigation: { motives: [], methods: [], clues: [], techniques: [] },
+        },
+        cells: createExampleCells(),
+        selectedStory: storyVariant,
+        puzzleFlowPlan: {
+          storyId: storyVariant.id,
+          totalPlayTime: 60,
+          totalSuggestedPuzzleCount: 5,
+          stages: [
+            {
+              id: 'stage-intro',
+              key: 'intro',
+              label: '기',
+              title: STAGE_TITLES.intro[0],
+              description: '공간 분위기 세팅 및 첫 번째 단서 탐색 유도',
+              estimatedMinutes: 8,
+              objective: OBJECTIVES.intro[0],
+              suggestedPuzzleSlots: 1,
+              effectsNotes: ['입장 시 전체 조명 OFF → 착석 후 서서히 앰비언트 점등'],
+              relatedKeywords: ['분위기', '스토리'],
+            },
+            {
+              id: 'stage-development',
+              key: 'development',
+              label: '승',
+              title: STAGE_TITLES.development[0],
+              description: '복수의 단서를 조합해 첫 번째 잠금장치 해제',
+              estimatedMinutes: 15,
+              objective: OBJECTIVES.development[0],
+              suggestedPuzzleSlots: 2,
+              effectsNotes: ['조명 점진적 증가'],
+              relatedKeywords: ['단서', '퍼즐'],
+            },
+            {
+              id: 'stage-expansion',
+              key: 'expansion',
+              label: '전',
+              title: STAGE_TITLES.expansion[0],
+              description: '숨겨진 공간 또는 2차 단서 구조 발견',
+              estimatedMinutes: 15,
+              objective: OBJECTIVES.expansion[0],
+              suggestedPuzzleSlots: 1,
+              effectsNotes: ['새로운 공간 조명 활성화'],
+              relatedKeywords: ['장치', '공간'],
+            },
+            {
+              id: 'stage-twist',
+              key: 'twist',
+              label: '반전',
+              title: STAGE_TITLES.twist[0],
+              description: '기존 가정을 전복시키는 핵심 진실 공개',
+              estimatedMinutes: 12,
+              objective: OBJECTIVES.twist[0],
+              suggestedPuzzleSlots: 1,
+              effectsNotes: ['갑작스런 조명 변화', '예상 밖의 이벤트'],
+              relatedKeywords: ['반전', '인물'],
+            },
+            {
+              id: 'stage-ending',
+              key: 'ending',
+              label: '결',
+              title: STAGE_TITLES.ending[0],
+              description: '최종 코드 해독 및 메인 잠금장치 해제',
+              estimatedMinutes: 10,
+              objective: OBJECTIVES.ending[0],
+              suggestedPuzzleSlots: 1,
+              effectsNotes: ['최종 해제 이펙트', '탈출 신호'],
+              relatedKeywords: ['결말', '퍼즐'],
+            },
+          ],
+        },
+        puzzleRecommendationGroups: [],
+        gameFlowDesign: null,
+        floorPlanData: null,
+        passmapLink: null,
+      };
+      upsertProject(sampleProject);
+      refresh();
+    } else {
+      refresh();
+    }
+  }, []);
 
   useEffect(() => { refresh(); }, [refreshKey]);
 
