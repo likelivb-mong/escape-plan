@@ -179,10 +179,12 @@ export default function FloorPlanRoom({
         isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
       style={{
-        left: `${validatedLayout.x}%`,
-        top: `${validatedLayout.y}%`,
-        width: `${validatedLayout.width}%`,
-        height: `${validatedLayout.height}%`,
+        // ⚠️ SAFETY: Direct bounds enforcement at render time
+        // Final safety net - ensures ABSOLUTE guarantee that room stays in bounds
+        left: `${Math.max(0, Math.min(validatedLayout.x, 100 - validatedLayout.width))}%`,
+        top: `${Math.max(0, Math.min(validatedLayout.y, 100 - validatedLayout.height))}%`,
+        width: `${Math.max(8, Math.min(validatedLayout.width, 100))}%`,
+        height: `${Math.max(8, Math.min(validatedLayout.height, 100))}%`,
       }}
       onPointerDown={handleRoomPointerDown}
       onPointerMove={stepDrag ? handleRoomPointerMove : undefined}

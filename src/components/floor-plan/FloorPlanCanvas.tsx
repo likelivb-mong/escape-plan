@@ -290,6 +290,9 @@ export default function FloorPlanCanvas({
               : 'linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)',
           ].join(', '),
           backgroundSize: '5% 5%',
+          // ⚠️ EMERGENCY: Clip all content to container bounds
+          // This is a safety net for any room that somehow exceeds bounds
+          clipPath: 'inset(0)',
         }}
         onPointerMove={isEditing ? handlePointerMove : undefined}
         onPointerUp={isEditing ? handlePointerUp : undefined}
