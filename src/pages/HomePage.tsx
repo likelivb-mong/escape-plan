@@ -686,20 +686,20 @@ function TogglePill({ active, onClick, children }: { active: boolean; onClick: (
 
 function BranchSelector({ selectedBranch, setSelectedBranch }: { selectedBranch: string; setSelectedBranch: (v: string) => void }) {
   return (
-    <Field label="지점 선택">
+    <Field label="지점">
       <div className="flex flex-wrap gap-1.5">
         {MOCK_BRANCHES.map((b) => (
           <button
             key={b.code}
             type="button"
             onClick={() => setSelectedBranch(b.code)}
-            className={`px-3 py-1.5 rounded-full text-subhead font-medium transition-all duration-200 border ${
+            className={`px-3 py-1.5 rounded-full text-subhead font-mono font-medium transition-all duration-200 border ${
               selectedBranch === b.code
                 ? 'bg-white text-black border-white'
                 : 'bg-transparent text-white/40 border-white/10 hover:border-white/30 hover:text-white/60'
             }`}
           >
-            {b.name}
+            {b.code}
           </button>
         ))}
       </div>
