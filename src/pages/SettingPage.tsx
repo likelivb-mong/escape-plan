@@ -108,6 +108,29 @@ export default function SettingPage() {
     updateTheme(passmapLink.themeId, { rooms: updatedRooms });
   }, [passmapLink]);
 
+  // ── Room move (with steps in zone) ────────────────────────────────────────
+  const handleRoomMove = useCallback((roomName: string, deltaX: number, deltaY: number) => {
+    if (!passmapLink) return;
+    const theme = getThemeById(passmapLink.themeId);
+    if (!theme?.rooms) return;
+
+    // Update room position
+    const updatedRooms = theme.rooms.map((r) =>
+      r.name === roomName ? { ...r, x: r.x + deltaX, y: r.y + deltaY } : r
+    );
+    updateTheme(passmapLink.themeId, { rooms: updatedRooms });
+
+    // Move all steps in that zone
+    const stepsInZone = pmSteps.filter((s) => s.zone === roomName);
+    if (stepsInZone.length > 0) {
+      const updatedSteps = pmSteps.map((s) =>
+        s.zone === roomName ? { ...s, x: s.x + deltaX, y: s.y + deltaY } : s
+      );
+      setPmSteps(updatedSteps);
+      saveStepsForTheme(passmapLink.themeId, updatedSteps);
+    }
+  }, [passmapLink, pmSteps]);
+
   // ── Room rename (propagates to GameFlow, FloorPlan, PassMap) ────────────────
 
   const handleRenameRoom = useCallback((oldName: string, newName: string) => {
@@ -373,6 +396,7 @@ export default function SettingPage() {
                   editable={isEditing}
                   onStepMove={isEditing ? handleStepMove : undefined}
                   onRoomUpdate={isEditing ? handleUpdateRoom : undefined}
+                  onRoomMove={isEditing ? handleRoomMove : undefined}
                 />
               </div>
               <div>

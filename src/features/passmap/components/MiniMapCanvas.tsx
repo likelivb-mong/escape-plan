@@ -31,6 +31,7 @@ interface MiniMapCanvasProps {
   editable?: boolean;
   onStepMove?: (stepId: string, x: number, y: number) => void;
   onRoomUpdate?: (roomName: string, updates: Partial<ThemeRoom>) => void;
+  onRoomMove?: (roomName: string, deltaX: number, deltaY: number) => void;
 }
 
 export default function MiniMapCanvas({
@@ -42,10 +43,11 @@ export default function MiniMapCanvas({
   editable = false,
   onStepMove,
   onRoomUpdate,
+  onRoomMove,
 }: MiniMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ stepId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; dragType: 'move' | 'resize' } | null>(null);
+  const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; origWidth: number; origHeight: number; dragType: 'move' | 'resize' } | null>(null);
 
   // Group steps by zone for step count per room
   const stepCountByZone = useMemo(() => {
@@ -103,6 +105,8 @@ export default function MiniMapCanvas({
       startY: e.clientY,
       origX: room.x,
       origY: room.y,
+      origWidth: room.width,
+      origHeight: room.height,
       dragType,
     };
 
@@ -115,18 +119,15 @@ export default function MiniMapCanvas({
       const dpy = (dy / rect.height) * 100;
 
       if (roomDragRef.current.dragType === 'move') {
-        // Move room
-        const newX = Math.max(0, Math.min(98, roomDragRef.current.origX + dpx));
-        const newY = Math.max(0, Math.min(98, roomDragRef.current.origY + dpy));
-        onRoomUpdate?.(roomDragRef.current.roomName, { x: newX, y: newY });
+        // Move room (and all steps in that zone)
+        const newX = Math.max(0, Math.min(100 - roomDragRef.current.origWidth, roomDragRef.current.origX + dpx));
+        const newY = Math.max(0, Math.min(100 - roomDragRef.current.origHeight, roomDragRef.current.origY + dpy));
+        onRoomMove?.(roomDragRef.current.roomName, newX - roomDragRef.current.origX, newY - roomDragRef.current.origY);
       } else {
         // Resize room (from bottom-right corner)
-        const room = rooms?.find((r) => r.name === roomDragRef.current?.roomName);
-        if (room) {
-          const newWidth = Math.max(8, Math.min(100 - room.x, room.width + dpx));
-          const newHeight = Math.max(8, Math.min(100 - room.y, room.height + dpy));
-          onRoomUpdate?.(roomDragRef.current.roomName, { width: newWidth, height: newHeight });
-        }
+        const newWidth = Math.max(8, Math.min(100 - roomDragRef.current.origX, roomDragRef.current.origWidth + dpx));
+        const newHeight = Math.max(8, Math.min(100 - roomDragRef.current.origY, roomDragRef.current.origHeight + dpy));
+        onRoomUpdate?.(roomDragRef.current.roomName, { width: newWidth, height: newHeight });
       }
     };
 
@@ -138,7 +139,7 @@ export default function MiniMapCanvas({
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-  }, [editable, rooms, onRoomUpdate]);
+  }, [editable, onRoomUpdate, onRoomMove]);
 
   return (
     <div
