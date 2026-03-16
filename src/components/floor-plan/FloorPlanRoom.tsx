@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
-import type { GameFlowStep } from '../../types/gameFlow';
+import type { GameFlowStep, ProblemMode, AnswerType, OutputType, StageLabel } from '../../types/gameFlow';
 import type { FloorPlanRoomLayout } from '../../types/floorPlan';
-import { AnswerTypeBadge } from '../game-flow/badges';
 
 // ── Room color palette ─────────────────────────────────────────────────────────
 
@@ -12,6 +11,41 @@ const ROOM_BG_COLORS = [
   { border: 'border-amber-400/20',    bg: 'bg-amber-500/[0.03]',header: 'bg-amber-500/[0.06]',text: 'text-amber-300/70' },
   { border: 'border-emerald-400/20',  bg: 'bg-emerald-500/[0.03]',header: 'bg-emerald-500/[0.06]',text: 'text-emerald-300/70' },
 ];
+
+// ── Step visual icons & colors ──────────────────────────────────────────────
+
+const PROBLEM_MODE_ICONS: Record<ProblemMode, string> = {
+  clue: '🧩', device: '⚙️', clue_device: '🔮',
+};
+
+const ANSWER_TYPE_COLORS: Record<AnswerType, { bg: string; text: string; border: string }> = {
+  key:        { bg: 'bg-rose-500/10',    text: 'text-rose-300/80',    border: 'border-rose-400/20' },
+  number_4:   { bg: 'bg-white/[0.04]',   text: 'text-white/60',       border: 'border-white/10' },
+  number_3:   { bg: 'bg-white/[0.04]',   text: 'text-white/60',       border: 'border-white/10' },
+  alphabet_5: { bg: 'bg-green-500/10',   text: 'text-green-300/80',   border: 'border-green-400/20' },
+  keypad:     { bg: 'bg-cyan-500/10',    text: 'text-cyan-300/80',    border: 'border-cyan-400/20' },
+  xkit:       { bg: 'bg-purple-500/10',  text: 'text-purple-300/80',  border: 'border-purple-400/25' },
+  auto:       { bg: 'bg-orange-500/10',  text: 'text-orange-300/80',  border: 'border-orange-400/20' },
+};
+
+const ANSWER_TYPE_SHORT: Record<AnswerType, string> = {
+  key: '🗝', number_4: '4#', number_3: '3#', alphabet_5: 'ABC',
+  keypad: '⌨', xkit: '📱', auto: '⚡',
+};
+
+const OUTPUT_ICONS: Record<OutputType, string> = {
+  door_open: '🚪', hidden_compartment_open: '🔓', led_on: '💡', tv_on: '📺',
+  xkit_guide_revealed: '📱', item_acquired: '📦', next_room_open: '➡️',
+  ending_video: '🎬', escape_clear: '🏁',
+};
+
+const STAGE_COLORS: Record<StageLabel, string> = {
+  기: 'text-sky-400/80',
+  승: 'text-emerald-400/80',
+  전: 'text-amber-400/80',
+  반전: 'text-rose-400/80',
+  결: 'text-violet-400/80',
+};
 
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
@@ -137,54 +171,89 @@ export default function FloorPlanRoom({
     >
       {/* Room header */}
       <div className={`px-2.5 py-1.5 ${colors.header} flex items-center justify-between flex-shrink-0`}>
-        {editingName ? (
-          <input
-            ref={nameInputRef}
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            onBlur={commitRename}
-            onKeyDown={handleNameKeyDown}
-            className={`text-caption font-semibold ${colors.text} bg-transparent border-b border-white/30 outline-none w-full mr-2`}
-            autoFocus
-          />
-        ) : (
-          <span
-            className={`text-caption font-semibold ${colors.text} truncate ${isEditing ? 'cursor-text hover:underline decoration-dotted underline-offset-2' : ''}`}
-            onDoubleClick={handleNameDoubleClick}
-            title={isEditing ? '더블클릭으로 이름 변경' : undefined}
-          >
-            {layout.roomName}
+        <div className="flex items-center gap-1.5 min-w-0">
+          {editingName ? (
+            <input
+              ref={nameInputRef}
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={handleNameKeyDown}
+              className={`text-caption font-semibold ${colors.text} bg-transparent border-b border-white/30 outline-none w-full mr-2`}
+              autoFocus
+            />
+          ) : (
+            <span
+              className={`text-caption font-semibold ${colors.text} truncate ${isEditing ? 'cursor-text hover:underline decoration-dotted underline-offset-2' : ''}`}
+              onDoubleClick={handleNameDoubleClick}
+              title={isEditing ? '더블클릭으로 이름 변경' : undefined}
+            >
+              {layout.roomName}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Device count indicator */}
+          {steps.filter(s => s.problemMode === 'device' || s.problemMode === 'clue_device').length > 0 && (
+            <span className="text-[9px] text-amber-300/50" title="장치 포함 스텝">
+              ⚙️{steps.filter(s => s.problemMode === 'device' || s.problemMode === 'clue_device').length}
+            </span>
+          )}
+          <span className="text-micro text-white/35 tabular-nums font-mono">
+            {steps.length}
           </span>
-        )}
-        <span className="text-micro text-white/35 flex-shrink-0">
-          {steps.length}스텝
-        </span>
+        </div>
       </div>
 
       {/* Step chips — absolute positioned within room */}
       <div className="relative flex-1 min-h-0">
         {steps.map((step, i) => {
           const pos = stepPositions[step.id] ?? getDefaultPos(i);
+          const atColor = ANSWER_TYPE_COLORS[step.answerType];
           return (
             <div
               key={step.id}
               data-step-chip="true"
-              className={`absolute flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.07] ${
-                isEditing ? 'cursor-grab active:cursor-grabbing' : ''
-              } ${stepDrag?.stepId === step.id ? 'opacity-80 z-10' : ''}`}
+              className={`absolute flex items-center gap-1 px-1.5 py-0.5 rounded-lg ${atColor.bg} border ${atColor.border} backdrop-blur-sm ${
+                isEditing ? 'cursor-grab active:cursor-grabbing hover:brightness-125' : 'hover:brightness-110'
+              } ${stepDrag?.stepId === step.id ? 'opacity-80 z-10 ring-1 ring-white/30' : ''} transition-all duration-100`}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
-                maxWidth: '92%',
+                maxWidth: '94%',
               }}
               onPointerDown={(e) => handleStepPointerDown(step, i, e)}
             >
-              <span className="text-micro text-white/30 font-mono tabular-nums flex-shrink-0">
+              {/* Stage label */}
+              <span className={`text-[9px] font-bold ${STAGE_COLORS[step.stageLabel]} flex-shrink-0 leading-none`}>
+                {step.stageLabel}
+              </span>
+
+              {/* Step number */}
+              <span className={`text-micro font-mono font-semibold tabular-nums flex-shrink-0 ${atColor.text}`}>
                 {String(step.stepNumber).padStart(2, '0')}
               </span>
-              <AnswerTypeBadge type={step.answerType} size="xs" />
-              <span className="text-micro text-white/45 font-mono truncate">
-                {step.answer}
+
+              {/* Problem mode icon */}
+              <span className="text-[10px] flex-shrink-0 leading-none" title={step.problemMode}>
+                {PROBLEM_MODE_ICONS[step.problemMode]}
+              </span>
+
+              {/* Answer type short label */}
+              <span className={`text-[9px] font-bold flex-shrink-0 ${atColor.text}`}>
+                {ANSWER_TYPE_SHORT[step.answerType]}
+              </span>
+
+              {/* Answer value */}
+              {step.answer && (
+                <span className="text-micro text-white/50 font-mono truncate max-w-[60px]">
+                  {step.answer}
+                </span>
+              )}
+
+              {/* Output icon */}
+              <span className="text-[10px] flex-shrink-0 leading-none opacity-60" title={step.output}>
+                {OUTPUT_ICONS[step.output]}
               </span>
             </div>
           );
