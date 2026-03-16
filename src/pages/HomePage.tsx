@@ -270,6 +270,16 @@ export default function HomePage() {
           <br className="hidden sm:block" />
           YouTube 분석 또는 직접 구성으로 시작할 수 있습니다.
         </p>
+
+        {/* PassMap Manager shortcut */}
+        <button
+          onClick={() => navigate('/passmap')}
+          className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/20 bg-violet-500/5 text-violet-300/70 hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-300 transition-all text-footnote font-medium"
+        >
+          <span className="text-sm">🗺️</span>
+          PassMap Manager
+          <span className="text-violet-300/30">→</span>
+        </button>
       </div>
 
       {/* Main card — wider for build tab */}
