@@ -236,36 +236,97 @@ export function normalizeFloorPlan(data: FloorPlanData): FloorPlanData {
   // 4. One more overlap check - if still overlapping, scale down problematic rooms
   let stillOverlapping = true;
   let safetyIterations = 0;
-  while (stillOverlapping && safetyIterations < 5) {
+  while (stillOverlapping && safetyIterations < 10) {
     stillOverlapping = false;
     for (let i = 0; i < normalizedRooms.length; i++) {
       for (let j = i + 1; j < normalizedRooms.length; j++) {
         if (roomsOverlap(normalizedRooms[i], normalizedRooms[j])) {
           stillOverlapping = true;
-          // Scale down both rooms slightly
-          if (normalizedRooms[i].width > 8 && normalizedRooms[i].height > 8) {
-            normalizedRooms[i] = {
-              ...normalizedRooms[i],
-              width: Math.max(8, normalizedRooms[i].width - 1),
-              height: Math.max(8, normalizedRooms[i].height - 1),
-            };
-          }
-          if (normalizedRooms[j].width > 8 && normalizedRooms[j].height > 8) {
-            normalizedRooms[j] = {
-              ...normalizedRooms[j],
-              width: Math.max(8, normalizedRooms[j].width - 1),
-              height: Math.max(8, normalizedRooms[j].height - 1),
-            };
+          // ⚠️ AGGRESSIVE: Push rooms apart more forcefully
+          const r1 = normalizedRooms[i];
+          const r2 = normalizedRooms[j];
+
+          const c1x = r1.x + r1.width / 2;
+          const c1y = r1.y + r1.height / 2;
+          const c2x = r2.x + r2.width / 2;
+          const c2y = r2.y + r2.height / 2;
+
+          // Direction and distance
+          let dx = c1x - c2x;
+          let dy = c1y - c2y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+          // Normalize
+          dx = (dx / dist) * 5;
+          dy = (dy / dist) * 5;
+
+          // Push apart
+          const newX1 = Math.max(0, Math.min(r1.x + dx, 100 - r1.width));
+          const newY1 = Math.max(0, Math.min(r1.y + dy, 100 - r1.height));
+          const newX2 = Math.max(0, Math.min(r2.x - dx, 100 - r2.width));
+          const newY2 = Math.max(0, Math.min(r2.y - dy, 100 - r2.height));
+
+          normalizedRooms[i] = { ...r1, x: newX1, y: newY1 };
+          normalizedRooms[j] = { ...r2, x: newX2, y: newY2 };
+
+          // If still overlapping after movement, scale down
+          if (roomsOverlap(normalizedRooms[i], normalizedRooms[j])) {
+            if (normalizedRooms[i].width > 8) {
+              normalizedRooms[i] = {
+                ...normalizedRooms[i],
+                width: Math.max(8, normalizedRooms[i].width - 2),
+              };
+            }
+            if (normalizedRooms[j].width > 8) {
+              normalizedRooms[j] = {
+                ...normalizedRooms[j],
+                width: Math.max(8, normalizedRooms[j].width - 2),
+              };
+            }
           }
         }
       }
     }
-    // Re-validate after scaling
+    // Re-validate after adjustments
     normalizedRooms = normalizedRooms.map(validateRoomBounds);
     safetyIterations++;
   }
 
-  // 5. Step positions
+  // 5. Final desperation check: If still overlapping, use grid layout
+  let hasOverlap = false;
+  for (let i = 0; i < normalizedRooms.length && !hasOverlap; i++) {
+    for (let j = i + 1; j < normalizedRooms.length; j++) {
+      if (roomsOverlap(normalizedRooms[i], normalizedRooms[j])) {
+        hasOverlap = true;
+        break;
+      }
+    }
+  }
+
+  if (hasOverlap) {
+    // Force grid layout as last resort
+    console.warn('[normalizeFloorPlan] Overlaps persist after resolution, forcing grid layout');
+    normalizedRooms = normalizedRooms.map((room, index) => {
+      const cols = Math.ceil(Math.sqrt(normalizedRooms.length));
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+
+      const cellW = (100 - 10) / cols;
+      const cellH = (100 - 10) / cols;
+      const roomW = Math.min(cellW - 2, room.width);
+      const roomH = Math.min(cellH - 2, room.height);
+
+      return {
+        ...room,
+        x: 5 + col * cellW + (cellW - roomW) / 2,
+        y: 5 + row * cellH + (cellH - roomH) / 2,
+        width: roomW,
+        height: roomH,
+      };
+    });
+  }
+
+  // 6. Step positions
   const normalizedStepPositions: Record<string, { x: number; y: number }> = {};
   for (const [stepId, pos] of Object.entries(data.stepPositions || {})) {
     normalizedStepPositions[stepId] = pos;
