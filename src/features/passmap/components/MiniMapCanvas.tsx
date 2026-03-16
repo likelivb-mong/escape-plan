@@ -64,6 +64,47 @@ export default function MiniMapCanvas({
 
   const hasRooms = rooms && rooms.length > 0;
 
+  // Check if a room collides with any other room
+  const checkRoomCollision = useCallback((testRoom: { x: number; y: number; width: number; height: number }, excludeRoomName?: string) => {
+    if (!rooms) return false;
+    return rooms.some(other => {
+      if (other.name === excludeRoomName) return false;
+      // AABB collision detection
+      return testRoom.x < other.x + other.width &&
+             testRoom.x + testRoom.width > other.x &&
+             testRoom.y < other.y + other.height &&
+             testRoom.y + testRoom.height > other.y;
+    });
+  }, [rooms]);
+
+  // Adjust position to avoid collision with minimum margin
+  const getCollisionAdjustedPosition = useCallback((
+    testRoom: { x: number; y: number; width: number; height: number },
+    excludeRoomName?: string
+  ) => {
+    const margin = 0.5; // Minimum gap between rooms
+    if (!rooms || !checkRoomCollision(testRoom, excludeRoomName)) {
+      return testRoom; // No collision, return as-is
+    }
+
+    // Try to adjust by moving in cardinal directions
+    const attempts = [
+      { x: testRoom.x, y: testRoom.y - (testRoom.height + margin) }, // up
+      { x: testRoom.x, y: testRoom.y + (testRoom.height + margin) }, // down
+      { x: testRoom.x - (testRoom.width + margin), y: testRoom.y }, // left
+      { x: testRoom.x + (testRoom.width + margin), y: testRoom.y }, // right
+    ];
+
+    for (const attempt of attempts) {
+      const adjusted = { ...testRoom, x: attempt.x, y: attempt.y };
+      if (!checkRoomCollision(adjusted, excludeRoomName)) {
+        return adjusted;
+      }
+    }
+
+    return testRoom; // Return original if no adjustment possible
+  }, [rooms, checkRoomCollision]);
+
   const handleDragStart = useCallback((e: React.MouseEvent, step: ThemeStep) => {
     if (!editable) return;
     e.preventDefault();
@@ -145,8 +186,20 @@ export default function MiniMapCanvas({
 
       // Update state for visual feedback
       if (roomDragRef.current.dragType === 'move') {
-        const newX = Math.max(0, Math.min(100 - roomDragRef.current.origWidth, roomDragRef.current.origX + dpx));
-        const newY = Math.max(0, Math.min(100 - roomDragRef.current.origHeight, roomDragRef.current.origY + dpy));
+        let newX = Math.max(0, Math.min(100 - roomDragRef.current.origWidth, roomDragRef.current.origX + dpx));
+        let newY = Math.max(0, Math.min(100 - roomDragRef.current.origHeight, roomDragRef.current.origY + dpy));
+
+        // Check and adjust for collision with other rooms
+        const testRoom = {
+          x: newX,
+          y: newY,
+          width: roomDragRef.current.origWidth,
+          height: roomDragRef.current.origHeight,
+        };
+        const adjustedRoom = getCollisionAdjustedPosition(testRoom, roomDragRef.current.roomName);
+        newX = adjustedRoom.x;
+        newY = adjustedRoom.y;
+
         const draggedData = {
           name: roomDragRef.current.roomName,
           x: newX,
@@ -157,8 +210,20 @@ export default function MiniMapCanvas({
         setDraggedRoom(draggedData);
         finalDragPositionRef.current = draggedData;
       } else {
-        const newWidth = Math.max(8, Math.min(100 - roomDragRef.current.origX, roomDragRef.current.origWidth + dpx));
-        const newHeight = Math.max(8, Math.min(100 - roomDragRef.current.origY, roomDragRef.current.origHeight + dpy));
+        let newWidth = Math.max(8, Math.min(100 - roomDragRef.current.origX, roomDragRef.current.origWidth + dpx));
+        let newHeight = Math.max(8, Math.min(100 - roomDragRef.current.origY, roomDragRef.current.origHeight + dpy));
+
+        // Check and adjust for collision with other rooms
+        const testRoom = {
+          x: roomDragRef.current.origX,
+          y: roomDragRef.current.origY,
+          width: newWidth,
+          height: newHeight,
+        };
+        const adjustedRoom = getCollisionAdjustedPosition(testRoom, roomDragRef.current.roomName);
+        newWidth = adjustedRoom.width;
+        newHeight = adjustedRoom.height;
+
         const draggedData = {
           name: roomDragRef.current.roomName,
           x: roomDragRef.current.origX,
@@ -196,7 +261,7 @@ export default function MiniMapCanvas({
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-  }, [editable, onRoomUpdate, onRoomMove]);
+  }, [editable, onRoomUpdate, onRoomMove, getCollisionAdjustedPosition]);
 
   return (
     <div
