@@ -339,7 +339,7 @@ export default function ProjectsPage() {
               <button
                 key={branch.code}
                 onClick={() => setBranchFilter(branchFilter === branch.code ? null : branch.code)}
-                className={`px-3 py-1.5 rounded-lg text-caption font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-caption font-mono font-medium transition-all ${
                   branchFilter === branch.code
                     ? 'bg-white/[0.10] text-white'
                     : hasContent
@@ -347,7 +347,7 @@ export default function ProjectsPage() {
                     : 'text-white/15 hover:text-white/30 hover:bg-white/[0.02]'
                 }`}
               >
-                {branch.name}
+                {branch.code}
                 {hasContent && (
                   <span className="ml-1 text-[10px] text-white/20">
                     {count + themes.length}
