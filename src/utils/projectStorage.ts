@@ -5,6 +5,7 @@ import type { PuzzleFlowPlan } from '../types/puzzleFlow';
 import type { PuzzleRecommendationGroup } from '../types/puzzleRecommendation';
 import type { GameFlowPlan } from '../types/gameFlow';
 import type { FloorPlanData } from '../types/floorPlan';
+import { normalizeFloorPlan } from './floorPlan';
 import { supabase } from '../services/supabase';
 
 const STORAGE_KEY = 'xcape-projects';
@@ -73,7 +74,8 @@ export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
       puzzleFlowPlan: row.puzzle_flow_plan,
       puzzleRecommendationGroups: row.puzzle_recommendation_groups || [],
       gameFlowDesign: row.game_flow_design,
-      floorPlanData: row.floor_plan_data,
+      // ⚠️ Always normalize floor plans from Supabase
+      floorPlanData: row.floor_plan_data ? normalizeFloorPlan(row.floor_plan_data) : null,
       passmapLink: row.passmap_link,
     }));
   } catch (error) {
@@ -83,18 +85,24 @@ export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
 }
 
 export function upsertProject(project: SavedProject): void {
+  // ⚠️ CRITICAL: Normalize floor plan before saving
+  const normalizedProject: SavedProject = {
+    ...project,
+    floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
+  };
+
   // Update localStorage first (instant response)
   const projects = listSavedProjects();
-  const idx = projects.findIndex((p) => p.id === project.id);
+  const idx = projects.findIndex((p) => p.id === normalizedProject.id);
   if (idx >= 0) {
-    projects[idx] = project;
+    projects[idx] = normalizedProject;
   } else {
-    projects.unshift(project);
+    projects.unshift(normalizedProject);
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
 
   // Sync to Supabase in background
-  upsertProjectToSupabase(project).catch(console.error);
+  upsertProjectToSupabase(normalizedProject).catch(console.error);
 }
 
 async function upsertProjectToSupabase(project: SavedProject): Promise<void> {
@@ -129,7 +137,15 @@ async function upsertProjectToSupabase(project: SavedProject): Promise<void> {
 }
 
 export function loadProjectById(id: string): SavedProject | null {
-  return listSavedProjects().find((p) => p.id === id) ?? null;
+  const project = listSavedProjects().find((p) => p.id === id);
+  if (!project) return null;
+
+  // ⚠️ CRITICAL: Always normalize floorPlanData on load to ensure data integrity
+  // This catches any floor plans saved before normalization was implemented
+  return {
+    ...project,
+    floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
+  };
 }
 
 export async function loadProjectByIdFromSupabase(id: string): Promise<SavedProject | null> {
@@ -160,7 +176,8 @@ export async function loadProjectByIdFromSupabase(id: string): Promise<SavedProj
       puzzleFlowPlan: data.puzzle_flow_plan,
       puzzleRecommendationGroups: data.puzzle_recommendation_groups || [],
       gameFlowDesign: data.game_flow_design,
-      floorPlanData: data.floor_plan_data,
+      // ⚠️ Always normalize floor plans from Supabase
+      floorPlanData: data.floor_plan_data ? normalizeFloorPlan(data.floor_plan_data) : null,
       passmapLink: data.passmap_link,
     };
   } catch (error) {
