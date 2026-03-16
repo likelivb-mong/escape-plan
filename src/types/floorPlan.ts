@@ -22,8 +22,8 @@ export interface DoorLayout {
 
 export interface FloorPlanData {
   rooms: FloorPlanRoomLayout[];
-  doors: DoorLayout[];
-  stepPositions: Record<string, { x: number; y: number }>; // stepId → % within room
+  doors?: DoorLayout[];
+  stepPositions?: Record<string, { x: number; y: number }>;
 }
 
 export interface PassMapEntry {
