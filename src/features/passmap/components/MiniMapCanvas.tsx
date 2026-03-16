@@ -47,7 +47,7 @@ export default function MiniMapCanvas({
 }: MiniMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ stepId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; origWidth: number; origHeight: number; dragType: 'move' | 'resize' } | null>(null);
+  const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; origWidth: number; origHeight: number; dragType: 'move' | 'resize'; pendingX?: number; pendingY?: number; pendingWidth?: number; pendingHeight?: number } | null>(null);
 
   // Group steps by zone for step count per room
   const stepCountByZone = useMemo(() => {
@@ -118,20 +118,29 @@ export default function MiniMapCanvas({
       const dpx = (dx / rect.width) * 100;
       const dpy = (dy / rect.height) * 100;
 
+      // Store pending values but don't call callbacks (avoid excessive re-renders)
       if (roomDragRef.current.dragType === 'move') {
-        // Move room (and all steps in that zone)
         const newX = Math.max(0, Math.min(100 - roomDragRef.current.origWidth, roomDragRef.current.origX + dpx));
         const newY = Math.max(0, Math.min(100 - roomDragRef.current.origHeight, roomDragRef.current.origY + dpy));
-        onRoomMove?.(roomDragRef.current.roomName, newX - roomDragRef.current.origX, newY - roomDragRef.current.origY);
+        roomDragRef.current.pendingX = newX;
+        roomDragRef.current.pendingY = newY;
       } else {
-        // Resize room (from bottom-right corner)
         const newWidth = Math.max(8, Math.min(100 - roomDragRef.current.origX, roomDragRef.current.origWidth + dpx));
         const newHeight = Math.max(8, Math.min(100 - roomDragRef.current.origY, roomDragRef.current.origHeight + dpy));
-        onRoomUpdate?.(roomDragRef.current.roomName, { width: newWidth, height: newHeight });
+        roomDragRef.current.pendingWidth = newWidth;
+        roomDragRef.current.pendingHeight = newHeight;
       }
     };
 
     const handleMouseUp = () => {
+      if (roomDragRef.current) {
+        // Call callbacks only once when drag ends
+        if (roomDragRef.current.dragType === 'move' && roomDragRef.current.pendingX !== undefined && roomDragRef.current.pendingY !== undefined) {
+          onRoomMove?.(roomDragRef.current.roomName, roomDragRef.current.pendingX - roomDragRef.current.origX, roomDragRef.current.pendingY - roomDragRef.current.origY);
+        } else if (roomDragRef.current.dragType === 'resize' && roomDragRef.current.pendingWidth !== undefined && roomDragRef.current.pendingHeight !== undefined) {
+          onRoomUpdate?.(roomDragRef.current.roomName, { width: roomDragRef.current.pendingWidth, height: roomDragRef.current.pendingHeight });
+        }
+      }
       roomDragRef.current = null;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -167,6 +176,13 @@ export default function MiniMapCanvas({
         const nameColor = ROOM_NAME_COLORS[i % ROOM_NAME_COLORS.length];
         const count = stepCountByZone.get(room.name) || room.stepCount;
 
+        // Use pending values during drag, otherwise use room values
+        const isDragging = roomDragRef.current?.roomName === room.name;
+        const displayX = isDragging && roomDragRef.current?.pendingX !== undefined ? roomDragRef.current.pendingX : room.x;
+        const displayY = isDragging && roomDragRef.current?.pendingY !== undefined ? roomDragRef.current.pendingY : room.y;
+        const displayWidth = isDragging && roomDragRef.current?.pendingWidth !== undefined ? roomDragRef.current.pendingWidth : room.width;
+        const displayHeight = isDragging && roomDragRef.current?.pendingHeight !== undefined ? roomDragRef.current.pendingHeight : room.height;
+
         return (
           <div
             key={room.name}
@@ -174,10 +190,10 @@ export default function MiniMapCanvas({
               editable ? 'cursor-move' : ''
             }`}
             style={{
-              left: `${room.x}%`,
-              top: `${room.y}%`,
-              width: `${room.width}%`,
-              height: `${room.height}%`,
+              left: `${displayX}%`,
+              top: `${displayY}%`,
+              width: `${displayWidth}%`,
+              height: `${displayHeight}%`,
               border: `1px solid ${borderColor}`,
               backgroundColor: `${borderColor.replace(/[\d.]+\)$/, '0.06)')}`,
             }}
