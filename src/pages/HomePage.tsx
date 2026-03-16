@@ -53,8 +53,6 @@ const GENRES: { value: Genre; label: string }[] = [
 const PUZZLE_TYPES: PuzzleType[] = ['추리', '관찰', '수리', '협동', '활동', '오감'];
 const CLUE_FORMATS: ClueFormat[] = ['평면', '입체', '공간', '감각'];
 
-type TabKey = 'youtube' | 'build';
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
@@ -70,15 +68,16 @@ export default function HomePage() {
     resetForNewProject,
   } = useProject();
 
-  const [activeTab, setActiveTab] = useState<TabKey>('build');
   const [shouldNavigateAfterSave, setShouldNavigateAfterSave] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<string>(MOCK_BRANCHES[0].code);
 
-  // ── YouTube state ────────────────────────────────────────────────────────
+  // ── YouTube state (선택사항) ─────────────────────────────────────────────
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubeLoading, setYoutubeLoading] = useState(false);
   const [youtubeStep, setYoutubeStep] = useState('');
   const [youtubeError, setYoutubeError] = useState('');
+  const [youtubeAnalysisResult, setYoutubeAnalysisResult] = useState<any>(null);
+  const [analyzeFromYoutube, setAnalyzeFromYoutube] = useState(false);
   const [preview, setPreview] = useState<VideoPreview | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -136,35 +135,16 @@ export default function HomePage() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
-  const handleYoutubeGenerate = async () => {
+  const handleYoutubeAnalyze = async () => {
     const url = youtubeUrl.trim();
     if (!url) return;
     setYoutubeLoading(true);
     setYoutubeError('');
     try {
-      // ── Reset previous project state (새 프로젝트로 시작) ──
-      resetForNewProject();
-
       const result = await analyzeYoutube(url, setYoutubeStep);
-      setYoutubeStep('보드 생성 중...');
-      await new Promise((r) => setTimeout(r, 200));
-      setCtxProjectName(result.projectName);
-      setCtxBranchCode(selectedBranch);
-      setCells(result.cells);
-      setAiStoryProposals(result.stories);
-      setProjectBrief({
-        source: 'youtube',
-        videoId: extractYouTubeId(url) ?? null,
-        videoTitle: result.videoTitle,
-        videoChannel: result.channelName,
-        synopsis: result.videoSynopsis,
-        beats: result.videoBeats,
-        genres: [],
-        playTimes: [],
-        investigation: { motives: [], methods: [], clues: [], techniques: [] },
-      });
-      setYoutubeStep('프로젝트 저장 중...');
-      setShouldNavigateAfterSave(true);
+      setYoutubeAnalysisResult(result);
+      // AI 분석에서 나온 프로젝트명 자동으로 설정
+      setProjectName(result.projectName || '');
     } catch (err) {
       setYoutubeError(err instanceof Error ? err.message : 'AI 분석 중 오류가 발생했습니다.');
     } finally {
@@ -202,6 +182,27 @@ export default function HomePage() {
 
     setCtxProjectName(name);
     setCtxBranchCode(selectedBranch);
+
+    // If YouTube analysis was selected, use that as base
+    if (youtubeAnalysisResult && analyzeFromYoutube) {
+      setCells(youtubeAnalysisResult.cells);
+      setAiStoryProposals(youtubeAnalysisResult.stories);
+      setProjectBrief({
+        source: 'youtube',
+        videoId: extractYouTubeId(youtubeUrl) ?? null,
+        videoTitle: youtubeAnalysisResult.videoTitle,
+        videoChannel: youtubeAnalysisResult.channelName,
+        synopsis: youtubeAnalysisResult.videoSynopsis,
+        beats: youtubeAnalysisResult.videoBeats,
+        genres,
+        playTimes,
+        investigation: { motives: [], methods: [], clues: [], techniques: [] },
+        puzzleTypes,
+        clueFormats,
+      });
+      setShouldNavigateAfterSave(true);
+      return;
+    }
 
     // If scenario form has data, use scenario-based generation
     if (scenarioResult) {
@@ -284,163 +285,40 @@ export default function HomePage() {
       </div>
 
       {/* Main card */}
-      <div
-        className={`w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all duration-300 shadow-card ${
-          activeTab === 'build' ? 'max-w-2xl lg:max-w-4xl' : 'max-w-lg sm:max-w-xl lg:max-w-2xl'
-        }`}
-      >
-        {/* Tab bar */}
-        <div className="flex border-b border-white/[0.06] px-1 pt-1">
-          <TabButton active={activeTab === 'youtube'} onClick={() => setActiveTab('youtube')}>
-            YouTube 분석
-          </TabButton>
-          <TabButton active={activeTab === 'build'} onClick={() => setActiveTab('build')}>
-            사건 구성하기
-          </TabButton>
-        </div>
-
-        {/* Tab content */}
-        <div className="p-6 sm:p-8">
-          {activeTab === 'youtube' ? (
-            <YouTubeTab
-              youtubeUrl={youtubeUrl}
-              setYoutubeUrl={setYoutubeUrl}
-              preview={preview}
-              youtubeLoading={youtubeLoading}
-              youtubeStep={youtubeStep}
-              youtubeError={youtubeError}
-              onGenerate={handleYoutubeGenerate}
-              selectedBranch={selectedBranch}
-              setSelectedBranch={setSelectedBranch}
-            />
-          ) : (
-            <BuildTab
-              projectName={projectName}
-              setProjectName={setProjectName}
-              playTimes={playTimes}
-              togglePlayTime={togglePlayTime}
-              genres={genres}
-              toggleGenre={toggleGenre}
-              puzzleTypes={puzzleTypes}
-              togglePuzzleType={togglePuzzleType}
-              clueFormats={clueFormats}
-              toggleClueFormat={toggleClueFormat}
-              scenarioForm={scenarioForm}
-              setScenarioForm={setScenarioForm}
-              scenarioResult={scenarioResult}
-              synopsis={synopsis}
-              setSynopsis={setSynopsis}
-              beats={beats}
-              setBeats={setBeats}
-              onSubmit={handleBuildSubmit}
-              selectedBranch={selectedBranch}
-              setSelectedBranch={setSelectedBranch}
-            />
-          )}
-        </div>
+      <div className="w-full max-w-2xl lg:max-w-4xl rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all duration-300 shadow-card p-6 sm:p-8">
+        <BuildTab
+          projectName={projectName}
+          setProjectName={setProjectName}
+          playTimes={playTimes}
+          togglePlayTime={togglePlayTime}
+          genres={genres}
+          toggleGenre={toggleGenre}
+          puzzleTypes={puzzleTypes}
+          togglePuzzleType={togglePuzzleType}
+          clueFormats={clueFormats}
+          toggleClueFormat={toggleClueFormat}
+          scenarioForm={scenarioForm}
+          setScenarioForm={setScenarioForm}
+          scenarioResult={scenarioResult}
+          synopsis={synopsis}
+          setSynopsis={setSynopsis}
+          beats={beats}
+          setBeats={setBeats}
+          onSubmit={handleBuildSubmit}
+          selectedBranch={selectedBranch}
+          setSelectedBranch={setSelectedBranch}
+          youtubeUrl={youtubeUrl}
+          setYoutubeUrl={setYoutubeUrl}
+          preview={preview}
+          youtubeLoading={youtubeLoading}
+          youtubeStep={youtubeStep}
+          youtubeError={youtubeError}
+          onAnalyzeYoutube={handleYoutubeAnalyze}
+          analyzeFromYoutube={analyzeFromYoutube}
+          setAnalyzeFromYoutube={setAnalyzeFromYoutube}
+          youtubeAnalysisResult={youtubeAnalysisResult}
+        />
       </div>
-    </div>
-  );
-}
-
-// ── Tab Button ──────────────────────────────────────────────────────────────
-
-function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex-1 py-2.5 rounded-lg text-subhead font-medium transition-all ${
-        active
-          ? 'text-white bg-white/[0.08]'
-          : 'text-white/30 hover:text-white/50'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-// ── YouTube Tab ─────────────────────────────────────────────────────────────
-
-interface YouTubeTabProps {
-  youtubeUrl: string;
-  setYoutubeUrl: (v: string) => void;
-  preview: VideoPreview | null;
-  youtubeLoading: boolean;
-  youtubeStep: string;
-  youtubeError: string;
-  onGenerate: () => void;
-  selectedBranch: string;
-  setSelectedBranch: (v: string) => void;
-}
-
-function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtubeStep, youtubeError, onGenerate, selectedBranch, setSelectedBranch }: YouTubeTabProps) {
-  return (
-    <div className="flex flex-col gap-3">
-      <BranchSelector selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
-      <label className="text-subhead text-white/40 font-medium tracking-wide uppercase">
-        YouTube URL
-      </label>
-      <input
-        type="url"
-        value={youtubeUrl}
-        onChange={(e) => setYoutubeUrl(e.target.value)}
-        placeholder="https://youtube.com/watch?v=..."
-        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/[0.20] focus:bg-white/[0.06] transition-all"
-      />
-
-      {preview && (
-        <div className="flex gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
-          <div className="flex-shrink-0 w-24 h-[54px] rounded-lg overflow-hidden bg-white/[0.06]">
-            <img
-              src={`https://img.youtube.com/vi/${preview.videoId}/mqdefault.jpg`}
-              alt="thumbnail"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="flex flex-col justify-center min-w-0">
-            {preview.metaLoading ? (
-              <>
-                <div className="h-3 w-32 rounded bg-white/10 animate-pulse mb-1.5" />
-                <div className="h-2.5 w-20 rounded bg-white/[0.06] animate-pulse" />
-              </>
-            ) : (
-              <>
-                <p className="text-subhead font-medium text-white/80 leading-snug line-clamp-2 mb-1">
-                  {preview.title ?? '제목을 불러올 수 없습니다'}
-                </p>
-                {preview.channel && (
-                  <p className="text-caption text-white/35 truncate">{preview.channel}</p>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      <button
-        onClick={onGenerate}
-        disabled={!youtubeUrl.trim() || youtubeLoading}
-        className="mt-2 w-full py-3 rounded-xl text-body font-semibold transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-      >
-        {youtubeLoading ? (
-          <>
-            <Spinner />
-            {youtubeStep || 'AI 분석 중...'}
-          </>
-        ) : (
-          'AI 테마 생성 →'
-        )}
-      </button>
-
-      {youtubeLoading && youtubeStep && (
-        <p className="text-footnote text-white/30 text-center animate-pulse">{youtubeStep}</p>
-      )}
-      {youtubeError && (
-        <p className="text-footnote text-red-400/70 leading-relaxed bg-red-500/[0.06] border border-red-500/20 rounded-lg px-3 py-2">
-          {youtubeError}
-        </p>
-      )}
     </div>
   );
 }
@@ -468,6 +346,16 @@ interface BuildTabProps {
   onSubmit: () => void;
   selectedBranch: string;
   setSelectedBranch: (v: string) => void;
+  youtubeUrl: string;
+  setYoutubeUrl: (v: string) => void;
+  preview: VideoPreview | null;
+  youtubeLoading: boolean;
+  youtubeStep: string;
+  youtubeError: string;
+  onAnalyzeYoutube: () => void;
+  analyzeFromYoutube: boolean;
+  setAnalyzeFromYoutube: (v: boolean) => void;
+  youtubeAnalysisResult: any;
 }
 
 function BuildTab({
@@ -482,6 +370,11 @@ function BuildTab({
   beats, setBeats,
   onSubmit,
   selectedBranch, setSelectedBranch,
+  youtubeUrl, setYoutubeUrl,
+  preview, youtubeLoading, youtubeStep, youtubeError,
+  onAnalyzeYoutube,
+  analyzeFromYoutube, setAnalyzeFromYoutube,
+  youtubeAnalysisResult,
 }: BuildTabProps) {
   const [openSection, setOpenSection] = useState<string>('basic');
 
@@ -490,6 +383,75 @@ function BuildTab({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ── Section 0: 참고 자료 (YouTube) ── */}
+      <SectionHeader
+        title="📺 참고 자료 (선택사항)"
+        subtitle="YouTube 영상을 기반으로 테마 기획하기"
+        open={openSection === 'youtube'}
+        onToggle={() => toggle('youtube')}
+      />
+      {openSection === 'youtube' && (
+        <div className="flex flex-col gap-4 pl-1">
+          <Field label="YouTube 링크">
+            <input
+              type="text"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=... 또는 https://youtu.be/..."
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/[0.20] focus:bg-white/[0.06] transition-all"
+            />
+          </Field>
+
+          {preview && preview.title && (
+            <div className="flex items-center gap-3 bg-white/[0.04] rounded-lg p-3 border border-white/[0.06]">
+              <div className="flex-shrink-0 w-10 h-10 rounded bg-white/[0.08] overflow-hidden">
+                <img
+                  src={`https://img.youtube.com/vi/${preview.videoId}/mqdefault.jpg`}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-footnote font-medium text-white/70 truncate">{preview.title}</p>
+                {preview.channel && <p className="text-caption text-white/40 truncate">{preview.channel}</p>}
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={onAnalyzeYoutube}
+            disabled={!youtubeUrl.trim() || youtubeLoading}
+            className="py-2 rounded-lg text-body font-medium transition-all bg-white/[0.08] text-white hover:bg-white/[0.12] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {youtubeLoading ? `분석 중... ${youtubeStep ? `(${youtubeStep})` : ''}` : '📊 영상 분석하기'}
+          </button>
+
+          {youtubeError && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-footnote">
+              {youtubeError}
+            </div>
+          )}
+
+          {youtubeAnalysisResult && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-300 text-footnote">
+              ✅ 분석 완료! 아래에서 "이 영상으로 시작" 옵션을 선택하세요.
+            </div>
+          )}
+
+          {youtubeAnalysisResult && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={analyzeFromYoutube}
+                onChange={(e) => setAnalyzeFromYoutube(e.target.checked)}
+                className="w-4 h-4 rounded"
+              />
+              <span className="text-footnote text-white/60">이 YouTube 영상을 기반으로 테마 설계 시작</span>
+            </label>
+          )}
+        </div>
+      )}
+
       {/* ── Section 1: 기본 정보 ── */}
       <SectionHeader
         title="기본 정보"
