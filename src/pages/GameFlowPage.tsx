@@ -4,6 +4,10 @@ import { useProject } from '../context/ProjectContext';
 import { generateGameFlowFromMandala, regenerateGameFlow } from '../utils/gameFlow';
 import type { GameFlowPlan } from '../types/gameFlow';
 import GameFlowTab from '../components/game-flow/GameFlowTab';
+import GameFlowStepsView from '../components/game-flow/GameFlowStepsView';
+import GameFlowSummaryView from '../components/game-flow/GameFlowSummaryView';
+
+type SubTab = 'chart' | 'steps' | 'summary';
 
 export default function GameFlowPage() {
   const navigate = useNavigate();
@@ -16,16 +20,16 @@ export default function GameFlowPage() {
     saveCurrentProject,
   } = useProject();
 
-  // ── Temporary state (editing) vs. saved state ──────────────────────────────────
   const [gamePlan, setGamePlan] = useState<GameFlowPlan | null>(gameFlowDesign ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [saved, setSaved] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState<SubTab>('chart');
 
-  // ── Auto-generate on mount (if no plan exists) ─────────────────────────────────
+  // ── Auto-generate on mount ────────────────────────────────────────────────
   useEffect(() => {
-    if (gamePlan) return; // Already has plan
+    if (gamePlan) return;
     if (!selectedStory || !cells || cells.length === 0) return;
 
     const generate = async () => {
@@ -48,7 +52,7 @@ export default function GameFlowPage() {
     try {
       const plan = await regenerateGameFlow(selectedStory, cells);
       setGamePlan(plan);
-      setHasChanges(true); // Mark as changed since user regenerated
+      setHasChanges(true);
     } finally {
       setIsRegenerating(false);
     }
@@ -56,7 +60,7 @@ export default function GameFlowPage() {
 
   const handleUpdatePlan = (newPlan: GameFlowPlan) => {
     setGamePlan(newPlan);
-    setHasChanges(true); // Mark as changed when user edits
+    setHasChanges(true);
   };
 
   const handleSave = () => {
@@ -80,7 +84,7 @@ export default function GameFlowPage() {
     navigate('/setting');
   };
 
-  // ── Empty state ──────────────────────────────────────────────────────────────
+  // ── Empty state ───────────────────────────────────────────────────────────
   if (!selectedStory) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 px-6">
@@ -103,6 +107,12 @@ export default function GameFlowPage() {
     );
   }
 
+  const SUB_TABS: { key: SubTab; label: string }[] = [
+    { key: 'chart', label: 'Chart' },
+    { key: 'steps', label: 'Steps' },
+    { key: 'summary', label: 'Summary' },
+  ];
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {/* ── Page header ── */}
@@ -122,9 +132,7 @@ export default function GameFlowPage() {
           </span>
         </div>
 
-        {/* ── Right actions ── */}
         <div className="flex items-center gap-2">
-          {/* Save button */}
           <button
             onClick={handleSave}
             disabled={!hasChanges}
@@ -149,6 +157,31 @@ export default function GameFlowPage() {
         </div>
       </div>
 
+      {/* ── Sub-tab bar ── */}
+      {gamePlan && !isGenerating && (
+        <div className="flex items-center gap-0.5 px-4 sm:px-6 py-2 border-b border-white/[0.05] flex-shrink-0">
+          <div className="flex items-center gap-0.5 p-0.5 rounded-full border border-white/[0.08] bg-white/[0.02]">
+            {SUB_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={[
+                  'px-4 py-1.5 rounded-full text-caption font-medium transition-all duration-150',
+                  activeTab === tab.key
+                    ? 'bg-white text-black'
+                    : 'text-white/40 hover:text-white/65',
+                ].join(' ')}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <span className="ml-3 text-caption text-white/20">
+            {gamePlan.steps.length}스텝 · {gamePlan.rooms.length}공간
+          </span>
+        </div>
+      )}
+
       {/* ── Content ── */}
       {isGenerating ? (
         <div className="flex flex-1 items-center justify-center">
@@ -158,12 +191,25 @@ export default function GameFlowPage() {
           </div>
         </div>
       ) : gamePlan ? (
-        <GameFlowTab
-          plan={gamePlan}
-          isRegenerating={isRegenerating}
-          onRegenerate={handleRegenerate}
-          onUpdatePlan={handleUpdatePlan}
-        />
+        <>
+          {activeTab === 'chart' && (
+            <GameFlowTab
+              plan={gamePlan}
+              isRegenerating={isRegenerating}
+              onRegenerate={handleRegenerate}
+              onUpdatePlan={handleUpdatePlan}
+            />
+          )}
+          {activeTab === 'steps' && (
+            <GameFlowStepsView
+              plan={gamePlan}
+              onUpdatePlan={handleUpdatePlan}
+            />
+          )}
+          {activeTab === 'summary' && (
+            <GameFlowSummaryView plan={gamePlan} />
+          )}
+        </>
       ) : null}
     </div>
   );

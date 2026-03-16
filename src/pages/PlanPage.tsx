@@ -1,18 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import { buildDraftDocument, calcDraftStatus } from '../utils/draft';
 import type { ProjectBrief, Genre, PlayTime } from '../types';
-
-import DraftHeader from '../components/draft/DraftHeader';
-import DraftOverviewSection from '../components/draft/DraftOverviewSection';
-import DraftConceptSummary from '../components/draft/DraftConceptSummary';
-import DraftStorySection from '../components/draft/DraftStorySection';
-import DraftFlowSection from '../components/draft/DraftFlowSection';
-import DraftPuzzleSection from '../components/draft/DraftPuzzleSection';
-import DraftSidebar from '../components/draft/DraftSidebar';
-import DraftDocumentActions from '../components/draft/DraftDocumentActions';
-import DraftGameFlowSection from '../components/draft/DraftGameFlowSection';
 
 const GENRE_LABELS: Record<string, string> = {
   horror: '공포', mystery: '미스터리', adventure: '어드벤처', thriller: '스릴러',
@@ -22,16 +11,21 @@ const ALL_GENRES: Genre[] = ['horror', 'mystery', 'adventure', 'thriller', 'fant
 const ALL_PLAY_TIMES: PlayTime[] = [60, 70, 80, 90];
 const BEAT_LABELS: ('기' | '승' | '전' | '반전' | '결')[] = ['기', '승', '전', '반전', '결'];
 
+const STAGES = [
+  { key: 'plan', label: 'Plan', path: '/plan' },
+  { key: 'story', label: 'Story', path: '/story' },
+  { key: 'mandalart', label: 'Mandalart', path: '/mandalart' },
+  { key: 'gameflow', label: 'Game Flow', path: '/gameflow' },
+  { key: 'setting', label: 'Setting', path: '/setting' },
+] as const;
+
 export default function PlanPage() {
   const navigate = useNavigate();
   const {
     projectName, setProjectName,
-    cells,
     selectedStory,
-    puzzleFlowPlan,
-    puzzleRecommendationGroups,
     gameFlowDesign,
-    setGameFlowDesign,
+    cells,
     projectBrief, setProjectBrief,
     branchCode,
     saveCurrentProject,
@@ -40,7 +34,7 @@ export default function PlanPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // ── Local edit state (draft while editing) ─────────────────────────────────
+  // ── Local edit state ──────────────────────────────────────────────────────
   const [editName, setEditName]       = useState(projectName);
   const [editSynopsis, setEditSynopsis] = useState(projectBrief?.synopsis ?? '');
   const [editGenres, setEditGenres]   = useState<Genre[]>(projectBrief?.genres ?? []);
@@ -87,21 +81,19 @@ export default function PlanPage() {
     setTimeout(() => setSaved(false), 1500);
   };
 
-  // ── Build draft document ────────────────────────────────────────────────────
-  const doc = useMemo(() => {
-    if (!selectedStory || !puzzleFlowPlan) return null;
-    return buildDraftDocument({
-      projectName,
-      cells,
-      story: selectedStory,
-      puzzleFlowPlan,
-      puzzleRecommendationGroups,
-    });
-  }, [projectName, cells, selectedStory, puzzleFlowPlan, puzzleRecommendationGroups]);
+  // ── Progress tracking ─────────────────────────────────────────────────────
+  const stageStatus = {
+    plan: !!projectBrief,
+    story: !!selectedStory,
+    mandalart: !!(cells && cells.length > 0),
+    gameflow: !!gameFlowDesign,
+    setting: false, // Setting completion is managed separately
+  };
 
-  const status = doc ? calcDraftStatus(doc) : null;
+  // Find the next incomplete stage to guide the user
+  const nextStage = STAGES.find((s) => !stageStatus[s.key]) ?? STAGES[STAGES.length - 1];
 
-  // ── Empty state ─────────────────────────────────────────────────────────────
+  // ── Empty state ───────────────────────────────────────────────────────────
   if (!projectBrief && projectName === 'Untitled Theme Project') {
     return (
       <EmptyState
@@ -113,7 +105,7 @@ export default function PlanPage() {
     );
   }
 
-  // ── Shared header ───────────────────────────────────────────────────────────
+  // ── Shared header ─────────────────────────────────────────────────────────
   const header = (
     <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
       <div className="flex items-center gap-2.5">
@@ -152,7 +144,7 @@ export default function PlanPage() {
               : 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
           }`}
         >
-          {saved ? '✓ 저장됨' : isEditing ? '저장' : '저장'}
+          {saved ? '✓ 저장됨' : '저장'}
         </button>
         <button
           onClick={() => navigate('/story')}
@@ -164,7 +156,7 @@ export default function PlanPage() {
     </div>
   );
 
-  // ── Edit mode ───────────────────────────────────────────────────────────────
+  // ── Edit mode ─────────────────────────────────────────────────────────────
   if (isEditing) {
     return (
       <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -281,104 +273,65 @@ export default function PlanPage() {
     );
   }
 
-  // ── Story 미선택 상태 ─────────────────────────────────────────────────────────
-  if (!selectedStory) {
-    return (
-      <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-        {header}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-3xl">
-            {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
-            <NextStepBanner
-              message="스토리를 생성하고 선택하면 기획서가 이어서 채워집니다."
-              buttonLabel="Story 생성 →"
-              onClick={() => navigate('/story')}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Story 선택 완료, GameFlow 미완성 ─────────────────────────────────────────
-  if (!puzzleFlowPlan && !gameFlowDesign) {
-    return (
-      <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-        {header}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-3xl">
-            {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
-            <SelectedStorySection story={selectedStory} />
-            <NextStepBanner
-              message="만다라트를 완성하면 기획서가 이어서 채워집니다."
-              buttonLabel="만다라트 편집 →"
-              onClick={() => navigate('/mandalart')}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Story 선택 완료, GameFlow 있음, PuzzleFlow 미완성 ────────────────────────
-  if (!doc || !status) {
-    return (
-      <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-        {header}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-3xl">
-            {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
-            {selectedStory && <SelectedStorySection story={selectedStory} />}
-            {gameFlowDesign && (
-              <DraftGameFlowSection
-                plan={gameFlowDesign}
-                onUpdatePlan={setGameFlowDesign}
-              />
-            )}
-            <NextStepBanner
-              message="Setting에서 룸 구성을 완성하면 기획서가 마무리됩니다."
-              buttonLabel="Setting →"
-              onClick={() => navigate('/setting')}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── 전체 완성 상태 ────────────────────────────────────────────────────────────
+  // ── Normal view: Brief + Progress ─────────────────────────────────────────
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {header}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
-        <div className="flex-1 overflow-y-auto min-w-0">
-          <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-3xl">
-            {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} compact />}
-            <DraftOverviewSection doc={doc} />
-            <DraftConceptSummary doc={doc} />
-            <DraftStorySection doc={doc} />
-            <DraftFlowSection doc={doc} />
-            <DraftPuzzleSection doc={doc} />
-            {gameFlowDesign && (
-              <DraftGameFlowSection
-                plan={gameFlowDesign}
-                onUpdatePlan={setGameFlowDesign}
-              />
-            )}
-            <div className="mt-6 mb-8 flex items-center gap-3">
-              <div className="h-px flex-1 bg-white/[0.05]" />
-              <span className="text-micro font-bold uppercase tracking-widest text-white/15">
-                XCAPE Internal · Theme Draft
-              </span>
-              <div className="h-px flex-1 bg-white/[0.05]" />
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-3xl">
+
+          {/* Theme Brief */}
+          {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
+
+          {/* Progress tracker */}
+          <div className="mt-8 mb-6">
+            <p className="text-caption text-white/25 uppercase tracking-widest mb-4">진행 현황</p>
+            <div className="flex items-center gap-1">
+              {STAGES.map((stage, i) => {
+                const done = stageStatus[stage.key];
+                const isCurrent = stage.key === 'plan';
+                return (
+                  <div key={stage.key} className="flex items-center gap-1 flex-1">
+                    <button
+                      onClick={() => navigate(stage.path)}
+                      className={`flex-1 py-2.5 rounded-lg text-center text-caption font-medium transition-all border ${
+                        isCurrent
+                          ? 'border-white/25 bg-white/[0.08] text-white/80'
+                          : done
+                          ? 'border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-300/70 hover:border-emerald-500/30'
+                          : 'border-white/[0.06] bg-white/[0.02] text-white/30 hover:border-white/12 hover:text-white/50'
+                      }`}
+                    >
+                      {done && !isCurrent ? '✓ ' : ''}{stage.label}
+                    </button>
+                    {i < STAGES.length - 1 && (
+                      <div className={`w-3 h-px flex-shrink-0 ${done ? 'bg-emerald-500/30' : 'bg-white/[0.08]'}`} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-        <div className="w-full lg:w-72 flex-shrink-0 flex flex-col overflow-hidden">
-          <DraftSidebar doc={doc} status={status} />
+
+          {/* Next step guidance */}
+          {nextStage.key !== 'plan' && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+              <p className="text-subhead text-white/40 leading-relaxed">
+                {nextStage.key === 'story' && '스토리를 생성하고 선택하면 다음 단계로 진행됩니다.'}
+                {nextStage.key === 'mandalart' && '만다라트 차트를 완성하면 다음 단계로 진행됩니다.'}
+                {nextStage.key === 'gameflow' && 'Game Flow를 생성하면 다음 단계로 진행됩니다.'}
+                {nextStage.key === 'setting' && 'Setting에서 룸 구성을 완성하면 기획이 마무리됩니다.'}
+              </p>
+              <button
+                onClick={() => navigate(nextStage.path)}
+                className="flex-shrink-0 px-4 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 transition-colors"
+              >
+                {nextStage.label} →
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      <DraftDocumentActions doc={doc} />
     </div>
   );
 }
@@ -388,37 +341,10 @@ export default function PlanPage() {
 function ThemeBriefSection({
   brief,
   branchCode,
-  compact = false,
 }: {
   brief: ProjectBrief;
   branchCode: string | null;
-  compact?: boolean;
 }) {
-  if (compact) {
-    return (
-      <div className="mb-6 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-        <p className="text-caption text-white/25 uppercase tracking-widest mb-2">테마 설계</p>
-        <div className="flex flex-wrap gap-1.5">
-          {brief.genres.map((g) => (
-            <span key={g} className="px-2 py-0.5 rounded-full text-caption bg-white/[0.06] text-white/50">
-              {GENRE_LABELS[g] ?? g}
-            </span>
-          ))}
-          {brief.playTimes.map((t) => (
-            <span key={t} className="px-2 py-0.5 rounded-full text-caption bg-white/[0.06] text-white/50">
-              {t}분
-            </span>
-          ))}
-          {branchCode && (
-            <span className="px-2 py-0.5 rounded-full text-caption bg-white/[0.06] text-white/50 font-mono">
-              {branchCode}
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="mb-8">
       <p className="text-caption text-white/25 uppercase tracking-widest mb-4">테마 설계 기획서</p>
@@ -499,50 +425,6 @@ function ThemeBriefSection({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ── 선택된 스토리 섹션 ────────────────────────────────────────────────────────────
-
-function SelectedStorySection({ story }: { story: import('../types/story').StoryProposal }) {
-  return (
-    <div className="mb-6 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03]">
-      <p className="text-caption text-emerald-400/50 uppercase tracking-widest mb-2">선택된 스토리</p>
-      <p className="text-body font-semibold text-white/80 mb-1">{story.title}</p>
-      <p className="text-subhead text-white/45 leading-relaxed mb-3">{story.logline}</p>
-      {story.beats && story.beats.length > 0 && (
-        <div className="grid grid-cols-5 gap-1.5">
-          {story.beats.map((beat) => (
-            <div key={beat.label} className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05]">
-              <p className="text-caption font-bold text-white/25 mb-0.5">{beat.label}</p>
-              <p className="text-[10px] text-white/45 leading-snug line-clamp-3">{beat.description}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── 다음 단계 안내 배너 ──────────────────────────────────────────────────────────
-
-function NextStepBanner({
-  message, buttonLabel, onClick,
-}: {
-  message: string;
-  buttonLabel: string;
-  onClick: () => void;
-}) {
-  return (
-    <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-      <p className="text-subhead text-white/40 leading-relaxed">{message}</p>
-      <button
-        onClick={onClick}
-        className="flex-shrink-0 px-4 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 transition-colors"
-      >
-        {buttonLabel}
-      </button>
     </div>
   );
 }
