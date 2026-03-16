@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import type { GameFlowStep, ProblemMode, AnswerType, OutputType, StageLabel } from '../../types/gameFlow';
 import type { FloorPlanRoomLayout } from '../../types/floorPlan';
-import { clampStepToRoom } from '../../utils/floorPlan';
+import { clampStepToRoom, validateRoomBounds } from '../../utils/floorPlan';
 
 // ── Room color palette ─────────────────────────────────────────────────────────
 
@@ -83,6 +83,9 @@ export default function FloorPlanRoom({
   onUpdateStepPosition,
   onRenameRoom,
 }: FloorPlanRoomProps) {
+  // ── Ensure room is always within valid bounds ──────────────────────────────
+  const validatedLayout = useMemo(() => validateRoomBounds(layout), [layout]);
+
   const colors = ROOM_BG_COLORS[roomIndex % ROOM_BG_COLORS.length];
   const roomRef = useRef<HTMLDivElement>(null);
 
@@ -94,18 +97,18 @@ export default function FloorPlanRoom({
   const handleNameDoubleClick = useCallback((e: React.MouseEvent) => {
     if (!isEditing) return;
     e.stopPropagation();
-    setNameValue(layout.roomName);
+    setNameValue(validatedLayout.roomName);
     setEditingName(true);
     setTimeout(() => nameInputRef.current?.select(), 0);
-  }, [isEditing, layout.roomName]);
+  }, [isEditing, validatedLayout.roomName]);
 
   const commitRename = useCallback(() => {
     const trimmed = nameValue.trim();
     setEditingName(false);
-    if (trimmed && trimmed !== layout.roomName) {
-      onRenameRoom?.(layout.roomName, trimmed);
+    if (trimmed && trimmed !== validatedLayout.roomName) {
+      onRenameRoom?.(validatedLayout.roomName, trimmed);
     }
-  }, [nameValue, layout.roomName, onRenameRoom]);
+  }, [nameValue, validatedLayout.roomName, onRenameRoom]);
 
   const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') commitRename();
@@ -123,7 +126,7 @@ export default function FloorPlanRoom({
     if (!isEditing) return;
     if ((e.target as HTMLElement).dataset.resize) return;
     if ((e.target as HTMLElement).closest('[data-step-chip]')) return;
-    onMoveStart(layout.roomName, e);
+    onMoveStart(validatedLayout.roomName, e);
   };
 
   const handleStepPointerDown = (step: GameFlowStep, index: number, e: React.PointerEvent) => {
@@ -151,12 +154,12 @@ export default function FloorPlanRoom({
 
     // Clamp to room bounds (converting from room percentage to canvas percentage)
     const clamped = clampStepToRoom(
-      layout.x + newX,
-      layout.y + newY,
-      layout.x,
-      layout.y,
-      layout.width,
-      layout.height
+      validatedLayout.x + newX,
+      validatedLayout.y + newY,
+      validatedLayout.x,
+      validatedLayout.y,
+      validatedLayout.width,
+      validatedLayout.height
     );
 
     // Convert back to room-relative percentages
@@ -176,10 +179,10 @@ export default function FloorPlanRoom({
         isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
       style={{
-        left: `${layout.x}%`,
-        top: `${layout.y}%`,
-        width: `${layout.width}%`,
-        height: `${layout.height}%`,
+        left: `${validatedLayout.x}%`,
+        top: `${validatedLayout.y}%`,
+        width: `${validatedLayout.width}%`,
+        height: `${validatedLayout.height}%`,
       }}
       onPointerDown={handleRoomPointerDown}
       onPointerMove={stepDrag ? handleRoomPointerMove : undefined}
@@ -205,7 +208,7 @@ export default function FloorPlanRoom({
               onDoubleClick={handleNameDoubleClick}
               title={isEditing ? '더블클릭으로 이름 변경' : undefined}
             >
-              {layout.roomName}
+              {validatedLayout.roomName}
             </span>
           )}
         </div>
@@ -287,7 +290,7 @@ export default function FloorPlanRoom({
           className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
           onPointerDown={(e) => {
             e.stopPropagation();
-            onResizeStart(layout.roomName, e);
+            onResizeStart(validatedLayout.roomName, e);
           }}
         >
           <svg

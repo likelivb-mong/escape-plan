@@ -7,6 +7,7 @@ import type { PuzzleRecommendationGroup } from '../types/puzzleRecommendation';
 import type { GameFlowPlan } from '../types/gameFlow';
 import type { FloorPlanData } from '../types/floorPlan';
 import { createInitialCells } from '../data/mockMandalart';
+import { normalizeFloorPlan } from '../utils/floorPlan';
 import {
   upsertProject,
   deleteProjectById,
@@ -120,6 +121,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const now = new Date().toISOString();
     const existing = currentProjectId ? loadProjectById(currentProjectId) : null;
 
+    // Always validate & normalize floor plan before saving
+    const validatedFloorPlan = floorPlanData ? normalizeFloorPlan(floorPlanData) : null;
+
     const project: SavedProject = {
       id,
       name: projectName,
@@ -137,7 +141,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       puzzleFlowPlan,
       puzzleRecommendationGroups,
       gameFlowDesign,
-      floorPlanData,
+      floorPlanData: validatedFloorPlan,
       passmapLink,
     };
 
@@ -161,7 +165,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setPuzzleFlowPlan(saved.puzzleFlowPlan);
     setPuzzleRecommendationGroups(saved.puzzleRecommendationGroups);
     setGameFlowDesign(saved.gameFlowDesign);
-    setFloorPlanData(saved.floorPlanData);
+    // Always validate & normalize floor plan after loading
+    setFloorPlanData(saved.floorPlanData ? normalizeFloorPlan(saved.floorPlanData) : null);
     setBranchCode(saved.branchCode ?? null);
     setPassmapLink(saved.passmapLink ?? null);
     setProjectBrief(saved.projectBrief);
