@@ -6,13 +6,12 @@ const WORKFLOW_STEPS = [
   { path: '/story', label: '스토리', shortLabel: '스토리' },
   { path: '/mandalart', label: '만다라트', shortLabel: '만다라트' },
   { path: '/puzzle-flow', label: '퍼즐 플로우', shortLabel: '플로우' },
-  { path: '/puzzle-recommendations', label: '퍼즐 추천', shortLabel: '추천' },
   { path: '/floor-plan', label: '공간 배치', shortLabel: '공간' },
   { path: '/draft', label: '기획안', shortLabel: '기획안' },
 ];
 
 // All paths that belong inside a project workflow
-const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/puzzle-flow', '/puzzle-recommendations', '/floor-plan', '/draft'];
+const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/puzzle-flow', '/floor-plan', '/draft'];
 
 export default function Navbar() {
   const location = useLocation();

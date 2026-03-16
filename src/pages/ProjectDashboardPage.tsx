@@ -48,23 +48,13 @@ const STAGES: Stage[] = [
     accentColor: 'violet',
   },
   {
-    key: 'puzzle-recommendations',
-    label: '퍼즐 추천',
-    description: 'AI 기반 퍼즐 추천 확인',
-    designerNote: '스토리와 연결된 퍼즐만 — 무의미한 자물쇠 지양',
-    path: '/puzzle-recommendations',
-    requiredLevel: 'story',
-    stepNumber: 4,
-    accentColor: 'rose',
-  },
-  {
     key: 'floor-plan',
     label: '공간 배치도',
     description: '방 구조와 동선 설계',
     designerNote: '플레이어의 탐색 동선과 시야 발견 포인트 배치',
     path: '/floor-plan',
     requiredLevel: 'flow',
-    stepNumber: 5,
+    stepNumber: 4,
     accentColor: 'emerald',
   },
   {
@@ -74,7 +64,7 @@ const STAGES: Stage[] = [
     designerNote: '제작팀에게 전달할 수 있는 완성된 테마 문서',
     path: '/draft',
     requiredLevel: 'flow',
-    stepNumber: 6,
+    stepNumber: 5,
     accentColor: 'indigo',
   },
 ];
