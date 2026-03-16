@@ -158,40 +158,37 @@ export default function PassMapThemePage() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 py-6">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="mb-6 flex items-start justify-between">
         <div>
           <button
             onClick={() => navigate(`/passmap/${branchCode}`)}
-            className="text-white/30 hover:text-white/60 text-sm mb-2 inline-block transition-colors"
+            className="text-white/20 hover:text-white/50 text-caption mb-2 inline-block transition-colors"
           >
             ← {branch.name}
           </button>
-          <h1 className="text-title1 text-white font-bold">{theme.name}</h1>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-caption text-white/30 font-mono">{branch.code} · {theme.id}</span>
-            <span className="text-caption text-white/20">·</span>
-            <span className="text-caption text-white/40">{steps.length} steps</span>
+          <h1 className="text-title2 text-white/90 font-bold tracking-tight">{theme.name}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-caption text-white/20 font-mono">{branch.code}</span>
+            <span className="text-caption text-white/30">{steps.length}개 스텝</span>
           </div>
         </div>
 
         {/* View Mode Tabs */}
         <div className="flex items-center gap-2">
           {saveMessage && (
-            <span className="text-caption text-emerald-400/80 animate-[fadeIn_200ms]">
-              {saveMessage}
-            </span>
+            <span className="text-caption text-emerald-400/70">{saveMessage}</span>
           )}
-          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+          <div className="flex gap-0.5 bg-white/[0.04] rounded-lg p-0.5">
             {VIEW_TABS.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => handleViewModeChange(tab.key)}
-                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-md text-[11px] font-semibold tracking-wide transition-all ${
                   viewMode === tab.key
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/40 hover:text-white/70'
+                    ? 'bg-white/[0.10] text-white'
+                    : 'text-white/30 hover:text-white/55'
                 }`}
               >
                 {tab.label}

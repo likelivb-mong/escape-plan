@@ -9,18 +9,16 @@ export default function BranchSelector({ branches }: BranchSelectorProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {branches.map((branch) => (
         <button
           key={branch.code}
           onClick={() => navigate(`/passmap/${branch.code}`)}
-          className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition-all hover:border-indigo-500/50 hover:bg-white/10"
+          className="group flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 text-left transition-all hover:border-white/[0.12] hover:bg-white/[0.04]"
         >
-          <div className="text-caption text-white/40 font-mono">{branch.code}</div>
-          <div className="text-title2 text-white mt-1">{branch.name}</div>
-          <div className="absolute top-4 right-4 text-white/20 group-hover:text-indigo-400 transition-colors text-2xl">
-            →
-          </div>
+          <span className="text-caption text-white/25 font-mono w-10 flex-shrink-0">{branch.code}</span>
+          <span className="text-body text-white/75 font-medium flex-1">{branch.name}</span>
+          <span className="text-white/15 group-hover:text-white/40 transition-colors text-caption">→</span>
         </button>
       ))}
     </div>

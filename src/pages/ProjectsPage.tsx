@@ -63,16 +63,7 @@ function ProjectCard({ project, onOpen, onDelete }: ProjectCardProps) {
   const playTimes = (project.playTimes ?? []).join('/');
 
   return (
-    <div className="group relative flex flex-col rounded-2xl border border-white/[0.07] bg-white/[0.04] hover:bg-white/[0.07] hover:border-white/[0.12] transition-all duration-300 overflow-hidden">
-      {/* Top accent bar based on completion */}
-      <div
-        className={`h-0.5 w-full ${
-          project.completionLevel === 'draft'  ? 'bg-gradient-to-r from-emerald-500/0 via-emerald-400/60 to-emerald-500/0' :
-          project.completionLevel === 'flow'   ? 'bg-gradient-to-r from-violet-500/0 via-violet-400/60 to-violet-500/0' :
-          project.completionLevel === 'story'  ? 'bg-gradient-to-r from-sky-500/0 via-sky-400/60 to-sky-500/0' :
-                                                  'bg-gradient-to-r from-amber-500/0 via-amber-400/60 to-amber-500/0'
-        }`}
-      />
+    <div className="group relative flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.10] transition-all overflow-hidden shadow-subtle">
 
       <div className="flex flex-col flex-1 p-5 gap-3">
         {/* Header */}
@@ -139,7 +130,7 @@ function ProjectCard({ project, onOpen, onDelete }: ProjectCardProps) {
               </button>
               <button
                 onClick={() => onOpen(project)}
-                className="px-4 py-1.5 rounded-lg bg-indigo-500/90 text-white text-subhead font-semibold hover:bg-indigo-400 active:scale-[0.98] transition-all"
+                className="px-4 py-1.5 rounded-lg bg-white/90 text-black text-subhead font-semibold hover:bg-white active:scale-[0.98] transition-all"
               >
                 열기
               </button>
@@ -228,7 +219,7 @@ export default function ProjectsPage() {
           </div>
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 text-white text-subhead font-semibold hover:bg-indigo-400 active:scale-[0.98] transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 active:scale-[0.98] transition-all"
           >
             <PlusIcon />
             새 테마

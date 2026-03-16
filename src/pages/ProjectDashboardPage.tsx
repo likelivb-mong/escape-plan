@@ -89,12 +89,12 @@ const GENRE_KR: Record<string, string> = {
 };
 
 const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string; dot: string }> = {
-  amber:   { border: 'border-amber-500/20',   text: 'text-amber-400',   bg: 'bg-amber-500/5',   dot: 'bg-amber-400' },
-  sky:     { border: 'border-sky-500/20',     text: 'text-sky-400',     bg: 'bg-sky-500/5',     dot: 'bg-sky-400' },
-  violet:  { border: 'border-violet-500/20',  text: 'text-violet-400',  bg: 'bg-violet-500/5',  dot: 'bg-violet-400' },
-  rose:    { border: 'border-rose-500/20',    text: 'text-rose-400',    bg: 'bg-rose-500/5',    dot: 'bg-rose-400' },
-  emerald: { border: 'border-emerald-500/20', text: 'text-emerald-400', bg: 'bg-emerald-500/5', dot: 'bg-emerald-400' },
-  indigo:  { border: 'border-indigo-500/20',  text: 'text-indigo-400',  bg: 'bg-indigo-500/5',  dot: 'bg-indigo-400' },
+  amber:   { border: 'border-white/[0.06]',   text: 'text-amber-400',   bg: 'bg-white/[0.03]',   dot: 'bg-amber-400' },
+  sky:     { border: 'border-white/[0.06]',   text: 'text-sky-400',     bg: 'bg-white/[0.03]',   dot: 'bg-sky-400' },
+  violet:  { border: 'border-white/[0.06]',   text: 'text-violet-400',  bg: 'bg-white/[0.03]',   dot: 'bg-violet-400' },
+  rose:    { border: 'border-white/[0.06]',   text: 'text-rose-400',    bg: 'bg-white/[0.03]',   dot: 'bg-rose-400' },
+  emerald: { border: 'border-white/[0.06]',   text: 'text-emerald-400', bg: 'bg-white/[0.03]',   dot: 'bg-emerald-400' },
+  indigo:  { border: 'border-white/[0.06]',   text: 'text-indigo-400',  bg: 'bg-white/[0.03]',   dot: 'bg-indigo-400' },
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ export default function ProjectDashboardPage() {
                 disabled={!available}
                 className={`group text-left rounded-xl border p-4 transition-all duration-200 ${
                   available
-                    ? `${accent.border} bg-white/[0.02] hover:${accent.bg} hover:border-opacity-40 cursor-pointer`
+                    ? `${accent.border} bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12] cursor-pointer`
                     : 'border-white/[0.03] bg-white/[0.01] opacity-30 cursor-not-allowed'
                 }`}
               >
@@ -247,10 +247,10 @@ export default function ProjectDashboardPage() {
         </div>
 
         {/* ── Designer tip ── */}
-        <div className="mt-8 px-4 py-3 rounded-xl border border-white/[0.04] bg-white/[0.015]">
-          <p className="text-caption text-white/25 leading-relaxed">
-            <span className="text-indigo-400/60 font-semibold">설계 원칙</span>
-            <span className="mx-1.5 text-white/10">|</span>
+        <div className="mt-8 px-4 py-3 rounded-xl border border-white/[0.04] bg-white/[0.02]">
+          <p className="text-caption text-white/20 leading-relaxed">
+            <span className="text-white/35 font-medium">설계 원칙</span>
+            <span className="mx-1.5 text-white/10">·</span>
             퍼즐은 "이 퍼즐이 왜 이 스토리에서 필요한가?"라는 질문에 답할 수 있어야 합니다.
             모든 퍼즐은 단서 발견, 사건 해석, 공간 탐색 중 하나의 역할을 가져야 합니다.
           </p>

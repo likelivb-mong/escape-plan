@@ -13,6 +13,7 @@
   --font-size-title2:   clamp(1.0625rem, 0.93rem + 0.37vw, 1.375rem);    /* 17px → 22px */
   --font-size-title1:   clamp(1.25rem,   1.08rem + 0.46vw, 1.75rem);     /* 20px → 28px */
   --font-size-display:  clamp(1.5rem,    1.29rem + 0.59vw, 2.125rem);    /* 24px → 34px */
+  --font-size-hero:     clamp(2rem,      1.6rem  + 1.1vw,  3.25rem);     /* 32px → 52px */
 
   /* ── Line heights ── */
   --line-height-micro:    1.2;
@@ -24,25 +25,30 @@
   --line-height-display:  1.1;
 
   /* ── Shadows (Apple-style layered, dark optimized) ── */
-  --shadow-subtle:   0 1px 2px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.2);
-  --shadow-card:     0 2px 8px rgba(0,0,0,0.35), 0 0 1px rgba(255,255,255,0.04);
-  --shadow-elevated: 0 8px 24px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.06);
-  --shadow-glow:     0 0 20px rgba(99,102,241,0.08), 0 0 60px rgba(99,102,241,0.04);
+  --shadow-subtle:   0 1px 2px rgba(0,0,0,0.3);
+  --shadow-card:     0 2px 12px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(255,255,255,0.04);
+  --shadow-elevated: 0 12px 40px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.06);
+  --shadow-glow:     0 0 30px rgba(99,102,241,0.06), 0 0 80px rgba(99,102,241,0.03);
 }
 
 /* ── Theme: Dark Only ─────────────────────────────────────────────────── */
 
 :root {
-  --page-bg: #08090c;
+  --page-bg: #0a0a0f;
   --page-fg: #e8e8ec;
+  --surface-1: rgba(255,255,255,0.03);
+  --surface-2: rgba(255,255,255,0.05);
+  --surface-3: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-medium: rgba(255,255,255,0.10);
   color-scheme: dark;
 }
 
 /* ── Smooth micro-transitions ─────────────────────────────────────────── */
 *, *::before, *::after {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;
-  transition-duration: 0.15s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 0.2s;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .no-transition, .no-transition * {
@@ -77,29 +83,39 @@
 
   /* Selection */
   ::selection {
-    background: rgba(99, 102, 241, 0.25);
+    background: rgba(99, 102, 241, 0.2);
   }
 
-  /* Thin scrollbar */
+  /* Invisible scrollbar (Apple-style) */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.06);
+    background: transparent;
     border-radius: 3px;
   }
+  *:hover::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.08);
+  }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.15);
   }
 
   /* Focus ring */
   :focus-visible {
-    outline: 2px solid rgba(99,102,241,0.5);
+    outline: 2px solid rgba(99,102,241,0.4);
     outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Input / textarea global reset */
+  input, textarea, select {
+    font-family: inherit;
+    letter-spacing: inherit;
   }
 }
 
@@ -114,8 +130,15 @@
   right: -12px;
   width: 12px;
   height: 1px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06);
 }
 .workflow-connector:last-child::after {
   display: none;
+}
+
+/* ── Glass morphism utility ──────────────────────────────────────────────── */
+.glass {
+  background: rgba(18, 18, 24, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
 }

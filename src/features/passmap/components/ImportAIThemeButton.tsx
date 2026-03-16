@@ -130,10 +130,10 @@ export default function ImportAIThemeButton({ branchCode, onImported }: ImportAI
 
       <button
         onClick={handleFileSelect}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-violet-400/30 bg-violet-500/5 text-violet-300/70 hover:border-violet-400/50 hover:bg-violet-500/10 hover:text-violet-300 transition-all text-sm font-medium"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/[0.10] bg-white/[0.04] text-white/50 hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white/70 transition-all text-[12px] font-medium"
       >
-        <span className="text-base">↑</span>
-        Import AI Theme
+        <span className="text-sm">↑</span>
+        Import
       </button>
 
       {/* Success toast */}
@@ -164,34 +164,34 @@ export default function ImportAIThemeButton({ branchCode, onImported }: ImportAI
 
       {/* Conflict dialog */}
       {conflict && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md mx-4 rounded-2xl border border-white/10 bg-[#1a1a1f] shadow-2xl p-6 space-y-4">
-            <h3 className="text-title3 text-white font-bold">테마 충돌 감지</h3>
-            <p className="text-body text-white/60">
-              <span className="text-white font-medium">"{conflict.data.themeName}"</span> 테마가
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+          <div className="w-full max-w-md mx-4 rounded-2xl border border-white/[0.08] bg-[#161618] shadow-2xl p-6 space-y-4">
+            <h3 className="text-body text-white/90 font-bold">테마 충돌 감지</h3>
+            <p className="text-subhead text-white/50">
+              <span className="text-white/80 font-medium">"{conflict.data.themeName}"</span> 테마가
               이 지점에 이미 존재합니다.
             </p>
-            <p className="text-caption text-white/40">
+            <p className="text-caption text-white/30 leading-relaxed">
               덮어쓰기: 기존 Step을 모두 교체합니다.<br />
               복제 생성: "{conflict.data.themeName} (2)" 이름으로 새로 만듭니다.
             </p>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2 pt-2">
               <button
                 onClick={() => processImport(conflict.data, true)}
-                className="flex-1 px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm font-medium hover:bg-amber-500/20 transition-all"
+                className="flex-1 px-4 py-2 rounded-lg bg-white text-black text-[12px] font-semibold hover:bg-white/90 transition-all"
               >
                 덮어쓰기
               </button>
               <button
                 onClick={() => processImport(conflict.data, false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-medium hover:bg-indigo-500/20 transition-all"
+                className="flex-1 px-4 py-2 rounded-lg border border-white/[0.10] bg-white/[0.06] text-white/70 text-[12px] font-medium hover:bg-white/[0.10] transition-all"
               >
                 복제 생성
               </button>
               <button
                 onClick={() => setConflict(null)}
-                className="px-4 py-2 rounded-lg border border-white/10 text-white/40 text-sm hover:text-white/60 transition-all"
+                className="px-4 py-2 rounded-lg text-white/30 text-[12px] hover:text-white/50 transition-all"
               >
                 취소
               </button>

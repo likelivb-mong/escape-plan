@@ -240,13 +240,13 @@ export default function FloorPlanPage() {
               <span className="text-caption text-emerald-400/80">{saveMessage}</span>
             )}
           </div>
-          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+          <div className="flex gap-0.5 bg-white/[0.04] rounded-lg p-0.5">
             {(['map', 'flow', 'editor'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setPmViewMode(m)}
-                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  pmViewMode === m ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/70'
+                className={`px-4 py-1.5 rounded-md text-[11px] font-semibold tracking-wide transition-all ${
+                  pmViewMode === m ? 'bg-white/[0.10] text-white' : 'text-white/30 hover:text-white/55'
                 }`}
               >
                 {m.toUpperCase()}

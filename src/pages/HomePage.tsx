@@ -253,43 +253,43 @@ export default function HomePage() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-start px-4 sm:px-6 py-8 sm:py-12">
+    <div className="min-h-[calc(100vh-3rem)] flex flex-col items-center justify-start px-4 sm:px-6 py-12 sm:py-16">
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/15 mb-4">
-          <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-          <span className="text-caption font-semibold tracking-wider uppercase text-indigo-300/70">
-            Theme Design Studio
-          </span>
-        </div>
-        <h1 className="text-display font-bold tracking-tight text-white mb-2">
-          새 테마 설계
+      <div className="text-center mb-10">
+        <h1 className="text-hero font-bold tracking-tight text-white/95 mb-3">
+          테마 설계
         </h1>
-        <p className="text-white/35 text-subhead leading-relaxed max-w-md mx-auto">
+        <p className="text-white/30 text-body leading-relaxed max-w-sm mx-auto">
           사건을 정의하고, 플레이어 경험을 설계하세요.
-          <br className="hidden sm:block" />
-          YouTube 분석 또는 직접 구성으로 시작할 수 있습니다.
         </p>
 
-        {/* PassMap Manager shortcut */}
-        <button
-          onClick={() => navigate('/passmap')}
-          className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/20 bg-violet-500/5 text-violet-300/70 hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-300 transition-all text-footnote font-medium"
-        >
-          <span className="text-sm">🗺️</span>
-          PassMap Manager
-          <span className="text-violet-300/30">→</span>
-        </button>
+        {/* Quick links */}
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <button
+            onClick={() => navigate('/passmap')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/60 hover:border-white/[0.15] transition-all text-caption font-medium"
+          >
+            PassMap Manager
+            <span className="text-white/20">→</span>
+          </button>
+          <button
+            onClick={() => navigate('/projects')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/60 hover:border-white/[0.15] transition-all text-caption font-medium"
+          >
+            내 프로젝트
+            <span className="text-white/20">→</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main card — wider for build tab */}
+      {/* Main card */}
       <div
-        className={`w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] overflow-hidden transition-all duration-300 ${
+        className={`w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all duration-300 shadow-card ${
           activeTab === 'build' ? 'max-w-2xl lg:max-w-4xl' : 'max-w-lg sm:max-w-xl lg:max-w-2xl'
         }`}
       >
         {/* Tab bar */}
-        <div className="flex border-b border-white/[0.07]">
+        <div className="flex border-b border-white/[0.06] px-1 pt-1">
           <TabButton active={activeTab === 'youtube'} onClick={() => setActiveTab('youtube')}>
             YouTube 분석
           </TabButton>
@@ -299,7 +299,7 @@ export default function HomePage() {
         </div>
 
         {/* Tab content */}
-        <div className="p-6">
+        <div className="p-6 sm:p-8">
           {activeTab === 'youtube' ? (
             <YouTubeTab
               youtubeUrl={youtubeUrl}
@@ -344,10 +344,10 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`flex-1 py-3 text-subhead font-medium transition-all duration-200 ${
+      className={`flex-1 py-2.5 rounded-lg text-subhead font-medium transition-all ${
         active
-          ? 'text-white border-b-2 border-indigo-400 bg-white/[0.02]'
-          : 'text-white/30 hover:text-white/50 hover:bg-white/[0.02]'
+          ? 'text-white bg-white/[0.08]'
+          : 'text-white/30 hover:text-white/50'
       }`}
     >
       {children}
@@ -378,7 +378,7 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
         value={youtubeUrl}
         onChange={(e) => setYoutubeUrl(e.target.value)}
         placeholder="https://youtube.com/watch?v=..."
-        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
+        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/[0.20] focus:bg-white/[0.06] transition-all"
       />
 
       {preview && (
@@ -413,7 +413,7 @@ function YouTubeTab({ youtubeUrl, setYoutubeUrl, preview, youtubeLoading, youtub
       <button
         onClick={onGenerate}
         disabled={!youtubeUrl.trim() || youtubeLoading}
-        className="mt-2 w-full py-3 rounded-xl text-body font-semibold transition-all duration-200 bg-indigo-500 text-white hover:bg-indigo-400 disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="mt-2 w-full py-3 rounded-xl text-body font-semibold transition-all duration-200 bg-white text-black hover:bg-white/90 disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {youtubeLoading ? (
           <>
@@ -494,7 +494,7 @@ function BuildTab({
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               placeholder="테마 이름을 입력하세요"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/[0.20] focus:bg-white/[0.06] transition-all"
             />
           </Field>
 
@@ -590,7 +590,7 @@ function BuildTab({
               onChange={(e) => setSynopsis(e.target.value)}
               placeholder="생성하려는 스토리의 핵심 주제와 방향을 입력하세요"
               rows={3}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/30 focus:bg-white/8 transition-all duration-200 resize-none"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-body text-white placeholder:text-white/20 outline-none focus:border-white/[0.20] focus:bg-white/[0.06] transition-all resize-none"
             />
           </Field>
           <Field label="기승전반결">
@@ -603,7 +603,7 @@ function BuildTab({
       <button
         onClick={onSubmit}
         disabled={!projectName.trim()}
-        className="mt-3 w-full py-3 rounded-xl text-body font-semibold transition-all duration-200 bg-indigo-500 text-white hover:bg-indigo-400 active:scale-[0.99] disabled:opacity-25 disabled:cursor-not-allowed"
+        className="mt-3 w-full py-3 rounded-xl text-body font-semibold transition-all duration-200 bg-white text-black hover:bg-white/90 active:scale-[0.99] disabled:opacity-25 disabled:cursor-not-allowed"
       >
         테마 설계 시작 →
       </button>
