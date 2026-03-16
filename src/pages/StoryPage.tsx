@@ -20,7 +20,7 @@ export default function StoryPage() {
   const {
     projectName, setProjectName, cells, setCells,
     selectedStory, setSelectedStory,
-    aiStoryProposals, projectBrief,
+    aiStoryProposals, setAiStoryProposals, projectBrief,
     saveCurrentProject, forkAsNewProject,
   } = useProject();
 
@@ -115,7 +115,11 @@ export default function StoryPage() {
         ...prev,
         ...Object.fromEntries(newProposals.map((p, i) => [p.id, newVariantIndices[i]])),
       }));
-      setProposals((prev) => [...newProposals, ...prev]);
+      const merged = [...newProposals, ...proposals];
+      setProposals(merged);
+      // 생성된 스토리 목록을 context에 저장
+      setAiStoryProposals(merged);
+      setTimeout(() => saveCurrentProject(), 0);
     } finally {
       setIsAddingBatch(false);
     }

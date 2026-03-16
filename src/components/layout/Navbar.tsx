@@ -2,11 +2,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useProject } from '../../context/ProjectContext';
 
 const WORKFLOW_STEPS = [
+  { path: '/plan', label: 'Plan' },
   { path: '/story', label: 'Story' },
   { path: '/mandalart', label: 'Mandala Chart' },
   { path: '/game-flow', label: 'Game Flow' },
   { path: '/setting', label: 'Setting' },
-  { path: '/plan', label: 'Plan' },
 ];
 
 const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/setting', '/plan'];
