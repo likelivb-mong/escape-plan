@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
-import type { GameFlowStep } from '../../types/gameFlow';
+import type { GameFlowStep, ProblemMode, AnswerType, OutputType } from '../../types/gameFlow';
 import { StageBadge } from './badges';
+
+const PROBLEM_MODES: ProblemMode[] = ['clue', 'device', 'clue_device'];
+const ANSWER_TYPES: AnswerType[] = ['key', 'number_4', 'number_3', 'alphabet_5', 'keypad', 'xkit', 'auto'];
+const OUTPUT_TYPES: OutputType[] = [
+  'door_open', 'hidden_compartment_open', 'led_on', 'tv_on',
+  'xkit_guide_revealed', 'item_acquired', 'next_room_open', 'ending_video', 'escape_clear',
+];
 
 interface StepDetailDrawerProps {
   step: GameFlowStep;
@@ -146,24 +153,20 @@ export default function StepDetailDrawer({
             />
 
             {/* Description */}
-            {step.description && (
-              <EditableField
-                label="설명"
-                value={step.description}
-                onSave={onUpdateStep ? v => onUpdateStep({ description: v }) : undefined}
-                multiline
-              />
-            )}
+            <EditableField
+              label="설명"
+              value={step.description || ''}
+              onSave={onUpdateStep ? v => onUpdateStep({ description: v }) : undefined}
+              multiline
+            />
 
             {/* Hint */}
-            {step.hint && (
-              <EditableField
-                label="힌트"
-                value={step.hint}
-                onSave={onUpdateStep ? v => onUpdateStep({ hint: v }) : undefined}
-                multiline
-              />
-            )}
+            <EditableField
+              label="힌트"
+              value={step.hint || ''}
+              onSave={onUpdateStep ? v => onUpdateStep({ hint: v }) : undefined}
+              multiline
+            />
 
             {/* Room */}
             <div>
@@ -201,11 +204,103 @@ export default function StepDetailDrawer({
 
               {/* Details */}
               {showDetails && (
-                <div className="mt-2 pt-3 border-t border-white/[0.05] space-y-3">
-                  <DetailRow label="문제 방식" value={step.problemMode} />
-                  <DetailRow label="정답 유형" value={step.answerType} />
-                  {step.answer && <DetailRow label="정답" value={step.answer} mono />}
-                  {step.content && <DetailRow label="내용" value={step.content} />}
+                <div className="mt-2 pt-3 border-t border-white/[0.05] space-y-4">
+                  {/* Problem Mode */}
+                  <div>
+                    <p className="text-micro font-semibold text-white/25 uppercase tracking-widest mb-1.5">
+                      문제 방식
+                    </p>
+                    {onUpdateStep ? (
+                      <select
+                        value={step.problemMode}
+                        onChange={e => onUpdateStep({ problemMode: e.target.value as ProblemMode })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/[0.12] bg-white/[0.04] text-footnote text-white/60 cursor-pointer appearance-none outline-none hover:border-white/20 transition-colors"
+                      >
+                        {PROBLEM_MODES.map(mode => (
+                          <option key={mode} value={mode} className="bg-black text-white/70">
+                            {mode}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-footnote text-white/60">{step.problemMode}</p>
+                    )}
+                  </div>
+
+                  {/* Answer Type */}
+                  <div>
+                    <p className="text-micro font-semibold text-white/25 uppercase tracking-widest mb-1.5">
+                      정답 유형
+                    </p>
+                    {onUpdateStep ? (
+                      <select
+                        value={step.answerType}
+                        onChange={e => onUpdateStep({ answerType: e.target.value as AnswerType })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/[0.12] bg-white/[0.04] text-footnote text-white/60 cursor-pointer appearance-none outline-none hover:border-white/20 transition-colors"
+                      >
+                        {ANSWER_TYPES.map(type => (
+                          <option key={type} value={type} className="bg-black text-white/70">
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-footnote text-white/60">{step.answerType}</p>
+                    )}
+                  </div>
+
+                  {/* Answer */}
+                  <EditableField
+                    label="정답"
+                    value={step.answer || ''}
+                    onSave={onUpdateStep ? v => onUpdateStep({ answer: v }) : undefined}
+                    multiline
+                  />
+
+                  {/* Content */}
+                  <EditableField
+                    label="내용"
+                    value={step.content || ''}
+                    onSave={onUpdateStep ? v => onUpdateStep({ content: v }) : undefined}
+                    multiline
+                  />
+
+                  {/* Output Type */}
+                  <div>
+                    <p className="text-micro font-semibold text-white/25 uppercase tracking-widest mb-1.5">
+                      출력 타입
+                    </p>
+                    {onUpdateStep ? (
+                      <select
+                        value={step.output}
+                        onChange={e => onUpdateStep({ output: e.target.value as OutputType })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/[0.12] bg-white/[0.04] text-footnote text-white/60 cursor-pointer appearance-none outline-none hover:border-white/20 transition-colors"
+                      >
+                        {OUTPUT_TYPES.map(type => (
+                          <option key={type} value={type} className="bg-black text-white/70">
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-footnote text-white/60">{step.output}</p>
+                    )}
+                  </div>
+
+                  {/* Input Label */}
+                  <EditableField
+                    label="입력 레이블"
+                    value={step.inputLabel || ''}
+                    onSave={onUpdateStep ? v => onUpdateStep({ inputLabel: v }) : undefined}
+                  />
+
+                  {/* Notes */}
+                  <EditableField
+                    label="메모"
+                    value={step.notes || ''}
+                    onSave={onUpdateStep ? v => onUpdateStep({ notes: v }) : undefined}
+                    multiline
+                  />
                 </div>
               )}
             </div>
@@ -226,23 +321,3 @@ export default function StepDetailDrawer({
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div>
-      <p className="text-micro font-semibold text-white/25 uppercase tracking-widest mb-1">
-        {label}
-      </p>
-      <p className={`text-footnote text-white/50 ${mono ? 'font-mono' : ''}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
