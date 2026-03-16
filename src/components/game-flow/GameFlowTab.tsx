@@ -4,7 +4,6 @@ import type { GameFlowPlan, GameFlowStep, ProblemMode, AnswerType, StageLabel } 
 import { useProject } from '../../context/ProjectContext';
 import StepListPanel from './StepListPanel';
 import StepDetailPanel from './StepDetailPanel';
-import ExportToPassMapButton from './ExportToPassMapButton';
 
 interface GameFlowTabProps {
   plan: GameFlowPlan;
@@ -336,7 +335,6 @@ function GameFlowSummaryBar({
 
       <div className="flex-1" />
 
-      <ExportToPassMapButton plan={plan} />
       <button
         onClick={onGoToFloorPlan}
         className="px-4 py-2 rounded-full border border-white/[0.10] text-subhead text-white/45 hover:border-white/20 hover:text-white/70 transition-all"

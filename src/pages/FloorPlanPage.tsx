@@ -6,7 +6,6 @@ import type { FloorPlanData } from '../types/floorPlan';
 import type { ThemeStep, StepDetail, PassMapViewMode } from '../features/passmap/types/passmap';
 
 import FloorPlanCanvas from '../components/floor-plan/FloorPlanCanvas';
-import PassMapTable from '../components/floor-plan/PassMapTable';
 import MiniMapCanvas from '../features/passmap/components/MiniMapCanvas';
 import StepListPanel from '../features/passmap/components/StepListPanel';
 import StepDetailCard from '../features/passmap/components/StepDetailCard';
@@ -36,6 +35,7 @@ export default function FloorPlanPage() {
     floorPlanData,
     setFloorPlanData,
     branchCode,
+    setBranchCode,
     passmapLink,
     setPassmapLink,
   } = useProject();
@@ -401,8 +401,19 @@ export default function FloorPlanPage() {
       ) : passmapLink ? (
         renderPassMapView()
       ) : (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 print:px-0 print:py-0">
-          <PassMapTable plan={gameFlowDesign} projectName={projectName} />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6">
+          <p className="text-body text-white/50">PassMap 연동을 위해 지점을 선택하세요</p>
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            {MOCK_BRANCHES.map((b) => (
+              <button
+                key={b.code}
+                onClick={() => setBranchCode(b.code)}
+                className="px-3 py-1.5 rounded-full text-subhead font-mono font-medium border border-white/10 text-white/40 hover:border-white/30 hover:text-white/60 transition-all"
+              >
+                {b.code}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

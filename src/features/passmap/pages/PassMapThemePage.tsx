@@ -147,10 +147,10 @@ export default function PassMapThemePage() {
         <div className="text-white/40 text-center py-20">
           테마를 찾을 수 없습니다.
           <button
-            onClick={() => navigate('/passmap')}
-            className="block mx-auto mt-4 text-indigo-400 hover:text-indigo-300 transition-colors"
+            onClick={() => navigate('/projects')}
+            className="block mx-auto mt-4 text-white/40 hover:text-white/60 transition-colors"
           >
-            ← 지점 목록으로
+            ← 프로젝트 목록으로
           </button>
         </div>
       </div>
@@ -163,10 +163,10 @@ export default function PassMapThemePage() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <button
-            onClick={() => navigate(`/passmap/${branchCode}`)}
+            onClick={() => navigate('/projects')}
             className="text-white/20 hover:text-white/50 text-caption mb-2 inline-block transition-colors"
           >
-            ← {branch.name}
+            ← 프로젝트
           </button>
           <h1 className="text-title2 text-white/90 font-bold tracking-tight">{theme.name}</h1>
           <div className="flex items-center gap-2 mt-1">
