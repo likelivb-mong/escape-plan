@@ -52,10 +52,19 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
-// ── Default step positions (stacked top-left if none stored) ───────────────────
+// ── Default step positions (grid layout to avoid overlap) ──────────────────────
 
 function getDefaultPos(index: number): { x: number; y: number } {
-  return { x: 3, y: 25 + index * 15 };
+  // 2-column grid layout to prevent overlaps
+  // Each step gets roughly 16% width per column, 18% height per row
+  const cols = 2;
+  const col = index % cols;
+  const row = Math.floor(index / cols);
+
+  return {
+    x: 3 + col * 48,      // Column 1: x=3%, Column 2: x=51%
+    y: 20 + row * 18,     // Row 0: y=20%, Row 1: y=38%, Row 2: y=56%, etc
+  };
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
@@ -163,10 +172,45 @@ export default function FloorPlanRoom({
     );
 
     // Convert back to room-relative percentages
+    let finalX = clamped.x - layout.x;
+    let finalY = clamped.y - layout.y;
+
+    // ⚠️ Prevent overlaps with other steps
+    // Maintain minimum 8% distance from other steps
+    const MIN_DISTANCE = 8;
+    for (const step of steps) {
+      if (step.id === stepDrag.stepId) continue;
+      const otherPos = stepPositions[step.id] ?? getDefaultPos(steps.indexOf(step));
+
+      const dx = Math.abs(finalX - otherPos.x);
+      const dy = Math.abs(finalY - otherPos.y);
+
+      if (dx < MIN_DISTANCE && dy < MIN_DISTANCE) {
+        // Too close, snap away
+        if (dx < dy) {
+          // Snap horizontally
+          finalX = finalX < otherPos.x ? otherPos.x - MIN_DISTANCE : otherPos.x + MIN_DISTANCE;
+        } else {
+          // Snap vertically
+          finalY = finalY < otherPos.y ? otherPos.y - MIN_DISTANCE : otherPos.y + MIN_DISTANCE;
+        }
+      }
+    }
+
+    // Clamp again after collision adjustment
+    const reclamped = clampStepToRoom(
+      validatedLayout.x + finalX,
+      validatedLayout.y + finalY,
+      validatedLayout.x,
+      validatedLayout.y,
+      validatedLayout.width,
+      validatedLayout.height
+    );
+
     onUpdateStepPosition(
       stepDrag.stepId,
-      clamped.x - layout.x,
-      clamped.y - layout.y,
+      reclamped.x - layout.x,
+      reclamped.y - layout.y,
     );
   };
 
@@ -179,6 +223,9 @@ export default function FloorPlanRoom({
         isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
       style={{
+        // ⚠️ CRITICAL: box-sizing must be border-box so border is included in width/height
+        // Without this, border extends beyond the calculated dimensions
+        boxSizing: 'border-box',
         // ⚠️ SAFETY: Direct bounds enforcement at render time
         // Final safety net - ensures ABSOLUTE guarantee that room stays in bounds
         left: `${Math.max(0, Math.min(validatedLayout.x, 100 - validatedLayout.width))}%`,
