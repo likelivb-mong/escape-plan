@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { GameFlowPlan, GameFlowStep } from '../../types/gameFlow';
+import type { GameFlowPlan, GameFlowStep, StageLabel } from '../../types/gameFlow';
 import GameFlowChart from './GameFlowChart';
 
 interface GameFlowTabProps {
@@ -7,7 +7,7 @@ interface GameFlowTabProps {
   isRegenerating: boolean;
   onRegenerate: () => void;
   onUpdatePlan: (plan: GameFlowPlan) => void;
-  onAddStep?: (stageLabel: string) => void;
+  onAddStep?: (stageLabel: StageLabel) => void;
 }
 
 export default function GameFlowTab({
