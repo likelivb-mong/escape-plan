@@ -48,6 +48,7 @@ export default function MiniMapCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ stepId: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
   const roomDragRef = useRef<{ roomName: string; startX: number; startY: number; origX: number; origY: number; origWidth: number; origHeight: number; dragType: 'move' | 'resize' } | null>(null);
+  const finalDragPositionRef = useRef<{ name: string; x: number; y: number; width: number; height: number } | null>(null);
 
   // State for dragging room display (enables visual feedback during drag)
   const [draggedRoom, setDraggedRoom] = useState<{ name: string; x: number; y: number; width: number; height: number } | null>(null);
@@ -125,36 +126,48 @@ export default function MiniMapCanvas({
       if (roomDragRef.current.dragType === 'move') {
         const newX = Math.max(0, Math.min(100 - roomDragRef.current.origWidth, roomDragRef.current.origX + dpx));
         const newY = Math.max(0, Math.min(100 - roomDragRef.current.origHeight, roomDragRef.current.origY + dpy));
-        setDraggedRoom({
+        const draggedData = {
           name: roomDragRef.current.roomName,
           x: newX,
           y: newY,
           width: roomDragRef.current.origWidth,
           height: roomDragRef.current.origHeight,
-        });
+        };
+        setDraggedRoom(draggedData);
+        finalDragPositionRef.current = draggedData;
       } else {
         const newWidth = Math.max(8, Math.min(100 - roomDragRef.current.origX, roomDragRef.current.origWidth + dpx));
         const newHeight = Math.max(8, Math.min(100 - roomDragRef.current.origY, roomDragRef.current.origHeight + dpy));
-        setDraggedRoom({
+        const draggedData = {
           name: roomDragRef.current.roomName,
           x: roomDragRef.current.origX,
           y: roomDragRef.current.origY,
           width: newWidth,
           height: newHeight,
-        });
+        };
+        setDraggedRoom(draggedData);
+        finalDragPositionRef.current = draggedData;
       }
     };
 
     const handleMouseUp = () => {
-      if (roomDragRef.current && draggedRoom) {
-        // Call callbacks only once when drag ends
+      if (roomDragRef.current && finalDragPositionRef.current) {
+        // Call callbacks only once when drag ends using final position from ref
         if (roomDragRef.current.dragType === 'move') {
-          onRoomMove?.(roomDragRef.current.roomName, draggedRoom.x - roomDragRef.current.origX, draggedRoom.y - roomDragRef.current.origY);
+          onRoomMove?.(
+            roomDragRef.current.roomName,
+            finalDragPositionRef.current.x - roomDragRef.current.origX,
+            finalDragPositionRef.current.y - roomDragRef.current.origY
+          );
         } else {
-          onRoomUpdate?.(roomDragRef.current.roomName, { width: draggedRoom.width, height: draggedRoom.height });
+          onRoomUpdate?.(roomDragRef.current.roomName, {
+            width: finalDragPositionRef.current.width,
+            height: finalDragPositionRef.current.height,
+          });
         }
       }
       roomDragRef.current = null;
+      finalDragPositionRef.current = null;
       setDraggedRoom(null);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
