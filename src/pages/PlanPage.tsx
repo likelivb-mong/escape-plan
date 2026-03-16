@@ -12,11 +12,11 @@ const ALL_PLAY_TIMES: PlayTime[] = [60, 70, 80, 90];
 const BEAT_LABELS: ('기' | '승' | '전' | '반전' | '결')[] = ['기', '승', '전', '반전', '결'];
 
 const STAGES = [
-  { key: 'plan', label: 'Plan', path: '/plan' },
-  { key: 'story', label: 'Story', path: '/story' },
-  { key: 'mandalart', label: 'Mandalart', path: '/mandalart' },
-  { key: 'gameflow', label: 'Game Flow', path: '/gameflow' },
-  { key: 'setting', label: 'Setting', path: '/setting' },
+  { key: 'plan',     label: 'Plan',     shortLabel: 'Plan',    path: '/plan' },
+  { key: 'story',    label: 'Story',    shortLabel: 'Story',   path: '/story' },
+  { key: 'mandalart',label: 'Mandalart',shortLabel: 'Mandala', path: '/mandalart' },
+  { key: 'gameflow', label: 'Game Flow',shortLabel: 'Flow',    path: '/game-flow' },
+  { key: 'setting',  label: 'Pass Map', shortLabel: 'PassMap', path: '/setting' },
 ] as const;
 
 export default function PlanPage() {
@@ -108,20 +108,20 @@ export default function PlanPage() {
 
   // ── Shared header ─────────────────────────────────────────────────────────
   const header = (
-    <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
-      <div className="flex items-center gap-2.5">
+    <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0 gap-2">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         <button
           onClick={() => navigate('/')}
-          className="text-white/30 hover:text-white/60 transition-colors text-subhead"
+          className="text-white/30 hover:text-white/60 transition-colors text-subhead flex-shrink-0"
         >
           ← 홈
         </button>
-        <span className="h-3.5 w-px bg-white/10" />
-        <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
-        <span className="h-3.5 w-px bg-white/10" />
-        <span className="text-footnote text-white/35 font-medium tracking-wide">Plan</span>
+        <span className="h-3.5 w-px bg-white/10 flex-shrink-0" />
+        <h1 className="text-body font-semibold text-white/85 truncate">{projectName}</h1>
+        <span className="hidden sm:block h-3.5 w-px bg-white/10 flex-shrink-0" />
+        <span className="hidden sm:block text-footnote text-white/35 font-medium tracking-wide flex-shrink-0">Plan</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 flex-shrink-0">
         {!isEditing ? (
           <button
             onClick={startEdit}
@@ -287,15 +287,15 @@ export default function PlanPage() {
           {/* Progress tracker */}
           <div className="mt-8 mb-6">
             <p className="text-caption text-white/25 uppercase tracking-widest mb-4">진행 현황</p>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 -mx-1 px-1">
               {STAGES.map((stage, i) => {
                 const done = stageStatus[stage.key];
                 const isCurrent = stage.key === 'plan';
                 return (
-                  <div key={stage.key} className="flex items-center gap-1 flex-1">
+                  <div key={stage.key} className="flex items-center gap-1 flex-1 min-w-0">
                     <button
                       onClick={() => navigate(stage.path)}
-                      className={`flex-1 py-2.5 rounded-lg text-center text-caption font-medium transition-all border ${
+                      className={`flex-1 min-w-[56px] py-2 sm:py-2.5 rounded-lg text-center transition-all border ${
                         isCurrent
                           ? 'border-white/25 bg-white/[0.08] text-white/80'
                           : done
@@ -303,10 +303,15 @@ export default function PlanPage() {
                           : 'border-white/[0.06] bg-white/[0.02] text-white/30 hover:border-white/12 hover:text-white/50'
                       }`}
                     >
-                      {done && !isCurrent ? '✓ ' : ''}{stage.label}
+                      <span className="hidden sm:inline text-caption font-medium">
+                        {done && !isCurrent ? '✓ ' : ''}{stage.label}
+                      </span>
+                      <span className="sm:hidden text-[10px] font-medium leading-tight">
+                        {done && !isCurrent ? '✓' : ''}{stage.shortLabel}
+                      </span>
                     </button>
                     {i < STAGES.length - 1 && (
-                      <div className={`w-3 h-px flex-shrink-0 ${done ? 'bg-emerald-500/30' : 'bg-white/[0.08]'}`} />
+                      <div className={`w-2 sm:w-3 h-px flex-shrink-0 ${done ? 'bg-emerald-500/30' : 'bg-white/[0.08]'}`} />
                     )}
                   </div>
                 );

@@ -259,8 +259,8 @@ export default function MandalartPage() {
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
 
       {/* ── Page Header ── */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <SourceBreadcrumb
             projectBrief={projectBrief}
             hasSelectedStory={!!selectedStory}
@@ -268,13 +268,13 @@ export default function MandalartPage() {
             onNavigateBack={(path) => navigate(path)}
           />
           {selectedStory && (
-            <div className="flex items-center gap-2 pl-2 border-l border-white/[0.1]">
+            <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-white/[0.1]">
               <span className="text-footnote text-white/30">스토리:</span>
-              <span className="text-subhead font-medium text-white/70">{selectedStory.title}</span>
+              <span className="text-subhead font-medium text-white/70 truncate max-w-[120px]">{selectedStory.title}</span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={() => saveCurrentProject()}
             className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
@@ -288,15 +288,16 @@ export default function MandalartPage() {
             onTouchStart={handleExamplePressStart}
             onTouchEnd={handleExamplePressEnd}
             title="누르는 동안 예시 미리보기"
-            className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/25 hover:bg-white/[0.04] active:border-white/40 active:text-white/70 transition-all duration-150 select-none"
+            className="hidden sm:block px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/25 hover:bg-white/[0.04] active:border-white/40 active:text-white/70 transition-all duration-150 select-none"
           >
             예시 보기
           </button>
           <button
             onClick={() => navigate('/game-flow')}
-            className="px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 hover:scale-[1.02] active:bg-white/80 active:scale-[0.98] transition-colors"
+            className="px-3 sm:px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
           >
-            Game Flow →
+            <span className="hidden sm:inline">Game Flow →</span>
+            <span className="sm:hidden">Flow →</span>
           </button>
         </div>
       </div>
@@ -434,24 +435,21 @@ function SourceBreadcrumb({
   const effectiveConfig = config; // hasSelectedStory is kept for future use when flows differ
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 min-w-0">
       {effectiveConfig && (
         <>
           <button
             onClick={() => onNavigateBack(effectiveConfig.backPath)}
-            className="text-footnote text-white/30 hover:text-white/60 transition-colors"
+            className="text-footnote text-white/30 hover:text-white/60 transition-colors flex-shrink-0"
           >
-            &larr; {effectiveConfig.label}
+            ← Story
           </button>
-          <span className="text-white/15">/</span>
-          <span className={`px-1.5 py-0.5 rounded-md border text-micro font-medium ${effectiveConfig.badgeStyle}`}>
-            {effectiveConfig.badge}
-          </span>
+          <span className="text-white/15 flex-shrink-0">/</span>
         </>
       )}
-      <h1 className="text-body font-semibold text-white/85">{projectName}</h1>
-      <span className="h-3.5 w-px bg-white/10" />
-      <span className="text-footnote text-white/35 font-medium tracking-wide">만다라트</span>
+      <h1 className="text-body font-semibold text-white/85 truncate">{projectName}</h1>
+      <span className="hidden sm:block h-3.5 w-px bg-white/10 flex-shrink-0" />
+      <span className="hidden sm:block text-footnote text-white/35 font-medium tracking-wide flex-shrink-0">만다라트</span>
     </div>
   );
 }
