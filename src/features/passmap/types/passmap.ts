@@ -5,11 +5,21 @@ export interface Branch {
   name: string;
 }
 
+export interface ThemeRoom {
+  name: string;
+  x: number;       // 0-100 (percentage)
+  y: number;
+  width: number;    // percentage
+  height: number;
+  stepCount: number;
+}
+
 export interface Theme {
   id: string;
   branchCode: string;
   name: string;
   mapImage: string;
+  rooms?: ThemeRoom[];
 }
 
 export type StepType = 'puzzle' | 'lock' | 'device';
