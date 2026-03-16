@@ -21,6 +21,8 @@ interface SyncToPassMapButtonProps {
   onLinked?: (branchCode: string, themeId: string) => void;
   /** If already linked, show the linked branch */
   currentLink?: { branchCode: string; themeId: string } | null;
+  /** Pre-selected branch from project context */
+  defaultBranchCode?: string | null;
 }
 
 type DialogState =
@@ -29,7 +31,7 @@ type DialogState =
   | { type: 'conflict'; branchCode: string; branchName: string; existingId: string; existingName: string }
   | { type: 'success'; result: SyncResult; branchCode: string };
 
-export default function SyncToPassMapButton({ plan, floorPlan, onLinked, currentLink }: SyncToPassMapButtonProps) {
+export default function SyncToPassMapButton({ plan, floorPlan, onLinked, currentLink, defaultBranchCode }: SyncToPassMapButtonProps) {
   const navigate = useNavigate();
   const [dialog, setDialog] = useState<DialogState>({ type: 'closed' });
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -117,10 +119,18 @@ export default function SyncToPassMapButton({ plan, floorPlan, onLinked, current
         </div>
       ) : (
         <button
-          onClick={() => setDialog({ type: 'branch-select' })}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/5 text-violet-300/70 text-footnote font-medium hover:bg-violet-500/10 hover:border-violet-500/30 hover:text-violet-300 transition-all"
+          onClick={() => {
+            if (defaultBranchCode) {
+              const branch = MOCK_BRANCHES.find((b) => b.code === defaultBranchCode);
+              if (branch) {
+                handleBranchSelect(branch.code, branch.name);
+                return;
+              }
+            }
+            setDialog({ type: 'branch-select' });
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.10] bg-white/[0.04] text-white/50 text-footnote font-medium hover:bg-white/[0.08] hover:text-white/70 transition-all"
         >
-          <span className="text-xs">🗺️</span>
           PassMap 연동
         </button>
       )}

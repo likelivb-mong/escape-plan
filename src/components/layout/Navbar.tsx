@@ -84,17 +84,6 @@ export default function Navbar() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          <Link
-            to="/passmap"
-            className={`px-3 py-1.5 rounded-md text-caption font-medium transition-all ${
-              location.pathname.startsWith('/passmap')
-                ? 'text-violet-300/90 bg-violet-500/10'
-                : 'text-white/30 hover:text-violet-300/70 hover:bg-white/[0.04]'
-            }`}
-          >
-            PassMap
-          </Link>
-
           {!isProjects && !isHome && (
             <Link
               to="/projects"

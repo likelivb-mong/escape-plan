@@ -54,6 +54,10 @@ interface ProjectContextValue {
   floorPlanData: FloorPlanData | null;
   setFloorPlanData: (data: FloorPlanData | null) => void;
 
+  // Branch assignment (set at project creation)
+  branchCode: string | null;
+  setBranchCode: (code: string | null) => void;
+
   // PassMap link (branchCode + themeId once synced)
   passmapLink: { branchCode: string; themeId: string } | null;
   setPassmapLink: (link: { branchCode: string; themeId: string } | null) => void;
@@ -88,6 +92,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     useState<PuzzleRecommendationGroup[]>([]);
   const [gameFlowDesign, setGameFlowDesign] = useState<GameFlowPlan | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
+  const [branchCode, setBranchCode] = useState<string | null>(null);
   const [passmapLink, setPassmapLink] = useState<{ branchCode: string; themeId: string } | null>(null);
   const [projectBrief, setProjectBrief] = useState<ProjectBrief | null>(null);
 
@@ -102,6 +107,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setPuzzleRecommendationGroups([]);
     setGameFlowDesign(null);
     setFloorPlanData(null);
+    setBranchCode(null);
     setPassmapLink(null);
     setAiStoryProposals(null);
     setProjectBrief(null);
@@ -124,6 +130,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       playTimes: projectBrief?.playTimes,
       synopsis: projectBrief?.synopsis ?? selectedStory?.logline,
       completionLevel: deriveCompletionLevel(selectedStory, puzzleFlowPlan, gameFlowDesign),
+      branchCode,
       projectBrief,
       cells,
       selectedStory,
@@ -139,7 +146,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return id;
   }, [
     currentProjectId, projectName, selectedStory, puzzleFlowPlan,
-    gameFlowDesign, projectBrief, cells, puzzleRecommendationGroups, floorPlanData, passmapLink,
+    gameFlowDesign, projectBrief, cells, puzzleRecommendationGroups, floorPlanData, branchCode, passmapLink,
   ]);
 
   const loadProject = useCallback((id: string): boolean => {
@@ -155,6 +162,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setPuzzleRecommendationGroups(saved.puzzleRecommendationGroups);
     setGameFlowDesign(saved.gameFlowDesign);
     setFloorPlanData(saved.floorPlanData);
+    setBranchCode(saved.branchCode ?? null);
     setPassmapLink(saved.passmapLink ?? null);
     setProjectBrief(saved.projectBrief);
     return true;
@@ -182,6 +190,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         puzzleRecommendationGroups, setPuzzleRecommendationGroups,
         gameFlowDesign, setGameFlowDesign,
         floorPlanData, setFloorPlanData,
+        branchCode, setBranchCode,
         passmapLink, setPassmapLink,
         projectBrief, setProjectBrief,
         resetForNewProject,

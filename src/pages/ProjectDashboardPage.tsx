@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { loadProjectById, type SavedProject, type CompletionLevel } from '../utils/projectStorage';
+import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 
 // ── Stage definitions — mirrors escape room design pipeline ──────────────────
 
@@ -66,6 +67,16 @@ const STAGES: Stage[] = [
     requiredLevel: 'flow',
     stepNumber: 5,
     accentColor: 'indigo',
+  },
+  {
+    key: 'passmap',
+    label: 'PassMap',
+    description: '운영 매뉴얼 · 스텝 상태 관리',
+    designerNote: '제작 완료 후 현장 운영 데이터를 관리',
+    path: '/floor-plan',
+    requiredLevel: 'flow',
+    stepNumber: 6,
+    accentColor: 'emerald',
   },
 ];
 
@@ -132,6 +143,9 @@ export default function ProjectDashboardPage() {
   const levelCfg = LEVEL_CONFIG[project.completionLevel];
   const genres = (project.genres ?? []).map((g) => GENRE_KR[g] ?? g);
   const playTimes = (project.playTimes ?? []).join('/');
+  const branchName = project.branchCode
+    ? MOCK_BRANCHES.find((b) => b.code === project.branchCode)?.name
+    : null;
   const progressPct = ((LEVEL_ORDER.indexOf(project.completionLevel) + 1) / LEVEL_ORDER.length) * 100;
 
   return (
@@ -163,6 +177,11 @@ export default function ProjectDashboardPage() {
           {/* Meta tags + progress */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-wrap gap-1.5">
+              {branchName && (
+                <span className="px-2 py-0.5 rounded-md bg-white/[0.05] text-caption text-white/50 font-medium">
+                  {branchName}
+                </span>
+              )}
               {genres.map((g) => (
                 <span key={g} className="px-2 py-0.5 rounded-md bg-white/[0.05] text-caption text-white/35 font-medium">
                   {g}
@@ -193,7 +212,7 @@ export default function ProjectDashboardPage() {
           <h2 className="text-body font-semibold text-white/60">테마 설계 파이프라인</h2>
           <div className="h-px flex-1 bg-white/[0.05]" />
           <span className="text-caption text-white/20">
-            스토리 → 만다라트 → 퍼즐 → 공간 → 기획안
+            스토리 → 만다라트 → 퍼즐 → 공간 → 기획안 → PassMap
           </span>
         </div>
 

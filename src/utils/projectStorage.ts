@@ -22,6 +22,7 @@ export interface SavedProject {
   playTimes?: number[];
   synopsis?: string;
   completionLevel: CompletionLevel;
+  branchCode?: string | null;
   // Full state snapshot
   projectBrief: ProjectBrief | null;
   cells: MandalartCellData[];
