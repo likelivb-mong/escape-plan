@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import { generateInitialLayout, reconcileRooms } from '../utils/floorPlan';
+import { generateInitialLayout, reconcileRooms, normalizeFloorPlan } from '../utils/floorPlan';
 import type { FloorPlanData } from '../types/floorPlan';
 import type { ThemeStep, StepDetail, PassMapViewMode } from '../features/passmap/types/passmap';
 
@@ -56,11 +56,12 @@ export default function FloorPlanPage() {
   // ── Auto-generate layout if missing ─────────────────────────────────────────
   useEffect(() => {
     if (!gameFlowDesign) return;
-    if (!floorPlanData) {
-      setFloorPlanData(generateInitialLayout(gameFlowDesign.rooms));
-    } else {
-      const reconciled = reconcileRooms(floorPlanData, gameFlowDesign.rooms);
-      if (reconciled !== floorPlanData) setFloorPlanData(reconciled);
+    let plan = floorPlanData || generateInitialLayout(gameFlowDesign.rooms);
+    const reconciled = reconcileRooms(plan, gameFlowDesign.rooms);
+    // Always normalize to ensure stability
+    const normalized = normalizeFloorPlan(reconciled);
+    if (normalized !== floorPlanData) {
+      setFloorPlanData(normalized);
     }
   }, [gameFlowDesign]); // eslint-disable-line react-hooks/exhaustive-deps
 

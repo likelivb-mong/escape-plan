@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { GameFlowPlan } from '../../types/gameFlow';
 import type { FloorPlanData, DoorLayout, DoorType } from '../../types/floorPlan';
+import { normalizeFloorPlan } from '../../utils/floorPlan';
 import FloorPlanRoom from './FloorPlanRoom';
 import FloorPlanDoor from './FloorPlanDoor';
 
@@ -169,12 +170,14 @@ export default function FloorPlanCanvas({
         } else {
           return {
             ...room,
-            width: snap(clamp(dragState.startW + dx, 10, 100 - room.x)),
-            height: snap(clamp(dragState.startH + dy, 10, 100 - room.y)),
+            width: snap(clamp(dragState.startW + dx, 8, 100 - room.x)),
+            height: snap(clamp(dragState.startH + dy, 8, 100 - room.y)),
           };
         }
       });
-      onUpdateFloorPlan({ ...floorPlan, doors, rooms: updatedRooms });
+      // Normalize to prevent overlaps and invalid states
+      const normalized = normalizeFloorPlan({ ...floorPlan, doors, rooms: updatedRooms });
+      onUpdateFloorPlan(normalized);
     } else {
       const updatedDoors = doors.map(door => {
         if (door.id !== dragState.id) return door;

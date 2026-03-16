@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { GameFlowStep, ProblemMode, AnswerType, OutputType, StageLabel } from '../../types/gameFlow';
 import type { FloorPlanRoomLayout } from '../../types/floorPlan';
+import { clampStepToRoom } from '../../utils/floorPlan';
 
 // ── Room color palette ─────────────────────────────────────────────────────────
 
@@ -143,10 +144,26 @@ export default function FloorPlanRoom({
     const rect = roomRef.current.getBoundingClientRect();
     const dx = ((e.clientX - stepDrag.startPX) / rect.width) * 100;
     const dy = ((e.clientY - stepDrag.startPY) / rect.height) * 100;
+
+    // Calculate new position
+    let newX = stepDrag.startX + dx;
+    let newY = stepDrag.startY + dy;
+
+    // Clamp to room bounds (converting from room percentage to canvas percentage)
+    const clamped = clampStepToRoom(
+      layout.x + newX,
+      layout.y + newY,
+      layout.x,
+      layout.y,
+      layout.width,
+      layout.height
+    );
+
+    // Convert back to room-relative percentages
     onUpdateStepPosition(
       stepDrag.stepId,
-      clamp(stepDrag.startX + dx, 0, 88),
-      clamp(stepDrag.startY + dy, 18, 90),
+      clamped.x - layout.x,
+      clamped.y - layout.y,
     );
   };
 
