@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import type { GameFlowPlan } from '../../types/gameFlow';
 import type { FloorPlanData, DoorLayout, DoorType } from '../../types/floorPlan';
-import { normalizeFloorPlan } from '../../utils/floorPlan';
+import { normalizeFloorPlan, validateRoomBounds } from '../../utils/floorPlan';
 import FloorPlanRoom from './FloorPlanRoom';
 import FloorPlanDoor from './FloorPlanDoor';
 
@@ -43,7 +43,18 @@ export default function FloorPlanCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
 
-  const doors = floorPlan.doors ?? [];
+  // ── Validate and normalize floor plan before rendering ─────────────────────
+  const validatedFloorPlan = useMemo(() => {
+    // Always apply strict validation before rendering
+    const validated = {
+      ...floorPlan,
+      rooms: floorPlan.rooms.map(validateRoomBounds),
+    };
+    // Also apply overlap resolution
+    return normalizeFloorPlan(validated);
+  }, [floorPlan]);
+
+  const doors = validatedFloorPlan.doors ?? [];
 
   // Group steps by room
   const stepsByRoom = new Map<string, typeof plan.steps>();
@@ -60,7 +71,7 @@ export default function FloorPlanCanvas({
   // ── Room handlers ────────────────────────────────────────────────────────────
 
   const handleRoomMoveStart = useCallback((roomName: string, e: React.PointerEvent) => {
-    const room = floorPlan.rooms.find(r => r.roomName === roomName);
+    const room = validatedFloorPlan.rooms.find(r => r.roomName === roomName);
     if (!room) return;
     setDragState({
       type: 'room', id: roomName, mode: 'move',
@@ -68,10 +79,10 @@ export default function FloorPlanCanvas({
       startX: room.x, startY: room.y, startW: room.width, startH: room.height,
     });
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [floorPlan.rooms]);
+  }, [validatedFloorPlan.rooms]);
 
   const handleRoomResizeStart = useCallback((roomName: string, e: React.PointerEvent) => {
-    const room = floorPlan.rooms.find(r => r.roomName === roomName);
+    const room = validatedFloorPlan.rooms.find(r => r.roomName === roomName);
     if (!room) return;
     setDragState({
       type: 'room', id: roomName, mode: 'resize',
@@ -79,7 +90,7 @@ export default function FloorPlanCanvas({
       startX: room.x, startY: room.y, startW: room.width, startH: room.height,
     });
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [floorPlan.rooms]);
+  }, [validatedFloorPlan.rooms]);
 
   // ── Door handlers ────────────────────────────────────────────────────────────
 
@@ -159,7 +170,7 @@ export default function FloorPlanCanvas({
     const dy = ((e.clientY - dragState.startPointerY) / rect.height) * 100;
 
     if (dragState.type === 'room') {
-      const updatedRooms = floorPlan.rooms.map(room => {
+      const updatedRooms = validatedFloorPlan.rooms.map(room => {
         if (room.roomName !== dragState.id) return room;
         if (dragState.mode === 'move') {
           const newX = snap(clamp(dragState.startX + dx, 0, 100 - room.width));
@@ -186,7 +197,7 @@ export default function FloorPlanCanvas({
         }
       });
       // Normalize to prevent overlaps and invalid states
-      const normalized = normalizeFloorPlan({ ...floorPlan, doors, rooms: updatedRooms });
+      const normalized = normalizeFloorPlan({ ...validatedFloorPlan, doors, rooms: updatedRooms });
       onUpdateFloorPlan(normalized);
     } else {
       const updatedDoors = doors.map(door => {
@@ -205,9 +216,9 @@ export default function FloorPlanCanvas({
           };
         }
       });
-      onUpdateFloorPlan({ ...floorPlan, doors: updatedDoors });
+      onUpdateFloorPlan({ ...validatedFloorPlan, doors: updatedDoors });
     }
-  }, [dragState, floorPlan, doors, getContainerRect, onUpdateFloorPlan]);
+  }, [dragState, validatedFloorPlan, doors, getContainerRect, onUpdateFloorPlan]);
 
   const handlePointerUp = useCallback(() => {
     setDragState(null);
@@ -261,14 +272,14 @@ export default function FloorPlanCanvas({
         onPointerUp={isEditing ? handlePointerUp : undefined}
         onPointerCancel={isEditing ? handlePointerUp : undefined}
       >
-        {floorPlan.rooms.map((layout, i) => (
+        {validatedFloorPlan.rooms.map((layout, i) => (
           <FloorPlanRoom
             key={layout.roomName}
             layout={layout}
             steps={stepsByRoom.get(layout.roomName) ?? []}
             roomIndex={i}
             isEditing={isEditing}
-            stepPositions={floorPlan.stepPositions ?? {}}
+            stepPositions={validatedFloorPlan.stepPositions ?? {}}
             onMoveStart={handleRoomMoveStart}
             onResizeStart={handleRoomResizeStart}
             onUpdateStepPosition={handleUpdateStepPosition}
