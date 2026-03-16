@@ -5,6 +5,7 @@ import type { ScenarioFormState, ScenarioBuildResult } from '../types/scenario';
 import { INITIAL_FORM_STATE } from '../types/scenario';
 import { useProject } from '../context/ProjectContext';
 import { analyzeYoutube } from '../services/aiAnalysis';
+import { fetchYouTubeMetadata } from '../utils/youtubeMetadata';
 import { createInitialCells } from '../data/mockMandalart';
 import { buildScenarioResult } from '../utils/scenario';
 import { populateMandalartFromScenario } from '../utils/mandalartFromScenario';
@@ -88,11 +89,13 @@ export default function HomePage() {
     setPreview({ videoId, title: null, channel: null, metaLoading: true });
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `https://noembed.com/embed?url=${encodeURIComponent('https://www.youtube.com/watch?v=' + videoId)}`,
-        );
-        const meta = await res.json();
-        setPreview({ videoId, title: meta.title ?? null, channel: meta.author_name ?? null, metaLoading: false });
+        const metadata = await fetchYouTubeMetadata(videoId);
+        setPreview({
+          videoId,
+          title: metadata?.title ?? null,
+          channel: metadata?.channelName ?? null,
+          metaLoading: false,
+        });
       } catch {
         setPreview((p) => p ? { ...p, metaLoading: false } : null);
       }
