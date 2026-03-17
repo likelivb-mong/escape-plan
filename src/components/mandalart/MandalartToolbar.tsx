@@ -4,10 +4,6 @@ interface MandalartToolbarProps {
   selectedCount: number;
   multiSelectMode: boolean;
   onToggleMultiSelect: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
   onApplyTheme: (theme: NonNullable<MandalartTheme>) => void;
   onClearTheme: () => void;
   onClearSelection: () => void;
@@ -44,10 +40,6 @@ export default function MandalartToolbar({
   selectedCount,
   multiSelectMode,
   onToggleMultiSelect,
-  canUndo,
-  canRedo,
-  onUndo,
-  onRedo,
   onApplyTheme,
   onClearTheme,
   onClearSelection,
@@ -57,26 +49,6 @@ export default function MandalartToolbar({
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap w-full">
-
-      {/* Undo / Redo */}
-      <button
-        onClick={onUndo}
-        disabled={!canUndo}
-        title="되돌리기 (Ctrl+Z)"
-        className="px-2 py-1.5 rounded-full border border-white/[0.08] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/15 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-150"
-      >
-        ↩
-      </button>
-      <button
-        onClick={onRedo}
-        disabled={!canRedo}
-        title="다시하기 (Ctrl+Shift+Z)"
-        className="px-2 py-1.5 rounded-full border border-white/[0.08] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/15 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-150"
-      >
-        ↪
-      </button>
-
-      <div className="h-4 w-px bg-white/10 mx-0.5" />
 
       {/* Color theme buttons */}
       {THEME_BUTTONS.map(({ theme, label, dot, style }) => (
@@ -119,17 +91,10 @@ export default function MandalartToolbar({
 
           <div className="h-4 w-px bg-white/10 mx-0.5" />
 
+          {/* Combined multi-select / deselect toggle */}
           <button
-            onClick={onClearSelection}
-            className="px-3 py-1.5 rounded-full border border-white/[0.08] text-footnote font-medium text-white/25 hover:text-white/45 hover:border-white/15 transition-all duration-150"
-          >
-            선택 해제
-          </button>
-
-          {/* Multi-select toggle + count */}
-          <button
-            onClick={onToggleMultiSelect}
-            title={multiSelectMode ? '중복 선택 해제 (현재 ON)' : '중복 선택 모드 (Ctrl/Cmd 없이 여러 칸 선택)'}
+            onClick={multiSelectMode ? onClearSelection : onToggleMultiSelect}
+            title={multiSelectMode ? '선택 해제' : '중복 선택 모드 (Ctrl/Cmd 없이 여러 칸 선택)'}
             className={[
               'px-3 py-1.5 rounded-full border text-footnote font-medium transition-all duration-150',
               multiSelectMode
@@ -137,7 +102,7 @@ export default function MandalartToolbar({
                 : 'border-white/[0.08] text-white/25 hover:text-white/45 hover:border-white/15',
             ].join(' ')}
           >
-            중복 선택
+            {multiSelectMode ? '선택 해제' : '중복 선택'}
           </button>
 
           <span className="text-footnote text-white/30 tabular-nums">
@@ -156,7 +121,7 @@ export default function MandalartToolbar({
                 : 'border-white/[0.10] text-white/30 hover:text-white/50 hover:border-white/20',
             ].join(' ')}
           >
-            중복 선택
+            {multiSelectMode ? '선택 해제' : '중복 선택'}
           </button>
           <span className="text-footnote text-white/20">칸을 클릭해 선택하세요</span>
         </>

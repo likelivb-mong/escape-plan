@@ -398,10 +398,6 @@ export default function MandalartPage() {
               selectedCount={selectedCellIds.size}
               multiSelectMode={multiSelectMode}
               onToggleMultiSelect={() => setMultiSelectMode((v) => !v)}
-              canUndo={undoCount > 0}
-              canRedo={redoCount > 0}
-              onUndo={handleUndo}
-              onRedo={handleRedo}
               onApplyTheme={handleApplyTheme}
               onClearTheme={handleClearTheme}
               onClearSelection={handleClearSelection}
