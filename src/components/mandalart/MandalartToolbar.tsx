@@ -2,6 +2,8 @@ import type { MandalartTheme } from '../../types/mandalart';
 
 interface MandalartToolbarProps {
   selectedCount: number;
+  multiSelectMode: boolean;
+  onToggleMultiSelect: () => void;
   onApplyTheme: (theme: NonNullable<MandalartTheme>) => void;
   onClearTheme: () => void;
   onClearSelection: () => void;
@@ -36,6 +38,8 @@ const THEME_BUTTONS: {
 
 export default function MandalartToolbar({
   selectedCount,
+  multiSelectMode,
+  onToggleMultiSelect,
   onApplyTheme,
   onClearTheme,
   onClearSelection,
@@ -45,6 +49,35 @@ export default function MandalartToolbar({
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap w-full">
+
+      {/* Multi-select toggle */}
+      <button
+        onClick={onToggleMultiSelect}
+        title={multiSelectMode ? '중복 선택 해제 (현재 ON)' : '중복 선택 모드 (Ctrl/Cmd 없이 여러 칸 선택)'}
+        className={[
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-full border',
+          'text-footnote font-medium transition-all duration-150',
+          multiSelectMode
+            ? 'border-white/30 bg-white/[0.10] text-white/80'
+            : 'border-white/[0.10] text-white/30 hover:text-white/50 hover:border-white/20',
+        ].join(' ')}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0">
+          <rect x="0.5" y="0.5" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1" />
+          <rect x="7" y="0.5" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1" />
+          <rect x="0.5" y="7" width="4.5" height="4.5" rx="1" stroke="currentColor" strokeWidth="1" />
+          {multiSelectMode && (
+            <>
+              <path d="M1.8 2.5L3 3.7L5.2 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8.3 2.5L9.5 3.7L11.7 1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1.8 9L3 10.2L5.2 8" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          )}
+        </svg>
+        중복 선택
+      </button>
+
+      <div className="h-4 w-px bg-white/10 mx-0.5" />
 
       {/* Color theme buttons */}
       {THEME_BUTTONS.map(({ theme, label, dot, style }) => (
