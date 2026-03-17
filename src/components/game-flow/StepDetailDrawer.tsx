@@ -61,7 +61,7 @@ function EditableField({
     return (
       <div>
         {label && (
-          <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-1.5">
+          <p className="text-[10px] font-semibold text-white/45 uppercase tracking-widest mb-1.5">
             {label}
           </p>
         )}
@@ -73,7 +73,7 @@ function EditableField({
             onBlur={commit}
             onKeyDown={e => { if (e.key === 'Escape') { setDraft(value); setEditing(false); } }}
             placeholder={placeholder}
-            className="w-full bg-white/[0.06] border border-white/20 rounded-lg px-3 py-2 text-[13px] text-white/60 outline-none placeholder:text-white/15 resize-none leading-relaxed"
+            className="w-full bg-white/[0.06] border border-white/20 rounded-lg px-3 py-2 text-[13px] text-white/80 outline-none placeholder:text-white/20 resize-none leading-relaxed"
             rows={4}
           />
         ) : (
@@ -88,7 +88,7 @@ function EditableField({
               if (e.key === 'Escape') { setDraft(value); setEditing(false); }
             }}
             placeholder={placeholder}
-            className="w-full bg-white/[0.06] border border-white/20 rounded-lg px-3 py-2 text-[13px] text-white/60 outline-none placeholder:text-white/15"
+            className="w-full bg-white/[0.06] border border-white/20 rounded-lg px-3 py-2 text-[13px] text-white/80 outline-none placeholder:text-white/20"
           />
         )}
       </div>
@@ -101,20 +101,20 @@ function EditableField({
       onClick={onSave ? () => { setDraft(value); setEditing(true); } : undefined}
     >
       {label && (
-        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-1.5">
+        <p className="text-[10px] font-semibold text-white/45 uppercase tracking-widest mb-1.5">
           {label}
         </p>
       )}
       {multiline ? (
         <p className={`text-[13px] leading-relaxed rounded-lg px-2.5 py-2 -mx-2.5 transition-colors ${
-          onSave ? 'group-hover/field:bg-white/[0.03]' : ''
-        } ${value ? 'text-white/55' : 'text-white/15 italic'}`}>
+          onSave ? 'group-hover/field:bg-white/[0.05]' : ''
+        } ${value ? 'text-white/80' : 'text-white/20 italic'}`}>
           {value || placeholder || '클릭하여 입력'}
         </p>
       ) : (
         <p className={`text-[14px] font-medium rounded-lg px-2.5 py-1.5 -mx-2.5 transition-colors ${
-          onSave ? 'group-hover/field:bg-white/[0.03]' : ''
-        } ${value ? 'text-white/70' : 'text-white/15 italic'}`}>
+          onSave ? 'group-hover/field:bg-white/[0.05]' : ''
+        } ${value ? 'text-white/90' : 'text-white/20 italic'}`}>
           {value || placeholder || '클릭하여 입력'}
         </p>
       )}
@@ -143,11 +143,11 @@ export default function StepDetailDrawer({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06] flex-shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-[12px] font-mono text-white/25 bg-white/[0.04] px-2 py-0.5 rounded">
+            <span className="text-[12px] font-mono text-white/50 bg-white/[0.06] px-2 py-0.5 rounded">
               {String(step.stepNumber).padStart(2, '0')} / {totalSteps}
             </span>
             <StageBadge label={step.stageLabel} />
-            <span className="text-[11px] text-white/30">{step.room}</span>
+            <span className="text-[11px] text-white/50">{step.room}</span>
           </div>
           <button
             onClick={onClose}
@@ -202,10 +202,10 @@ export default function StepDetailDrawer({
             {/* ── Answer ── */}
             <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12]">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">
+                <p className="text-[10px] font-semibold text-white/45 uppercase tracking-widest">
                   🔑 정답
                 </p>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-white/30">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.08] text-white/50">
                   {ANSWER_LABEL[step.answerType] ?? step.answerType}
                 </span>
               </div>
@@ -237,14 +237,14 @@ export default function StepDetailDrawer({
 
             {/* ── Room ── */}
             <div>
-              <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-1.5">
+              <p className="text-[10px] font-semibold text-white/45 uppercase tracking-widest mb-1.5">
                 위치
               </p>
               {onUpdateStep ? (
                 <select
                   value={step.room}
                   onChange={e => onUpdateStep({ room: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-white/[0.12] bg-white/[0.04] text-[13px] text-white/60 cursor-pointer appearance-none outline-none hover:border-white/20 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-white/[0.15] bg-white/[0.05] text-[13px] text-white/75 cursor-pointer appearance-none outline-none hover:border-white/25 transition-colors"
                 >
                   {rooms.map(r => (
                     <option key={r} value={r} className="bg-black text-white/70">{r}</option>
@@ -261,7 +261,7 @@ export default function StepDetailDrawer({
                 onClick={() => setShowTechnical(!showTechnical)}
                 className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-white/[0.04] transition-colors flex items-center justify-between"
               >
-                <span className="text-[12px] font-medium text-white/35">
+                <span className="text-[12px] font-medium text-white/50">
                   {showTechnical ? '▼' : '▶'} 기술 설정
                 </span>
               </button>
@@ -337,14 +337,14 @@ function SelectField({
 }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-1.5">
+      <p className="text-[10px] font-semibold text-white/45 uppercase tracking-widest mb-1.5">
         {label}
       </p>
       {onChange ? (
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-white/[0.12] bg-white/[0.04] text-[13px] text-white/60 cursor-pointer appearance-none outline-none hover:border-white/20 transition-colors"
+          className="w-full px-3 py-2 rounded-lg border border-white/[0.15] bg-white/[0.05] text-[13px] text-white/75 cursor-pointer appearance-none outline-none hover:border-white/25 transition-colors"
         >
           {options.map(opt => (
             <option key={opt} value={opt} className="bg-black text-white/70">

@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import type { GameFlowPlan, GameFlowStep, StageLabel, ProblemMode, AnswerType } from '../../types/gameFlow';
+import type { MandalartCellData } from '../../types/mandalart';
 import StepDetailDrawer from './StepDetailDrawer';
 import { StageBadge } from './badges';
 
@@ -14,8 +15,27 @@ const STAGES: { label: StageLabel; title: string; accent: string; border: string
 const STAGE_ORDER: StageLabel[] = ['기', '승', '전', '반전', '결'];
 
 
+// ── Sub-goal config (mirrors mandalartFromStory.ts) ─────────────────────────
+const SUB_GOALS = [
+  { label: '분위기', row: 3, col: 3, theme: 'rose' },
+  { label: '스토리', row: 3, col: 4, theme: 'rose' },
+  { label: '퍼즐',   row: 3, col: 5, theme: 'sky' },
+  { label: '인물',   row: 4, col: 3, theme: 'rose' },
+  { label: '단서',   row: 4, col: 5, theme: 'amber' },
+  { label: '장치',   row: 5, col: 3, theme: 'sky' },
+  { label: '공간',   row: 5, col: 4, theme: 'rose' },
+  { label: '반전',   row: 5, col: 5, theme: 'amber' },
+] as const;
+
+const GOAL_THEME_CLASS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
+  rose:  { bg: 'bg-rose-500/[0.06]',  border: 'border-rose-500/15',  text: 'text-rose-300/80',  dot: 'bg-rose-400/60' },
+  sky:   { bg: 'bg-sky-500/[0.06]',   border: 'border-sky-500/15',   text: 'text-sky-300/80',   dot: 'bg-sky-400/60' },
+  amber: { bg: 'bg-amber-500/[0.06]', border: 'border-amber-500/15', text: 'text-amber-300/80', dot: 'bg-amber-400/60' },
+};
+
 interface GameFlowChartProps {
   plan: GameFlowPlan;
+  cells?: MandalartCellData[];
   onUpdateStep?: (stepId: string, updates: Partial<GameFlowStep>) => void;
   onAddStep?: (stageLabel: StageLabel) => void;
   onDeleteStep?: (stepId: string) => void;
@@ -24,12 +44,31 @@ interface GameFlowChartProps {
 
 export default function GameFlowChart({
   plan,
+  cells,
   onUpdateStep,
   onAddStep,
   onDeleteStep,
   onReorderSteps,
 }: GameFlowChartProps) {
   const [selectedStep, setSelectedStep] = useState<GameFlowStep | null>(null);
+  const [showGoals, setShowGoals] = useState(false);
+
+  // ── Extract mandalart sub-goals ──
+  const subGoals = useMemo(() => {
+    if (!cells?.length) return [];
+    return SUB_GOALS.map((g) => {
+      const cell = cells.find((c) => c.row === g.row && c.col === g.col);
+      const text = cell?.text || g.label;
+      // Count steps whose clueTags or clueTitle loosely match
+      const matchCount = plan.steps.filter((s) =>
+        s.clueTags?.some((t) => t.includes(g.label) || g.label.includes(t)) ||
+        s.clueTitle?.includes(g.label) ||
+        (g.label === '장치' && (s.problemMode === 'device' || s.problemMode === 'clue_device')) ||
+        (g.label === '반전' && s.stageLabel === '반전')
+      ).length;
+      return { ...g, text, matchCount };
+    });
+  }, [cells, plan.steps]);
 
   // ── Drag state ──────────────────────────────────────────────────────────────
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -87,6 +126,41 @@ export default function GameFlowChart({
 
   return (
     <>
+      {/* ── Mandalart Sub-Goals Panel ── */}
+      {subGoals.length > 0 && (
+        <div className="px-5 pt-3 pb-0 flex-shrink-0">
+          <button
+            onClick={() => setShowGoals(!showGoals)}
+            className="flex items-center gap-2 text-[11px] text-white/35 hover:text-white/55 transition-colors mb-2"
+          >
+            <span className={`transition-transform ${showGoals ? 'rotate-90' : ''}`}>▶</span>
+            <span className="font-medium uppercase tracking-wider">만다라트 세부목표</span>
+            <span className="text-white/20">({subGoals.length})</span>
+          </button>
+          {showGoals && (
+            <div className="flex items-center gap-2 flex-wrap pb-3">
+              {subGoals.map((g) => {
+                const tc = GOAL_THEME_CLASS[g.theme] ?? GOAL_THEME_CLASS.rose;
+                return (
+                  <div
+                    key={g.label}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${tc.bg} ${tc.border}`}
+                  >
+                    <div className={`w-1.5 h-1.5 rounded-full ${tc.dot}`} />
+                    <span className={`text-xs font-medium ${tc.text}`}>{g.text}</span>
+                    {g.matchCount > 0 && (
+                      <span className="text-[10px] font-mono text-white/30 tabular-nums">
+                        {g.matchCount}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
         <div className="flex gap-3 p-5 h-full" style={{ minWidth: 'max-content' }}>
           {stepsByStage.map((stage) => {

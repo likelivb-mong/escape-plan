@@ -223,6 +223,7 @@ export default function GameFlowPage() {
           {activeTab === 'chart' && (
             <GameFlowTab
               plan={gamePlan}
+              cells={cells}
               isRegenerating={isRegenerating}
               onRegenerate={handleRegenerate}
               onUpdatePlan={handleUpdatePlan}
