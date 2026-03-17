@@ -183,20 +183,23 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadProject = useCallback((id: string): boolean => {
+    // Show local cache instantly
     const saved = loadProjectById(id);
     if (saved) {
       applyProject(saved);
-      return true;
     }
 
-    // Not in localStorage — try Supabase in background
+    // Always fetch latest from Supabase (cross-device sync)
     loadProjectByIdFromSupabase(id).then((remote) => {
       if (remote) {
-        upsertProject(remote); // cache locally
-        applyProject(remote);
+        // Apply if newer than local or if local didn't exist
+        if (!saved || remote.updatedAt > saved.updatedAt) {
+          applyProject(remote);
+        }
       }
     });
-    return false;
+
+    return !!saved;
   }, [applyProject]);
 
   const deleteProject = useCallback((id: string): void => {
