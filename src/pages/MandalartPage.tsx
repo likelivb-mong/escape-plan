@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { MandalartTheme } from '../types/mandalart';
+import type { MandalartTheme, MandalartCellData } from '../types/mandalart';
 import { useProject } from '../context/ProjectContext';
 import type { ProjectBrief } from '../types';
 import MandalartBoard from '../components/mandalart/MandalartBoard';
@@ -8,6 +8,8 @@ import MandalartToolbar from '../components/mandalart/MandalartToolbar';
 import LinkedKeywordsEditor from '../components/mandalart/LinkedKeywordsEditor';
 import { createExampleCells, EXAMPLE_PROJECT_NAME } from '../data/mockMandalart';
 import WorkflowStepBar from '../components/layout/WorkflowStepBar';
+
+const MAX_UNDO = 50;
 
 export default function MandalartPage() {
   const navigate = useNavigate();
@@ -19,6 +21,53 @@ export default function MandalartPage() {
   const [boardSize, setBoardSize] = useState(600);
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Undo / Redo ──────────────────────────────────────────────────────────
+  const undoStackRef = useRef<MandalartCellData[][]>([]);
+  const redoStackRef = useRef<MandalartCellData[][]>([]);
+
+  /** Snapshot current cells before a mutation */
+  const pushUndo = useCallback(() => {
+    undoStackRef.current.push([...cells]);
+    if (undoStackRef.current.length > MAX_UNDO) undoStackRef.current.shift();
+    redoStackRef.current = []; // clear redo on new action
+  }, [cells]);
+
+  /** setCells with automatic undo snapshot */
+  const setCellsWithUndo = useCallback(
+    (updater: MandalartCellData[] | ((prev: MandalartCellData[]) => MandalartCellData[])) => {
+      pushUndo();
+      setCells(updater);
+    },
+    [pushUndo, setCells],
+  );
+
+  const [undoCount, setUndoCount] = useState(0);
+  const [redoCount, setRedoCount] = useState(0);
+
+  const handleUndo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return;
+    const prev = undoStackRef.current.pop()!;
+    redoStackRef.current.push([...cells]);
+    setCells(prev);
+    setUndoCount(undoStackRef.current.length);
+    setRedoCount(redoStackRef.current.length);
+  }, [cells, setCells]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStackRef.current.length === 0) return;
+    const next = redoStackRef.current.pop()!;
+    undoStackRef.current.push([...cells]);
+    setCells(next);
+    setUndoCount(undoStackRef.current.length);
+    setRedoCount(redoStackRef.current.length);
+  }, [cells, setCells]);
+
+  // Keep counts in sync after mutations
+  const syncHistoryCounts = useCallback(() => {
+    setUndoCount(undoStackRef.current.length);
+    setRedoCount(redoStackRef.current.length);
+  }, []);
 
   // 셀 변경 후 1.5초 debounce 자동 저장
   const debounceSave = useCallback(() => {
@@ -67,18 +116,32 @@ export default function MandalartPage() {
     setSelectedCellIds(new Set());
   }, []);
 
-  // ── Delete key: clear content of selected cells ───────────────────────────
+  // ── Keyboard: Delete, Undo (Ctrl+Z), Redo (Ctrl+Shift+Z / Ctrl+Y) ──────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (editingCellId) return; // don't interfere with textarea editing
+      // ── Undo / Redo ──
+      if ((e.metaKey || e.ctrlKey) && !e.altKey) {
+        if (e.key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          handleUndo();
+          return;
+        }
+        if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+          e.preventDefault();
+          handleRedo();
+          return;
+        }
+      }
+
+      // ── Delete ──
+      if (editingCellId) return;
       if (selectedCellIds.size === 0) return;
       if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-      // Don't fire if a real input/textarea has focus
       const tag = (document.activeElement as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
       e.preventDefault();
-      setCells((prev) => {
+      setCellsWithUndo((prev) => {
         let result = prev;
         for (const id of selectedCellIds) {
           const updated = result.map((c) => (c.id === id ? { ...c, text: '' } : c));
@@ -99,11 +162,12 @@ export default function MandalartPage() {
         }
         return result;
       });
+      syncHistoryCounts();
       setSelectedCellIds(new Set());
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [editingCellId, selectedCellIds, setCells]);
+  }, [editingCellId, selectedCellIds, setCellsWithUndo, handleUndo, handleRedo, syncHistoryCounts]);
 
   // ── Edit ───────────────────────────────────────────────────────────────────
   const handleStartEdit = useCallback((id: string) => {
@@ -130,7 +194,7 @@ export default function MandalartPage() {
       setEditingCellId(null);
       if (newText === null) return; // ESC — discard
 
-      setCells((prev) => {
+      setCellsWithUndo((prev) => {
         const updated = prev.map((c) => (c.id === id ? { ...c, text: newText } : c));
         const edited = prev.find((c) => c.id === id);
         if (!edited) return updated;
@@ -160,15 +224,16 @@ export default function MandalartPage() {
 
         return updated;
       });
+      syncHistoryCounts();
       debounceSave();
     },
-    [setCells, debounceSave]
+    [setCellsWithUndo, debounceSave, syncHistoryCounts]
   );
 
   // ── Swap cells (drag-to-reposition) ───────────────────────────────────────
   const handleSwapCells = useCallback(
     (id1: string, id2: string) => {
-      setCells((prev) => {
+      setCellsWithUndo((prev) => {
         const c1 = prev.find((c) => c.id === id1);
         const c2 = prev.find((c) => c.id === id2);
         if (!c1 || !c2) return prev;
@@ -178,38 +243,42 @@ export default function MandalartPage() {
           return c;
         });
       });
+      syncHistoryCounts();
       debounceSave();
     },
-    [setCells, debounceSave]
+    [setCellsWithUndo, debounceSave, syncHistoryCounts]
   );
 
   // ── Theme ──────────────────────────────────────────────────────────────────
   const handleApplyTheme = useCallback(
     (theme: NonNullable<MandalartTheme>) => {
-      setCells((prev) =>
+      setCellsWithUndo((prev) =>
         prev.map((c) => (selectedCellIds.has(c.id) ? { ...c, theme } : c))
       );
+      syncHistoryCounts();
     },
-    [setCells, selectedCellIds]
+    [setCellsWithUndo, selectedCellIds, syncHistoryCounts]
   );
 
   const handleClearTheme = useCallback(() => {
-    setCells((prev) =>
+    setCellsWithUndo((prev) =>
       prev.map((c) => (selectedCellIds.has(c.id) ? { ...c, theme: null } : c))
     );
-  }, [setCells, selectedCellIds]);
+    syncHistoryCounts();
+  }, [setCellsWithUndo, selectedCellIds, syncHistoryCounts]);
 
   // ── Clear selected cells (text + color) ───────────────────────────────────
   const handleClearAllKeywords = useCallback(() => {
     if (selectedCellIds.size === 0) return;
-    setCells((prev) =>
+    setCellsWithUndo((prev) =>
       prev.map((c) =>
         selectedCellIds.has(c.id) && !c.isCenter ? { ...c, text: '', theme: null } : c
       )
     );
+    syncHistoryCounts();
     setSelectedCellIds(new Set());
     debounceSave();
-  }, [setCells, selectedCellIds, debounceSave]);
+  }, [setCellsWithUndo, selectedCellIds, debounceSave, syncHistoryCounts]);
 
   // ── 예시 보기: 누르는 동안만 표시, 떼면 복원 ──────────────────────────────
   const exampleSnapshotRef = useRef<{ name: string; cells: ReturnType<typeof createExampleCells> } | null>(null);
@@ -329,6 +398,10 @@ export default function MandalartPage() {
               selectedCount={selectedCellIds.size}
               multiSelectMode={multiSelectMode}
               onToggleMultiSelect={() => setMultiSelectMode((v) => !v)}
+              canUndo={undoCount > 0}
+              canRedo={redoCount > 0}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
               onApplyTheme={handleApplyTheme}
               onClearTheme={handleClearTheme}
               onClearSelection={handleClearSelection}
