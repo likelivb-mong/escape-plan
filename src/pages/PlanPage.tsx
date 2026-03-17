@@ -86,7 +86,7 @@ export default function PlanPage() {
   const stageStatus = {
     plan: !!projectBrief,
     story: !!selectedStory,
-    mandalart: !!(cells && cells.length > 0),
+    mandalart: !!selectedStory && !!(cells && cells.length > 0),
     gameflow: !!gameFlowDesign,
     setting: !!floorPlanData,
   };
