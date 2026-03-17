@@ -20,7 +20,7 @@ const STORAGE_KEYS = {
 } as const;
 
 // Bump this when mock data changes to trigger merge of new mocks
-const CURRENT_VERSION = '5';
+const CURRENT_VERSION = '6';
 
 // ── Change event system ─────────────────────────────────────────────────────
 // Allows React components to subscribe to store changes
