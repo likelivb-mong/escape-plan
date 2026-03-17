@@ -158,8 +158,67 @@ export default function HomePage() {
       const result = await analyzeYoutube(url, setYoutubeStep);
       setYoutubeProgress(100);
       setYoutubeAnalysisResult(result);
-      // AI 분석에서 나온 프로젝트명 자동으로 설정
+
+      // ── Auto-fill all form fields from analysis ──
       setProjectName(result.projectName || '');
+      if (result.videoSynopsis) setSynopsis(result.videoSynopsis);
+      if (result.videoBeats?.length) {
+        const newBeats: Record<string, string> = { '기': '', '승': '', '전': '', '반전': '', '결': '' };
+        for (const b of result.videoBeats) newBeats[b.label] = b.description;
+        setBeats(newBeats);
+      }
+
+      // Infer genres from story proposals
+      if (result.stories?.length) {
+        const GENRE_MAP: Record<string, Genre> = {
+          '공포': 'horror', '호러': 'horror',
+          '미스터리': 'mystery', '추리': 'mystery',
+          '어드벤처': 'adventure', '모험': 'adventure',
+          '스릴러': 'thriller', '긴박': 'thriller', '심리': 'thriller',
+          '판타지': 'fantasy',
+          'sf': 'sci-fi', '사이파이': 'sci-fi',
+          '로맨스': 'romance',
+          '코미디': 'comedy',
+        };
+        const inferred = new Set<Genre>();
+        for (const s of result.stories) {
+          const g = (s.genre || '').toLowerCase();
+          for (const [keyword, genre] of Object.entries(GENRE_MAP)) {
+            if (g.includes(keyword)) inferred.add(genre);
+          }
+        }
+        if (inferred.size > 0) setGenres([...inferred]);
+
+        // Infer playtime from first story
+        const ptMatch = result.stories[0]?.meta?.playtime?.match(/(\d+)/);
+        if (ptMatch) {
+          const mins = parseInt(ptMatch[1], 10);
+          const closest = PLAY_TIMES.reduce((a, b) => Math.abs(b - mins) < Math.abs(a - mins) ? b : a);
+          setPlayTimes([closest]);
+        }
+      }
+
+      // Infer puzzle types from narrative tags
+      const tags = result.narrative?.escapeRoomUsefulPoints?.tags ?? [];
+      const tagsText = tags.join(' ').toLowerCase();
+      const puzzleInferred: PuzzleType[] = [];
+      if (tagsText.match(/추리|수사|탐정/)) puzzleInferred.push('추리');
+      if (tagsText.match(/관찰|발견|탐색/)) puzzleInferred.push('관찰');
+      if (tagsText.match(/수리|숫자|계산|암호/)) puzzleInferred.push('수리');
+      if (tagsText.match(/협동|협력|팀/)) puzzleInferred.push('협동');
+      if (tagsText.match(/활동|신체|움직/)) puzzleInferred.push('활동');
+      if (tagsText.match(/오감|감각|소리|냄새/)) puzzleInferred.push('오감');
+      if (puzzleInferred.length > 0) setPuzzleTypes(puzzleInferred);
+
+      // Infer clue formats from narrative
+      const clueInferred: ClueFormat[] = [];
+      if (tagsText.match(/텍스트|문서|편지|일기|uv|영상|사진/)) clueInferred.push('평면');
+      if (tagsText.match(/물품|장치|기계|열쇠|상자|입체/)) clueInferred.push('입체');
+      if (tagsText.match(/공간|배치|동선|지도|방/)) clueInferred.push('공간');
+      if (tagsText.match(/감각|시각|청각|촉각|소리|빛/)) clueInferred.push('감각');
+      if (clueInferred.length > 0) setClueFormats(clueInferred);
+
+      setAnalyzeFromYoutube(true);
     } catch (err) {
       setYoutubeError(err instanceof Error ? err.message : 'AI 분석 중 오류가 발생했습니다.');
     } finally {
@@ -392,10 +451,23 @@ function BuildTab({
   analyzeFromYoutube, setAnalyzeFromYoutube,
   youtubeAnalysisResult,
 }: BuildTabProps) {
-  const [openSection, setOpenSection] = useState<string>('basic');
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['basic']));
+
+  // When YouTube analysis completes, open all sections to show auto-filled data
+  const prevAnalysisRef = useRef(youtubeAnalysisResult);
+  useEffect(() => {
+    if (youtubeAnalysisResult && youtubeAnalysisResult !== prevAnalysisRef.current) {
+      prevAnalysisRef.current = youtubeAnalysisResult;
+      setOpenSections(new Set(['youtube', 'basic', 'scenario', 'puzzle', 'story']));
+    }
+  }, [youtubeAnalysisResult]);
 
   const toggle = (key: string) =>
-    setOpenSection((prev) => (prev === key ? '' : key));
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
 
   return (
     <div className="flex flex-col gap-4">
@@ -403,10 +475,10 @@ function BuildTab({
       <SectionHeader
         title="📺 참고 자료 (선택사항)"
         subtitle="YouTube 영상을 기반으로 테마 기획하기"
-        open={openSection === 'youtube'}
+        open={openSections.has('youtube')}
         onToggle={() => toggle('youtube')}
       />
-      {openSection === 'youtube' && (
+      {openSections.has('youtube') && (
         <div className="flex flex-col gap-4 pl-1">
           <Field label="YouTube 링크">
             <input
@@ -519,10 +591,10 @@ function BuildTab({
       <SectionHeader
         title="기본 정보"
         subtitle="프로젝트명, 시간, 장르"
-        open={openSection === 'basic'}
+        open={openSections.has('basic')}
         onToggle={() => toggle('basic')}
       />
-      {openSection === 'basic' && (
+      {openSections.has('basic') && (
         <div className="flex flex-col gap-4 pl-1">
           <BranchSelector selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
           <Field label="프로젝트 이름">
@@ -561,10 +633,10 @@ function BuildTab({
       <SectionHeader
         title="사건 요소"
         subtitle="인물, 장소, 범행동기, 수사단서"
-        open={openSection === 'scenario'}
+        open={openSections.has('scenario')}
         onToggle={() => toggle('scenario')}
       />
-      {openSection === 'scenario' && (
+      {openSections.has('scenario') && (
         <div className="pl-1">
           <ScenarioForm form={scenarioForm} onChange={setScenarioForm} />
           {scenarioResult && (
@@ -582,10 +654,10 @@ function BuildTab({
       <SectionHeader
         title="문제 유형"
         subtitle="퍼즐 유형 + 클루 형태"
-        open={openSection === 'puzzle'}
+        open={openSections.has('puzzle')}
         onToggle={() => toggle('puzzle')}
       />
-      {openSection === 'puzzle' && (
+      {openSections.has('puzzle') && (
         <div className="flex flex-col gap-4 pl-1">
           <Field label="퍼즐 유형">
             <div className="flex flex-wrap gap-1.5">
@@ -616,10 +688,10 @@ function BuildTab({
       <SectionHeader
         title="스토리 흐름"
         subtitle="시놉시스 + 기승전반결 (선택사항)"
-        open={openSection === 'story'}
+        open={openSections.has('story')}
         onToggle={() => toggle('story')}
       />
-      {openSection === 'story' && (
+      {openSections.has('story') && (
         <div className="flex flex-col gap-4 pl-1">
           <Field label="스토리 핵심 흐름">
             <textarea
