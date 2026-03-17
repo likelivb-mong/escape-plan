@@ -12,6 +12,7 @@ export interface ThemeRoom {
   width: number;    // percentage
   height: number;
   stepCount: number;
+  tiles?: { row: number; col: number }[]; // pixel-art tile cells (5% per cell)
 }
 
 export interface Theme {

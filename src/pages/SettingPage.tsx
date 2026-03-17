@@ -422,6 +422,7 @@ export default function SettingPage() {
                   onStepMove={isEditing ? handleStepMove : undefined}
                   onRoomUpdate={isEditing ? handleUpdateRoom : undefined}
                   onRoomMove={isEditing ? handleRoomMove : undefined}
+                  details={pmDetails}
                 />
               </div>
               <div>
