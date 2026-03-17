@@ -6,6 +6,7 @@ import type { FloorPlanData } from '../types/floorPlan';
 import type { ThemeStep, StepDetail, PassMapViewMode, ThemeRoom } from '../features/passmap/types/passmap';
 
 import FloorPlanCanvas from '../components/floor-plan/FloorPlanCanvas';
+import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 import MiniMapCanvas from '../features/passmap/components/MiniMapCanvas';
 import StepListPanel from '../features/passmap/components/StepListPanel';
 import StepDetailCard from '../features/passmap/components/StepDetailCard';
@@ -311,6 +312,9 @@ export default function SettingPage() {
           </button>
         </div>
       </div>
+
+      {/* Workflow step bar */}
+      <WorkflowStepBar onBeforeNavigate={saveCurrentProject} />
 
       {/* ── Content ── */}
       {passmapLink ? (

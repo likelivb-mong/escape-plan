@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import type { ProjectBrief, Genre, PlayTime } from '../types';
+import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 
 const GENRE_LABELS: Record<string, string> = {
   horror: '공포', mystery: '미스터리', adventure: '어드벤처', thriller: '스릴러',
@@ -108,6 +109,7 @@ export default function PlanPage() {
 
   // ── Shared header ─────────────────────────────────────────────────────────
   const header = (
+    <>
     <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0 gap-2">
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <button
@@ -148,13 +150,15 @@ export default function PlanPage() {
           {saved ? '✓ 저장됨' : '저장'}
         </button>
         <button
-          onClick={() => navigate('/story')}
+          onClick={() => { handleSave(); navigate('/story'); }}
           className="px-4 py-1.5 rounded-lg bg-white text-black text-footnote font-semibold hover:bg-white/90 transition-colors"
         >
           Story →
         </button>
       </div>
     </div>
+    <WorkflowStepBar onBeforeNavigate={handleSave} />
+    </>
   );
 
   // ── Edit mode ─────────────────────────────────────────────────────────────

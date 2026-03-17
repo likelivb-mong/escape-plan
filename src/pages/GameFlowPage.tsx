@@ -6,6 +6,7 @@ import type { GameFlowPlan } from '../types/gameFlow';
 import GameFlowTab from '../components/game-flow/GameFlowTab';
 import GameFlowStepsView from '../components/game-flow/GameFlowStepsView';
 import GameFlowSummaryView from '../components/game-flow/GameFlowSummaryView';
+import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 
 type SubTab = 'chart' | 'steps' | 'summary';
 
@@ -158,6 +159,9 @@ export default function GameFlowPage() {
           </button>
         </div>
       </div>
+
+      {/* Workflow step bar */}
+      <WorkflowStepBar onBeforeNavigate={handleSave} />
 
       {/* ── Sub-tab bar ── */}
       {gamePlan && !isGenerating && (

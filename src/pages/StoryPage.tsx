@@ -12,6 +12,7 @@ import { populateMandalartFromStory } from '../utils/mandalartFromStory';
 import ProjectBriefSection from '../components/story/ProjectBriefSection';
 import StoryProposalGrid from '../components/story/StoryProposalGrid';
 import StoryDetailModal from '../components/story/StoryDetailModal';
+import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 
 const GENRE_LABELS: Record<string, string> = {
   horror: '공포', mystery: '미스터리', adventure: '어드벤처', thriller: '스릴러',
@@ -242,6 +243,9 @@ export default function StoryPage() {
           </button>
         </div>
       </div>
+
+      {/* Workflow step bar */}
+      <WorkflowStepBar onBeforeNavigate={saveCurrentProject} />
 
       {/* Info banner when story is already locked */}
       {isStoryLocked && (
