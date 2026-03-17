@@ -200,10 +200,17 @@ function StepRow({
           <Field label="메모" value={step.notes ?? ''} onChange={(v) => onUpdate({ notes: v })} multiline />
         </div>
 
-        {/* Badges */}
-        <div className="flex items-center gap-1.5 flex-wrap mt-4 pt-3 border-t border-white/[0.06]">
-          <ProblemModeBadge mode={step.problemMode} size="xs" />
-          <AnswerTypeBadge type={step.answerType} size="xs" />
+        {/* Badges: 방식 · 입력 ▸ 출력 */}
+        <div className="flex items-center gap-0 mt-4 pt-3 border-t border-white/[0.06]">
+          <div className="flex items-center rounded-l border border-r-0 border-white/[0.08] overflow-hidden">
+            <span className="text-[10px] font-semibold px-2 py-1">
+              <ProblemModeBadge mode={step.problemMode} size="xs" />
+            </span>
+            <span className="text-[10px] font-semibold px-2 py-1 border-l border-white/[0.08]">
+              <AnswerTypeBadge type={step.answerType} size="xs" />
+            </span>
+          </div>
+          <span className="text-[10px] text-white/25 px-1.5">▸</span>
           <OutputBadge output={step.output} />
         </div>
       </div>
@@ -228,15 +235,18 @@ function StepRow({
         </span>
       )}
 
-      {/* Compact meta tags */}
-      <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
-        <span className="text-[9px] font-semibold text-sky-300/60 bg-sky-500/[0.08] px-1.5 py-[1px] rounded border border-sky-500/10">
-          {MODE_LABEL[step.problemMode] ?? step.problemMode}
-        </span>
-        <span className="text-[9px] font-semibold text-white/45 bg-white/[0.05] px-1.5 py-[1px] rounded border border-white/[0.08]">
-          {ANSWER_LABEL[step.answerType] ?? step.answerType}
-        </span>
-        <span className="text-[9px] font-semibold text-emerald-300/60 bg-emerald-500/[0.08] px-1.5 py-[1px] rounded border border-emerald-500/10">
+      {/* Compact meta: 방식 · 입력 ▸ 출력 */}
+      <div className="hidden sm:flex items-center gap-0 flex-shrink-0">
+        <div className="flex items-center rounded-l border border-r-0 border-white/[0.06] overflow-hidden">
+          <span className="text-[9px] font-semibold text-sky-300/60 bg-sky-500/[0.08] px-1.5 py-[2px] border-r border-white/[0.06]">
+            {MODE_LABEL[step.problemMode] ?? step.problemMode}
+          </span>
+          <span className="text-[9px] font-semibold text-white/45 bg-white/[0.05] px-1.5 py-[2px]">
+            {ANSWER_LABEL[step.answerType] ?? step.answerType}
+          </span>
+        </div>
+        <span className="text-[9px] text-white/20 px-1">▸</span>
+        <span className="text-[9px] font-semibold text-emerald-300/60 bg-emerald-500/[0.08] px-1.5 py-[2px] rounded border border-emerald-500/10">
           {OUTPUT_LABEL[step.output] ?? step.output}
         </span>
       </div>

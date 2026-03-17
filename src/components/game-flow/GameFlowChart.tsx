@@ -380,15 +380,21 @@ function StepCard({
         </div>
       )}
 
-      {/* Tags row */}
-      <div className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
-        <span className={`px-1.5 py-[2px] rounded text-[9px] font-semibold border leading-none ${mode.cls}`}>
-          {mode.label}
-        </span>
-        <span className={`px-1.5 py-[2px] rounded text-[9px] font-semibold border leading-none ${answer.cls}`}>
-          {answer.label}
-        </span>
-        <span className={`px-1.5 py-[2px] rounded text-[9px] font-semibold border leading-none ${output.cls}`}>
+      {/* Tags row: 방식 · 입력 ▸ 출력 */}
+      <div className="flex items-center gap-0 px-3 pb-2.5">
+        {/* 방식 + 입력 그룹 */}
+        <div className="flex items-center rounded-l border border-r-0 border-white/[0.06] overflow-hidden">
+          <span className={`px-1.5 py-[3px] text-[9px] font-semibold leading-none ${mode.cls} border-r border-white/[0.06]`}>
+            {mode.label}
+          </span>
+          <span className={`px-1.5 py-[3px] text-[9px] font-semibold leading-none ${answer.cls}`}>
+            {answer.label}
+          </span>
+        </div>
+        {/* 화살표 구분자 */}
+        <span className="text-[9px] text-white/20 px-1">▸</span>
+        {/* 출력 결과 */}
+        <span className={`px-1.5 py-[3px] rounded text-[9px] font-semibold border leading-none ${output.cls}`}>
           {output.label}
         </span>
       </div>
