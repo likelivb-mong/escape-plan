@@ -9,7 +9,6 @@ import { normalizeFloorPlan } from './floorPlan';
 import { supabase } from '../services/supabase';
 
 const STORAGE_KEY = 'xcape-projects';
-const TRASH_KEY = 'xcape-projects-trash';
 
 export type CompletionLevel = 'brief' | 'story' | 'flow' | 'draft';
 
@@ -36,9 +35,13 @@ export interface SavedProject {
   passmapLink?: { branchCode: string; themeId: string } | null;
 }
 
-// ── Hybrid approach: Load from localStorage first, sync with Supabase in background ────
+export interface TrashedProject extends SavedProject {
+  deletedAt: string;
+}
 
-export function listSavedProjects(): SavedProject[] {
+// ── localStorage cache helpers (for instant UI, offline fallback) ─────────────
+
+function readLocalProjects(): SavedProject[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -48,128 +51,27 @@ export function listSavedProjects(): SavedProject[] {
   }
 }
 
-export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
-  if (!supabase) return [];
-  try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .order('updated_at', { ascending: false });
-
-    if (error) throw error;
-
-    return (data || []).map(mapRowToProject);
-  } catch (error) {
-    console.error('Failed to load projects from Supabase:', error);
-    return [];
-  }
+function writeLocalProjects(projects: SavedProject[]): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
 }
 
-export function upsertProject(project: SavedProject): void {
-  const normalizedProject: SavedProject = {
-    ...project,
-    floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
-  };
-
-  // Update localStorage first (instant response)
-  const projects = listSavedProjects();
-  const idx = projects.findIndex((p) => p.id === normalizedProject.id);
+function cacheProjectLocally(project: SavedProject): void {
+  const projects = readLocalProjects();
+  const idx = projects.findIndex((p) => p.id === project.id);
   if (idx >= 0) {
-    projects[idx] = normalizedProject;
+    projects[idx] = project;
   } else {
-    projects.unshift(normalizedProject);
+    projects.unshift(project);
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-
-  // Sync to Supabase in background
-  upsertProjectToSupabase(normalizedProject).catch(console.error);
+  writeLocalProjects(projects);
 }
 
-async function upsertProjectToSupabase(project: SavedProject): Promise<void> {
-  if (!supabase) return;
-  try {
-    const { error } = await supabase
-      .from('projects')
-      .upsert({
-        id: project.id,
-        name: project.name,
-        saved_at: project.savedAt,
-        updated_at: project.updatedAt,
-        story_title: project.storyTitle,
-        genres: project.genres,
-        play_times: project.playTimes,
-        synopsis: project.synopsis,
-        completion_level: project.completionLevel,
-        branch_code: project.branchCode,
-        project_brief: project.projectBrief,
-        cells: project.cells,
-        selected_story: project.selectedStory,
-        puzzle_flow_plan: project.puzzleFlowPlan,
-        puzzle_recommendation_groups: project.puzzleRecommendationGroups,
-        game_flow_design: project.gameFlowDesign,
-        floor_plan_data: project.floorPlanData,
-        passmap_link: project.passmapLink,
-      });
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Failed to sync project to Supabase:', error);
-  }
+function removeFromLocalCache(id: string): void {
+  const projects = readLocalProjects().filter((p) => p.id !== id);
+  writeLocalProjects(projects);
 }
 
-export function loadProjectById(id: string): SavedProject | null {
-  const project = listSavedProjects().find((p) => p.id === id);
-  if (!project) return null;
-
-  return {
-    ...project,
-    floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
-  };
-}
-
-export async function loadProjectByIdFromSupabase(id: string): Promise<SavedProject | null> {
-  if (!supabase) return null;
-  try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    if (!data) return null;
-
-    return mapRowToProject(data);
-  } catch (error) {
-    console.error('Failed to load project from Supabase:', error);
-    return null;
-  }
-}
-
-export function deleteProjectById(id: string): void {
-  // Delete from localStorage first
-  const projects = listSavedProjects().filter((p) => p.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-
-  // Delete from Supabase in background
-  deleteProjectFromSupabase(id).catch(console.error);
-}
-
-async function deleteProjectFromSupabase(id: string): Promise<void> {
-  if (!supabase) return;
-  try {
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-  } catch (error) {
-    console.error('Failed to delete project from Supabase:', error);
-  }
-}
-
-// ── Row → Project mapping ────────────────────────────────────────────────────
+// ── Row ↔ Project mapping ────────────────────────────────────────────────────
 
 function mapRowToProject(row: any): SavedProject {
   return {
@@ -194,53 +96,226 @@ function mapRowToProject(row: any): SavedProject {
   };
 }
 
-// ── Trash ─────────────────────────────────────────────────────────────────────
-
-export interface TrashedProject extends SavedProject {
-  deletedAt: string;
+function mapRowToTrashedProject(row: any): TrashedProject {
+  return {
+    ...mapRowToProject(row),
+    deletedAt: row.deleted_at,
+  };
 }
 
-export function listTrashedProjects(): TrashedProject[] {
+function projectToRow(project: SavedProject) {
+  return {
+    id: project.id,
+    name: project.name,
+    saved_at: project.savedAt,
+    updated_at: project.updatedAt,
+    story_title: project.storyTitle,
+    genres: project.genres,
+    play_times: project.playTimes,
+    synopsis: project.synopsis,
+    completion_level: project.completionLevel,
+    branch_code: project.branchCode,
+    project_brief: project.projectBrief,
+    cells: project.cells,
+    selected_story: project.selectedStory,
+    puzzle_flow_plan: project.puzzleFlowPlan,
+    puzzle_recommendation_groups: project.puzzleRecommendationGroups,
+    game_flow_design: project.gameFlowDesign,
+    floor_plan_data: project.floorPlanData,
+    passmap_link: project.passmapLink,
+  };
+}
+
+// ── List projects (Supabase-first, localStorage fallback) ────────────────────
+
+/** Instant list from localStorage cache */
+export function listSavedProjects(): SavedProject[] {
+  return readLocalProjects();
+}
+
+/** Primary list from Supabase (active projects only, deleted_at IS NULL) */
+export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
+  if (!supabase) return [];
   try {
-    const raw = localStorage.getItem(TRASH_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as TrashedProject[];
-  } catch {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw error;
+
+    const projects = (data || []).map(mapRowToProject);
+
+    // Update localStorage cache with the fresh list
+    writeLocalProjects(projects);
+
+    return projects;
+  } catch (error) {
+    console.error('Failed to load projects from Supabase:', error);
+    // Fallback to localStorage
+    return readLocalProjects();
+  }
+}
+
+// ── List trashed projects from Supabase ──────────────────────────────────────
+
+export async function listTrashedProjectsFromSupabase(): Promise<TrashedProject[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(mapRowToTrashedProject);
+  } catch (error) {
+    console.error('Failed to load trashed projects from Supabase:', error);
     return [];
   }
 }
 
+// ── Upsert (save/update) ────────────────────────────────────────────────────
+
+export function upsertProject(project: SavedProject): void {
+  const normalizedProject: SavedProject = {
+    ...project,
+    floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
+  };
+
+  // Update localStorage cache (instant response)
+  cacheProjectLocally(normalizedProject);
+
+  // Sync to Supabase
+  upsertProjectToSupabase(normalizedProject).catch(console.error);
+}
+
+async function upsertProjectToSupabase(project: SavedProject): Promise<void> {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .upsert({
+        ...projectToRow(project),
+        deleted_at: null, // ensure it's active when upserting
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Failed to sync project to Supabase:', error);
+  }
+}
+
+// ── Load by ID (Supabase-first) ─────────────────────────────────────────────
+
+/** Sync load from localStorage cache */
+export function loadProjectById(id: string): SavedProject | null {
+  const project = readLocalProjects().find((p) => p.id === id);
+  if (!project) return null;
+
+  return {
+    ...project,
+    floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
+  };
+}
+
+/** Async load from Supabase (primary source of truth) */
+export async function loadProjectByIdFromSupabase(id: string): Promise<SavedProject | null> {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .is('deleted_at', null)
+      .single();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    const project = mapRowToProject(data);
+    // Update local cache
+    cacheProjectLocally(project);
+    return project;
+  } catch (error) {
+    console.error('Failed to load project from Supabase:', error);
+    return null;
+  }
+}
+
+// ── Delete (hard delete) ────────────────────────────────────────────────────
+
+export function deleteProjectById(id: string): void {
+  removeFromLocalCache(id);
+  deleteProjectFromSupabase(id).catch(console.error);
+}
+
+async function deleteProjectFromSupabase(id: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Failed to delete project from Supabase:', error);
+  }
+}
+
+// ── Trash (soft delete via Supabase) ────────────────────────────────────────
+
 export function moveToTrash(id: string): void {
-  const project = loadProjectById(id);
-  if (!project) return;
-  // Add to trash
-  const trash = listTrashedProjects();
-  trash.unshift({ ...project, deletedAt: new Date().toISOString() });
-  localStorage.setItem(TRASH_KEY, JSON.stringify(trash));
-  // Remove from active projects
-  deleteProjectById(id);
+  // Remove from local active cache
+  removeFromLocalCache(id);
+
+  // Soft-delete in Supabase (set deleted_at)
+  if (supabase) {
+    supabase
+      .from('projects')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
+      .then(({ error }) => {
+        if (error) console.error('Failed to move project to trash in Supabase:', error);
+      });
+  }
 }
 
 export function restoreFromTrash(id: string): void {
-  const trash = listTrashedProjects();
-  const item = trash.find((p) => p.id === id);
-  if (!item) return;
-  // Restore to active (strip deletedAt)
-  const { deletedAt: _deleted, ...project } = item;
-  upsertProject(project as SavedProject);
-  // Remove from trash
-  const updated = trash.filter((p) => p.id !== id);
-  localStorage.setItem(TRASH_KEY, JSON.stringify(updated));
+  // Clear deleted_at in Supabase to restore
+  if (supabase) {
+    supabase
+      .from('projects')
+      .update({ deleted_at: null })
+      .eq('id', id)
+      .then(({ error }) => {
+        if (error) console.error('Failed to restore project from Supabase:', error);
+      });
+  }
 }
 
 export function permanentlyDelete(id: string): void {
-  const trash = listTrashedProjects().filter((p) => p.id !== id);
-  localStorage.setItem(TRASH_KEY, JSON.stringify(trash));
+  // Hard delete from Supabase
+  deleteProjectFromSupabase(id).catch(console.error);
 }
 
 export function emptyTrash(): void {
-  localStorage.removeItem(TRASH_KEY);
+  // Delete all trashed projects from Supabase
+  if (supabase) {
+    supabase
+      .from('projects')
+      .delete()
+      .not('deleted_at', 'is', null)
+      .then(({ error }) => {
+        if (error) console.error('Failed to empty trash in Supabase:', error);
+      });
+  }
 }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 export function deriveCompletionLevel(
   selectedStory: StoryProposal | null,

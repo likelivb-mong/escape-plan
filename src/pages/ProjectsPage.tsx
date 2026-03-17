@@ -1,14 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import {
   listSavedProjects,
   listSavedProjectsFromSupabase,
-  listTrashedProjects,
+  listTrashedProjectsFromSupabase,
   restoreFromTrash,
   permanentlyDelete,
   emptyTrash,
-  upsertProject,
   type SavedProject,
   type TrashedProject,
   type CompletionLevel,
@@ -218,36 +217,35 @@ export default function ProjectsPage() {
   const { moveToTrash } = useProject();
   const [projects, setProjects] = useState<SavedProject[]>([]);
   const [trashed, setTrashed] = useState<TrashedProject[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showTrash, setShowTrash] = useState(false);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const refresh = () => {
-    setProjects(listSavedProjects());
-    setTrashed(listTrashedProjects());
-  };
-
-  // Load projects on mount: localStorage first, then merge from Supabase
-  useEffect(() => {
-    refresh();
-    // Fetch from Supabase and merge any projects not in localStorage
-    listSavedProjectsFromSupabase().then((remoteProjects) => {
-      if (remoteProjects.length === 0) return;
-      const local = listSavedProjects();
-      const localIds = new Set(local.map((p) => p.id));
-      let merged = false;
-      for (const rp of remoteProjects) {
-        if (!localIds.has(rp.id)) {
-          upsertProject(rp); // saves to localStorage + re-syncs to Supabase
-          merged = true;
-        }
-      }
-      if (merged) refresh();
-    });
+  const refreshFromSupabase = useCallback(async () => {
+    try {
+      const [remoteProjects, remoteTrashed] = await Promise.all([
+        listSavedProjectsFromSupabase(),
+        listTrashedProjectsFromSupabase(),
+      ]);
+      setProjects(remoteProjects);
+      setTrashed(remoteTrashed);
+    } catch {
+      // Fallback to localStorage cache
+      setProjects(listSavedProjects());
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { refresh(); }, [refreshKey]);
+  // Load: show localStorage cache instantly, then replace with Supabase data
+  useEffect(() => {
+    setProjects(listSavedProjects()); // instant cache
+    refreshFromSupabase();
+  }, [refreshFromSupabase]);
+
+  useEffect(() => { refreshFromSupabase(); }, [refreshKey, refreshFromSupabase]);
 
   // Subscribe to store changes (e.g. from import, delete theme)
   useEffect(() => {
@@ -289,23 +287,27 @@ export default function ProjectsPage() {
 
   const handleMoveToTrash = (id: string) => {
     moveToTrash(id);
-    refresh();
+    // Optimistic: remove from UI immediately, then refresh from Supabase
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    setTimeout(() => refreshFromSupabase(), 500);
   };
 
   const handleRestore = (id: string) => {
     restoreFromTrash(id);
-    refresh();
+    // Optimistic: remove from trash UI
+    setTrashed((prev) => prev.filter((p) => p.id !== id));
+    setTimeout(() => refreshFromSupabase(), 500);
   };
 
   const handlePermanentDelete = (id: string) => {
     permanentlyDelete(id);
-    refresh();
+    setTrashed((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleEmptyTrash = () => {
     emptyTrash();
     setConfirmEmptyTrash(false);
-    refresh();
+    setTrashed([]);
   };
 
   return (
@@ -316,7 +318,9 @@ export default function ProjectsPage() {
           <div>
             <h1 className="text-title1 font-bold text-white/90">프로젝트</h1>
             <p className="text-subhead text-white/30 mt-1">
-              {projects.length > 0
+              {loading
+                ? '프로젝트를 불러오는 중...'
+                : projects.length > 0
                 ? `${projects.length}개의 테마 프로젝트`
                 : '저장된 프로젝트가 없습니다'}
             </p>
