@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useProject } from '../../context/ProjectContext';
+import HistoryDrawer from './HistoryDrawer';
 
 const WORKFLOW_STEPS = [
   { path: '/plan',       label: 'Plan',         mobileLabel: 'Plan' },
@@ -14,7 +16,8 @@ const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/sett
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { projectName } = useProject();
+  const { projectName, currentProjectId } = useProject();
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const isProjectDashboard = location.pathname.startsWith('/projects/') && location.pathname !== '/projects';
   const isInsideProject = isProjectDashboard || PROJECT_PATHS.some((p) => location.pathname.startsWith(p));
@@ -85,6 +88,17 @@ export default function Navbar() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1 flex-shrink-0">
+          {isInsideProject && currentProjectId && (
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="px-2.5 py-1.5 rounded-md text-caption font-medium text-white/30 hover:text-white/55 hover:bg-white/[0.04] transition-all"
+              title="버전 히스토리"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          )}
           {!isProjects && !isHome && (
             <Link
               to="/projects"
@@ -134,6 +148,8 @@ export default function Navbar() {
         </div>
       </nav>
     )}
+
+    <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </>
   );
 }

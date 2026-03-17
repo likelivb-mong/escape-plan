@@ -16,6 +16,7 @@ import {
   deriveCompletionLevel,
   type SavedProject,
 } from '../utils/projectStorage';
+import { saveHistorySnapshot } from '../utils/projectHistory';
 
 // ── Context value type ────────────────────────────────────────────────────────
 
@@ -146,6 +147,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     };
 
     upsertProject(project);
+    // Save history snapshot for version tracking
+    saveHistorySnapshot(project);
     setCurrentProjectId(id);
     return id;
   }, [
