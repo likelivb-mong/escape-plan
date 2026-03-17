@@ -285,7 +285,7 @@ export default function HomePage() {
     const BEAT_KEYS = ['기', '승', '전', '반전', '결'] as const;
     const hasManualBeats = BEAT_KEYS.some((k) => beats[k]?.trim());
 
-    let finalBeats: { label: string; description: string }[];
+    let finalBeats: { label: '기' | '승' | '전' | '반전' | '결'; description: string }[];
     if (hasManualBeats) {
       // User typed beats — use them, fill gaps from YouTube/scenario if available
       finalBeats = BEAT_KEYS.map((k) => {
