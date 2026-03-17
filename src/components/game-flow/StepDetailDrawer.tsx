@@ -298,28 +298,51 @@ export default function StepDetailDrawer({
               </button>
 
               {showTechnical && (
-                <div className="mt-2 pt-3 border-t border-white/[0.05] space-y-4">
-                  <SelectField
-                    label="문제 방식"
-                    value={step.problemMode}
-                    options={PROBLEM_MODES}
-                    labels={MODE_LABEL}
-                    onChange={onUpdateStep ? v => onUpdateStep({ problemMode: v as ProblemMode }) : undefined}
-                  />
-                  <SelectField
-                    label="정답 유형"
-                    value={step.answerType}
-                    options={ANSWER_TYPES}
-                    labels={ANSWER_LABEL}
-                    onChange={onUpdateStep ? v => onUpdateStep({ answerType: v as AnswerType }) : undefined}
-                  />
-                  <SelectField
-                    label="출력 타입"
-                    value={step.output}
-                    options={OUTPUT_TYPES}
-                    labels={OUTPUT_LABEL}
-                    onChange={onUpdateStep ? v => onUpdateStep({ output: v as OutputType }) : undefined}
-                  />
+                <div className="mt-2 pt-3 border-t border-white/[0.05] space-y-3">
+                  {/* ── Flow summary: 방식 · 입력 ▸ 출력 ── */}
+                  <div className="flex items-center gap-0 mb-1">
+                    <div className="flex items-center rounded-l border border-r-0 border-white/[0.08] overflow-hidden">
+                      <span className="text-[10px] font-semibold text-sky-300/80 bg-sky-500/[0.10] px-2 py-1 border-r border-white/[0.08]">
+                        {MODE_LABEL[step.problemMode] ?? step.problemMode}
+                      </span>
+                      <span className="text-[10px] font-semibold text-white/55 bg-white/[0.05] px-2 py-1">
+                        {ANSWER_LABEL[step.answerType] ?? step.answerType}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-white/25 px-1.5">▸</span>
+                    <span className="text-[10px] font-semibold text-emerald-300/80 bg-emerald-500/[0.10] px-2 py-1 rounded border border-emerald-500/15">
+                      {OUTPUT_LABEL[step.output] ?? step.output}
+                    </span>
+                  </div>
+
+                  {/* ── Structured settings grid ── */}
+                  <div className="rounded-lg border border-white/[0.06] overflow-hidden divide-y divide-white/[0.05]">
+                    <TechRow
+                      indicator="sky"
+                      label="방식"
+                      value={step.problemMode}
+                      options={PROBLEM_MODES}
+                      labels={MODE_LABEL}
+                      onChange={onUpdateStep ? v => onUpdateStep({ problemMode: v as ProblemMode }) : undefined}
+                    />
+                    <TechRow
+                      indicator="white"
+                      label="입력"
+                      value={step.answerType}
+                      options={ANSWER_TYPES}
+                      labels={ANSWER_LABEL}
+                      onChange={onUpdateStep ? v => onUpdateStep({ answerType: v as AnswerType }) : undefined}
+                    />
+                    <TechRow
+                      indicator="emerald"
+                      label="출력"
+                      value={step.output}
+                      options={OUTPUT_TYPES}
+                      labels={OUTPUT_LABEL}
+                      onChange={onUpdateStep ? v => onUpdateStep({ output: v as OutputType }) : undefined}
+                    />
+                  </div>
+
                   <EditableField
                     label="메모"
                     value={step.notes || ''}
@@ -347,15 +370,23 @@ export default function StepDetailDrawer({
   );
 }
 
-// ── Select Field ─────────────────────────────────────────────────────────────
+// ── Tech Row (compact inline label + select) ────────────────────────────────
 
-function SelectField({
+const INDICATOR_COLOR: Record<string, string> = {
+  sky:     'bg-sky-400/70',
+  white:   'bg-white/40',
+  emerald: 'bg-emerald-400/70',
+};
+
+function TechRow({
+  indicator,
   label,
   value,
   options,
   labels,
   onChange,
 }: {
+  indicator: string;
   label: string;
   value: string;
   options: string[];
@@ -363,24 +394,25 @@ function SelectField({
   onChange?: (v: string) => void;
 }) {
   return (
-    <div>
-      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
+    <div className="flex items-center gap-3 px-3 py-2.5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${INDICATOR_COLOR[indicator] ?? 'bg-white/40'}`} />
+      <span className="text-[10px] font-bold text-white/45 uppercase tracking-wider w-10 flex-shrink-0">
         {label}
-      </p>
+      </span>
       {onChange ? (
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-lg border border-white/[0.15] bg-white/[0.05] text-[13px] text-white/80 cursor-pointer appearance-none outline-none hover:border-white/25 transition-colors font-medium"
+          className="flex-1 px-2.5 py-1.5 rounded-md border border-white/[0.10] bg-white/[0.04] text-[12px] text-white/75 cursor-pointer appearance-none outline-none hover:border-white/20 transition-colors font-medium"
         >
           {options.map(opt => (
-            <option key={opt} value={opt} className="bg-black text-white/80">
+            <option key={opt} value={opt} className="bg-black text-white/70">
               {labels[opt] ?? opt}
             </option>
           ))}
         </select>
       ) : (
-        <p className="text-[13px] text-white/70 font-medium">{labels[value] ?? value}</p>
+        <span className="text-[12px] text-white/65 font-medium">{labels[value] ?? value}</span>
       )}
     </div>
   );
