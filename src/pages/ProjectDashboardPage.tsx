@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import { loadProjectById, type SavedProject, type CompletionLevel } from '../utils/projectStorage';
+import { loadProjectById, loadProjectByIdFromSupabase, type SavedProject, type CompletionLevel } from '../utils/projectStorage';
 import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 
 // ── Stage definitions — mirrors escape room design pipeline ──────────────────
@@ -110,13 +110,22 @@ export default function ProjectDashboardPage() {
   useEffect(() => {
     if (!id) return;
     const saved = loadProjectById(id);
-    if (!saved) {
-      navigate('/projects');
+    if (saved) {
+      setProject(saved);
+      loadProject(id);
+      setLoaded(true);
       return;
     }
-    setProject(saved);
-    loadProject(id);
-    setLoaded(true);
+    // Not in localStorage — try Supabase
+    loadProjectByIdFromSupabase(id).then((remote) => {
+      if (!remote) {
+        navigate('/projects');
+        return;
+      }
+      setProject(remote);
+      loadProject(id);
+      setLoaded(true);
+    });
   }, [id, navigate, loadProject]);
 
   if (!loaded || !project) {

@@ -12,6 +12,7 @@ import {
   upsertProject,
   deleteProjectById,
   loadProjectById,
+  loadProjectByIdFromSupabase,
   moveToTrash as moveToTrashById,
   deriveCompletionLevel,
   type SavedProject,
@@ -166,10 +167,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return saveVersionSnapshot(project, page);
   }, [buildProject]);
 
-  const loadProject = useCallback((id: string): boolean => {
-    const saved = loadProjectById(id);
-    if (!saved) return false;
-
+  const applyProject = useCallback((saved: SavedProject) => {
     setProjectName(saved.name);
     setCurrentProjectId(saved.id);
     setCells(saved.cells);
@@ -178,13 +176,28 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setPuzzleFlowPlan(saved.puzzleFlowPlan);
     setPuzzleRecommendationGroups(saved.puzzleRecommendationGroups);
     setGameFlowDesign(saved.gameFlowDesign);
-    // Always validate & normalize floor plan after loading
     setFloorPlanData(saved.floorPlanData ? normalizeFloorPlan(saved.floorPlanData) : null);
     setBranchCode(saved.branchCode ?? null);
     setPassmapLink(saved.passmapLink ?? null);
     setProjectBrief(saved.projectBrief);
-    return true;
   }, []);
+
+  const loadProject = useCallback((id: string): boolean => {
+    const saved = loadProjectById(id);
+    if (saved) {
+      applyProject(saved);
+      return true;
+    }
+
+    // Not in localStorage — try Supabase in background
+    loadProjectByIdFromSupabase(id).then((remote) => {
+      if (remote) {
+        upsertProject(remote); // cache locally
+        applyProject(remote);
+      }
+    });
+    return false;
+  }, [applyProject]);
 
   const deleteProject = useCallback((id: string): void => {
     deleteProjectById(id);
