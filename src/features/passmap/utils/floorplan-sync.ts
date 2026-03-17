@@ -7,6 +7,7 @@
  */
 
 import type { GameFlowPlan, GameFlowStep } from '../../../types/gameFlow';
+import { OUTPUT_LABELS } from '../../../utils/gameFlow';
 import type { FloorPlanData, FloorPlanRoomLayout } from '../../../types/floorPlan';
 import type { ThemeStep, StepType, StepDetail, Theme, ThemeRoom } from '../types/passmap';
 import {
@@ -189,7 +190,7 @@ export function syncFloorPlanToPassMap(
     stepId: steps[i].id,
     answer: gameStep.answer,
     input: gameStep.inputLabel,
-    output: gameStep.output,
+    output: OUTPUT_LABELS[gameStep.output] ?? gameStep.output,
     resetMethod: '',
     memo: gameStep.notes || '',
   }));
