@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { generateInitialLayout, reconcileRooms, normalizeFloorPlan } from '../utils/floorPlan';
 import type { FloorPlanData } from '../types/floorPlan';
@@ -30,6 +30,7 @@ type FloorViewMode = 'map' | 'flow';
 
 export default function SettingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     projectName,
     gameFlowDesign,
@@ -40,7 +41,8 @@ export default function SettingPage() {
     setBranchCode,
     passmapLink,
     setPassmapLink,
-    saveCurrentProject,
+    persistProject,
+    saveVersion,
   } = useProject();
 
   const [activeTab, setActiveTab] = useState<Tab>('passmap');
@@ -55,11 +57,22 @@ export default function SettingPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // ── Auto-generate layout ONLY if missing (first time) ──────────────────────
-  // Does NOT reconcile on subsequent gameFlowDesign changes to prevent overwriting edits
+  // ── Generate layout: on first mount if missing, or when applyFromPrev ─────
   const layoutInitializedRef = useRef(false);
   useEffect(() => {
-    if (!gameFlowDesign || layoutInitializedRef.current) return;
+    if (!gameFlowDesign) return;
+    const applyFromPrev = (location.state as { applyFromPrev?: boolean } | null)?.applyFromPrev;
+
+    if (applyFromPrev) {
+      // User chose to apply — regenerate from game flow rooms
+      window.history.replaceState({}, '');
+      const initial = generateInitialLayout(gameFlowDesign.rooms);
+      setFloorPlanData(normalizeFloorPlan(initial));
+      layoutInitializedRef.current = true;
+      return;
+    }
+
+    if (layoutInitializedRef.current) return;
     layoutInitializedRef.current = true;
     if (!floorPlanData) {
       const initial = generateInitialLayout(gameFlowDesign.rooms);
@@ -302,7 +315,7 @@ export default function SettingPage() {
             </button>
           )}
           <button
-            onClick={() => { saveCurrentProject('setting'); setSaveMessage('저장됨'); setTimeout(() => setSaveMessage(null), 1500); }}
+            onClick={() => { const v = saveVersion('setting'); setSaveMessage(`v${v} 저장됨`); setTimeout(() => setSaveMessage(null), 2000); }}
             disabled={!isEditing}
             className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
               isEditing
@@ -316,7 +329,7 @@ export default function SettingPage() {
       </div>
 
       {/* Workflow step bar */}
-      <WorkflowStepBar onBeforeNavigate={saveCurrentProject} />
+      <WorkflowStepBar onBeforeNavigate={persistProject} />
 
       {/* ── Content ── */}
       {passmapLink ? (

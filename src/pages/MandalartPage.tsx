@@ -13,7 +13,10 @@ const MAX_UNDO = 50;
 
 export default function MandalartPage() {
   const navigate = useNavigate();
-  const { projectName, setProjectName, cells, setCells, projectBrief, selectedStory, saveCurrentProject } = useProject();
+  const { projectName, setProjectName, cells, setCells, projectBrief, selectedStory, persistProject, saveVersion } = useProject();
+
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [savedVersionLabel, setSavedVersionLabel] = useState<string | null>(null);
 
   const [selectedCellIds, setSelectedCellIds] = useState<Set<string>>(new Set());
   const [editingCellId, setEditingCellId] = useState<string | null>(null);
@@ -72,8 +75,8 @@ export default function MandalartPage() {
   // 셀 변경 후 1.5초 debounce 자동 저장
   const debounceSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => saveCurrentProject('mandalart'), 1500);
-  }, [saveCurrentProject]);
+    saveTimerRef.current = setTimeout(() => persistProject(), 1500);
+  }, [persistProject]);
 
   // ── Auto-fit board size to container ──────────────────────────────────────
   useEffect(() => {
@@ -352,15 +355,18 @@ export default function MandalartPage() {
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
-            onClick={() => saveCurrentProject('mandalart')}
-            disabled={!editingCellId && selectedCellIds.size === 0}
+            onClick={() => {
+              const v = saveVersion('mandalart');
+              setSavedVersionLabel(`v${v} 저장됨`);
+              setTimeout(() => setSavedVersionLabel(null), 2000);
+            }}
             className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
-              editingCellId || selectedCellIds.size > 0
-                ? 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
-                : 'border-white/[0.08] text-white/20 bg-white/[0.02] cursor-not-allowed'
+              savedVersionLabel
+                ? 'border-emerald-500/25 text-emerald-400/90 bg-emerald-500/[0.08]'
+                : 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
             }`}
           >
-            {editingCellId || selectedCellIds.size > 0 ? '저장' : '저장됨'}
+            {savedVersionLabel ?? '저장'}
           </button>
           <button
             onMouseDown={handleExamplePressStart}
@@ -374,7 +380,7 @@ export default function MandalartPage() {
             예시 보기
           </button>
           <button
-            onClick={() => { saveCurrentProject('mandalart'); navigate('/game-flow'); }}
+            onClick={() => setShowApplyDialog(true)}
             className="px-3 sm:px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
           >
             <span className="hidden sm:inline">Game Flow →</span>
@@ -384,7 +390,7 @@ export default function MandalartPage() {
       </div>
 
       {/* Workflow step bar */}
-      <WorkflowStepBar onBeforeNavigate={saveCurrentProject} />
+      <WorkflowStepBar onBeforeNavigate={persistProject} />
 
       {/* ── Main Content ── */}
       <div className="flex flex-1 gap-4 px-4 py-4 overflow-hidden min-h-0">
@@ -481,7 +487,83 @@ export default function MandalartPage() {
           }}
         />
       </div>
+
+      {/* ── Apply Confirm Dialog ── */}
+      {showApplyDialog && (
+        <ApplyConfirmDialog
+          from="만다라트"
+          to="Game Flow"
+          description="만다라트 키워드를 기반으로 Game Flow를 AI가 새로 생성합니다."
+          onConfirm={() => {
+            persistProject();
+            navigate('/game-flow', { state: { applyFromPrev: true } });
+          }}
+          onSkip={() => {
+            persistProject();
+            navigate('/game-flow');
+          }}
+          onCancel={() => setShowApplyDialog(false)}
+        />
+      )}
     </div>
+  );
+}
+
+// ── Apply Confirm Dialog ──────────────────────────────────────────────────────
+
+function ApplyConfirmDialog({
+  from,
+  to,
+  description,
+  onConfirm,
+  onSkip,
+  onCancel,
+}: {
+  from: string;
+  to: string;
+  description: string;
+  onConfirm: () => void;
+  onSkip: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50" onClick={onCancel} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-[#1e1e1e] border border-white/[0.10] rounded-2xl shadow-2xl max-w-sm w-full p-6">
+          <h3 className="text-[15px] font-semibold text-white/90 mb-2">
+            {to}에 반영하시겠습니까?
+          </h3>
+          <p className="text-[13px] text-white/40 leading-relaxed mb-1">
+            {description}
+          </p>
+          <p className="text-[11px] text-white/25 mb-5">
+            기존 {to} 데이터가 있으면 새로 대체됩니다.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={onConfirm}
+              className="w-full py-2.5 rounded-xl bg-white text-black text-[13px] font-semibold hover:bg-white/90 transition-colors"
+            >
+              {from} → {to} 반영하기
+            </button>
+            <button
+              onClick={onSkip}
+              className="w-full py-2.5 rounded-xl border border-white/[0.10] text-[13px] font-medium text-white/50 hover:text-white/70 hover:border-white/20 transition-all"
+            >
+              반영 없이 이동
+            </button>
+            <button
+              onClick={onCancel}
+              className="w-full py-2 text-[12px] text-white/25 hover:text-white/45 transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

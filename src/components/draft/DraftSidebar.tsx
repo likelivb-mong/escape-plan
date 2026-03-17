@@ -10,13 +10,13 @@ interface DraftSidebarProps {
 
 export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
   const nextSteps = getSuggestedNextSteps(status);
-  const { saveCurrentProject } = useProject();
+  const { saveVersion } = useProject();
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const handleSave = () => {
     setSaveState('saving');
     try {
-      saveCurrentProject('plan');
+      saveVersion('plan');
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2500);
     } catch {

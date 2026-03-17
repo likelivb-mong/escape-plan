@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { generateGameFlowFromMandala, regenerateGameFlow } from '../utils/gameFlow';
 import type { GameFlowPlan } from '../types/gameFlow';
@@ -12,40 +12,67 @@ type SubTab = 'chart' | 'steps' | 'summary';
 
 export default function GameFlowPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     projectName,
     cells,
     selectedStory,
     gameFlowDesign,
     setGameFlowDesign,
-    saveCurrentProject,
+    persistProject,
+    saveVersion,
   } = useProject();
 
   const [gamePlan, setGamePlan] = useState<GameFlowPlan | null>(gameFlowDesign ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [savedLabel, setSavedLabel] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<SubTab>('chart');
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
 
-  // ── Auto-generate on mount ────────────────────────────────────────────────
+  const applyHandled = useRef(false);
+
+  // ── Generate from previous page if applyFromPrev ───────────────────────────
   useEffect(() => {
-    if (gamePlan) return;
-    if (!selectedStory || !cells || cells.length === 0) return;
+    if (applyHandled.current) return;
+    const applyFromPrev = (location.state as { applyFromPrev?: boolean } | null)?.applyFromPrev;
 
-    const generate = async () => {
-      setIsGenerating(true);
-      try {
-        const plan = await generateGameFlowFromMandala(selectedStory, cells);
-        setGamePlan(plan);
-        setHasChanges(false);
-      } finally {
-        setIsGenerating(false);
-      }
-    };
+    if (applyFromPrev && selectedStory && cells?.length > 0) {
+      applyHandled.current = true;
+      // Clear navigation state
+      window.history.replaceState({}, '');
 
-    generate();
-  }, [selectedStory, cells, gamePlan]);
+      const generate = async () => {
+        setIsGenerating(true);
+        try {
+          const plan = await generateGameFlowFromMandala(selectedStory, cells);
+          setGamePlan(plan);
+          setHasChanges(true);
+        } finally {
+          setIsGenerating(false);
+        }
+      };
+      generate();
+      return;
+    }
+
+    // If no apply flag and no existing plan, auto-generate once
+    if (!gamePlan && selectedStory && cells?.length > 0) {
+      applyHandled.current = true;
+      const generate = async () => {
+        setIsGenerating(true);
+        try {
+          const plan = await generateGameFlowFromMandala(selectedStory, cells);
+          setGamePlan(plan);
+          setHasChanges(false);
+        } finally {
+          setIsGenerating(false);
+        }
+      };
+      generate();
+    }
+  }, [location.state, selectedStory, cells, gamePlan]);
 
   const handleRegenerate = async () => {
     if (!selectedStory || isRegenerating) return;
@@ -68,21 +95,14 @@ export default function GameFlowPage() {
     if (gamePlan) {
       setGameFlowDesign(gamePlan);
       setHasChanges(false);
-      setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-        saveCurrentProject('gameFlow');
-      }, 300);
+      const v = saveVersion('gameFlow');
+      setSavedLabel(`v${v} 저장됨`);
+      setTimeout(() => setSavedLabel(null), 2000);
     }
   };
 
   const handleGoToSetting = () => {
-    if (gamePlan) {
-      setGameFlowDesign(gamePlan);
-      setHasChanges(false);
-      setTimeout(() => saveCurrentProject('gameFlow'), 0);
-    }
-    navigate('/setting');
+    setShowApplyDialog(true);
   };
 
   // ── Empty state ───────────────────────────────────────────────────────────
@@ -136,16 +156,16 @@ export default function GameFlowPage() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={handleSave}
-            disabled={!hasChanges}
+            disabled={!hasChanges && !savedLabel}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              saved
+              savedLabel
                 ? 'bg-emerald-500/15 text-emerald-400/90 border border-emerald-500/25'
                 : hasChanges
                 ? 'bg-white/[0.06] text-white/60 border border-white/[0.10] hover:bg-white/[0.10] hover:text-white/80'
                 : 'bg-white/[0.03] text-white/20 border border-white/[0.06] cursor-not-allowed'
             }`}
           >
-            {saved ? '✓ Saved' : hasChanges ? 'Save' : 'Saved'}
+            {savedLabel ?? (hasChanges ? '저장' : '저장됨')}
           </button>
 
           <button
@@ -219,6 +239,60 @@ export default function GameFlowPage() {
           )}
         </>
       ) : null}
+
+      {/* ── Apply Confirm Dialog ── */}
+      {showApplyDialog && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowApplyDialog(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1e1e1e] border border-white/[0.10] rounded-2xl shadow-2xl max-w-sm w-full p-6">
+              <h3 className="text-[15px] font-semibold text-white/90 mb-2">
+                Pass Map에 반영하시겠습니까?
+              </h3>
+              <p className="text-[13px] text-white/40 leading-relaxed mb-1">
+                Game Flow의 룸 구성을 기반으로 배치도를 AI가 새로 생성합니다.
+              </p>
+              <p className="text-[11px] text-white/25 mb-5">
+                기존 Pass Map 데이터가 있으면 새로 대체됩니다.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    if (gamePlan) {
+                      setGameFlowDesign(gamePlan);
+                      setHasChanges(false);
+                    }
+                    persistProject();
+                    navigate('/setting', { state: { applyFromPrev: true } });
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-white text-black text-[13px] font-semibold hover:bg-white/90 transition-colors"
+                >
+                  Game Flow → Pass Map 반영하기
+                </button>
+                <button
+                  onClick={() => {
+                    if (gamePlan) {
+                      setGameFlowDesign(gamePlan);
+                      setHasChanges(false);
+                    }
+                    persistProject();
+                    navigate('/setting');
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-white/[0.10] text-[13px] font-medium text-white/50 hover:text-white/70 hover:border-white/20 transition-all"
+                >
+                  반영 없이 이동
+                </button>
+                <button
+                  onClick={() => setShowApplyDialog(false)}
+                  className="w-full py-2 text-[12px] text-white/25 hover:text-white/45 transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

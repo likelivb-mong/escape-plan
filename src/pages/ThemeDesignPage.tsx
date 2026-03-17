@@ -42,7 +42,7 @@ function extractYouTubeId(url: string): string | null {
 
 export default function ThemeDesignPage() {
   const navigate = useNavigate();
-  const { projectName, setProjectName, setProjectBrief, setCells, setAiStoryProposals, saveCurrentProject } = useProject();
+  const { projectName, setProjectName, setProjectBrief, setCells, setAiStoryProposals, persistProject } = useProject();
 
   // YouTube state
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -201,7 +201,7 @@ export default function ThemeDesignPage() {
       }
 
       await new Promise((resolve) => setTimeout(resolve, 300));
-      saveCurrentProject('plan');
+      persistProject();
       setSaved(true);
       setTimeout(() => navigate('/plan'), 800);
     } catch (error) {

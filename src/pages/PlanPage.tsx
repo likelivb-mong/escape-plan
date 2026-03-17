@@ -34,7 +34,8 @@ export default function PlanPage() {
     floorPlanData,
     projectBrief, setProjectBrief,
     branchCode,
-    saveCurrentProject,
+    persistProject,
+    saveVersion,
   } = useProject();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -188,7 +189,7 @@ export default function PlanPage() {
 
   const handleSave = () => {
     if (isEditing) handleSaveEdit();
-    saveCurrentProject('plan');
+    saveVersion('plan');
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };

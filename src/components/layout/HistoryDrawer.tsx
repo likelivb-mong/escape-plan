@@ -20,7 +20,7 @@ const PAGE_TABS: HistoryPage[] = ['plan', 'story', 'mandalart', 'gameFlow', 'set
 export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
   const {
     currentProjectId,
-    saveCurrentProject,
+    persistProject,
     setCells,
     setSelectedStory,
     setGameFlowDesign,
@@ -51,11 +51,11 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
     }
 
     // Save current state first
-    saveCurrentProject();
+    persistProject();
 
     // Restore only the page-specific data
-    const { page, data } = extractPageData(snap);
-    switch (page) {
+    const data = extractPageData(snap);
+    switch (snap.page) {
       case 'plan':
         if (data.projectBrief !== undefined) setProjectBrief(data.projectBrief);
         break;
@@ -156,7 +156,10 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
                       >
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-[12px] font-medium text-white/60">
+                            <span className="text-[12px] font-bold text-white/70 tabular-nums">
+                              v{snap.version}
+                            </span>
+                            <span className="text-[11px] text-white/30">
                               {formatSnapshotTime(snap.savedAt)}
                             </span>
                             {isLatest && (

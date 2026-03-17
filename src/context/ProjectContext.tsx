@@ -16,7 +16,7 @@ import {
   deriveCompletionLevel,
   type SavedProject,
 } from '../utils/projectStorage';
-import { saveHistorySnapshot, type HistoryPage } from '../utils/projectHistory';
+import { saveVersionSnapshot, type HistoryPage } from '../utils/projectHistory';
 
 // ── Context value type ────────────────────────────────────────────────────────
 
@@ -69,9 +69,10 @@ interface ProjectContextValue {
   setProjectBrief: (brief: ProjectBrief | null) => void;
 
   // Persistence helpers
-  resetForNewProject: () => void; // clear currentProjectId so next save creates a NEW project
-  forkAsNewProject: () => void;   // nullify currentProjectId only (keep all other state) so next save creates a NEW project
-  saveCurrentProject: (page?: HistoryPage) => string; // returns saved project id
+  resetForNewProject: () => void;
+  forkAsNewProject: () => void;
+  persistProject: () => string;                    // silent save (no history)
+  saveVersion: (page: HistoryPage) => number;      // explicit save → creates version, returns version number
   loadProject: (id: string) => boolean;
   deleteProject: (id: string) => void;
   moveToTrash: (id: string) => void;
@@ -117,15 +118,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setProjectName('Untitled Theme Project');
   }, []);
 
-  const saveCurrentProject = useCallback((page?: HistoryPage): string => {
+  /** Build the current project object for persistence */
+  const buildProject = useCallback((): SavedProject => {
     const id = currentProjectId ?? crypto.randomUUID();
     const now = new Date().toISOString();
     const existing = currentProjectId ? loadProjectById(currentProjectId) : null;
-
-    // Always validate & normalize floor plan before saving
     const validatedFloorPlan = floorPlanData ? normalizeFloorPlan(floorPlanData) : null;
 
-    const project: SavedProject = {
+    return {
       id,
       name: projectName,
       savedAt: existing?.savedAt ?? now,
@@ -145,16 +145,26 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       floorPlanData: validatedFloorPlan,
       passmapLink,
     };
-
-    upsertProject(project);
-    // Save history snapshot for version tracking (tagged by page)
-    if (page) saveHistorySnapshot(project, page);
-    setCurrentProjectId(id);
-    return id;
   }, [
     currentProjectId, projectName, selectedStory, puzzleFlowPlan,
     gameFlowDesign, projectBrief, cells, puzzleRecommendationGroups, floorPlanData, branchCode, passmapLink,
   ]);
+
+  /** Silent persist — saves to localStorage but does NOT create a version in history */
+  const persistProject = useCallback((): string => {
+    const project = buildProject();
+    upsertProject(project);
+    setCurrentProjectId(project.id);
+    return project.id;
+  }, [buildProject]);
+
+  /** Explicit save — persists AND creates a numbered version in history */
+  const saveVersion = useCallback((page: HistoryPage): number => {
+    const project = buildProject();
+    upsertProject(project);
+    setCurrentProjectId(project.id);
+    return saveVersionSnapshot(project, page);
+  }, [buildProject]);
 
   const loadProject = useCallback((id: string): boolean => {
     const saved = loadProjectById(id);
@@ -203,7 +213,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         projectBrief, setProjectBrief,
         resetForNewProject,
         forkAsNewProject,
-        saveCurrentProject,
+        persistProject,
+        saveVersion,
         loadProject,
         deleteProject,
         moveToTrash,
