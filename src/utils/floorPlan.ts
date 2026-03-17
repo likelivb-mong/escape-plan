@@ -1,6 +1,45 @@
 import type { GameFlowPlan } from '../types/gameFlow';
 import type { FloorPlanData, FloorPlanRoomLayout, PassMapEntry } from '../types/floorPlan';
+import { GRID_COLS, GRID_ROWS, CELL_PCT } from '../types/floorPlan';
 import { ANSWER_TYPE_LABELS, DEVICE_SUBTYPE_LABELS } from './gameFlow';
+
+// ── Tile utilities ────────────────────────────────────────────────────────────
+
+export function tilesBBox(tiles: { row: number; col: number }[]): { x: number; y: number; width: number; height: number } {
+  if (!tiles || tiles.length === 0) return { x: 0, y: 0, width: CELL_PCT, height: CELL_PCT };
+  const rows = tiles.map(t => t.row);
+  const cols = tiles.map(t => t.col);
+  const minRow = Math.min(...rows);
+  const maxRow = Math.max(...rows);
+  const minCol = Math.min(...cols);
+  const maxCol = Math.max(...cols);
+  return {
+    x: minCol * CELL_PCT,
+    y: minRow * CELL_PCT,
+    width: (maxCol - minCol + 1) * CELL_PCT,
+    height: (maxRow - minRow + 1) * CELL_PCT,
+  };
+}
+
+export function rectToTiles(x: number, y: number, width: number, height: number): { row: number; col: number }[] {
+  const startCol = Math.max(0, Math.min(GRID_COLS - 1, Math.round(x / CELL_PCT)));
+  const startRow = Math.max(0, Math.min(GRID_ROWS - 1, Math.round(y / CELL_PCT)));
+  const numCols = Math.max(1, Math.round(width / CELL_PCT));
+  const numRows = Math.max(1, Math.round(height / CELL_PCT));
+  const tiles: { row: number; col: number }[] = [];
+  for (let r = startRow; r < Math.min(GRID_ROWS, startRow + numRows); r++) {
+    for (let c = startCol; c < Math.min(GRID_COLS, startCol + numCols); c++) {
+      tiles.push({ row: r, col: c });
+    }
+  }
+  return tiles;
+}
+
+export function syncRoomFromTiles(room: FloorPlanRoomLayout): FloorPlanRoomLayout {
+  if (!room.tiles || room.tiles.length === 0) return room;
+  const bbox = tilesBBox(room.tiles);
+  return { ...room, x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height };
+}
 
 // ── Auto-layout generator ────────────────────────────────────────────────────
 

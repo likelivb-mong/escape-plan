@@ -1,11 +1,16 @@
 import type { AnswerType } from './gameFlow';
 
+export const GRID_COLS = 20;
+export const GRID_ROWS = 20;
+export const CELL_PCT = 5; // each grid cell = 5% of canvas
+
 export interface FloorPlanRoomLayout {
   roomName: string;   // must match a room from GameFlowPlan.rooms
   x: number;          // 0-100 (percentage position within canvas)
   y: number;
   width: number;      // 10-60 (percentage size)
   height: number;
+  tiles?: { row: number; col: number }[]; // pixel-art style tile cells
 }
 
 export type DoorType = 'swing' | 'double' | 'bifold' | 'sliding';
