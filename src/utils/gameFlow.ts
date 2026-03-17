@@ -14,6 +14,95 @@ import type {
 
 const DEFAULT_ROOMS = ['수사실', '처치실', '할머니 방', '골목', '공용 부엌'];
 
+// ── Mandalart → structured keyword extraction ────────────────────────────────
+// Sub-goal block mapping: sub-goal position (row,col) → expansion block rows/cols
+// 분위기(3,3)→(0,0) 스토리(3,4)→(0,1) 퍼즐(3,5)→(0,2)
+// 인물(4,3)→(1,0)                      단서(4,5)→(1,2)
+// 장치(5,3)→(2,0) 공간(5,4)→(2,1)    반전(5,5)→(2,2)
+
+interface MandalartBlock {
+  label: string;
+  keywords: string[];
+}
+
+export interface MandalartStructure {
+  mainTheme: string;
+  분위기: MandalartBlock;
+  스토리: MandalartBlock;
+  퍼즐: MandalartBlock;
+  인물: MandalartBlock;
+  단서: MandalartBlock;
+  장치: MandalartBlock;
+  공간: MandalartBlock;
+  반전: MandalartBlock;
+}
+
+const SUBGOAL_BLOCK_MAP: { label: string; sgRow: number; sgCol: number; br: number; bc: number }[] = [
+  { label: '분위기', sgRow: 3, sgCol: 3, br: 0, bc: 0 },
+  { label: '스토리', sgRow: 3, sgCol: 4, br: 0, bc: 1 },
+  { label: '퍼즐',   sgRow: 3, sgCol: 5, br: 0, bc: 2 },
+  { label: '인물',   sgRow: 4, sgCol: 3, br: 1, bc: 0 },
+  { label: '단서',   sgRow: 4, sgCol: 5, br: 1, bc: 2 },
+  { label: '장치',   sgRow: 5, sgCol: 3, br: 2, bc: 0 },
+  { label: '공간',   sgRow: 5, sgCol: 4, br: 2, bc: 1 },
+  { label: '반전',   sgRow: 5, sgCol: 5, br: 2, bc: 2 },
+];
+
+/**
+ * Extract structured keywords from mandalart cells organized by sub-goal block.
+ * Each block's action items become keywords for that category.
+ */
+export function extractMandalartStructure(cells: MandalartCellData[]): MandalartStructure {
+  const cellMap = new Map<string, MandalartCellData>();
+  for (const c of cells) cellMap.set(`${c.row}-${c.col}`, c);
+
+  const mainCell = cellMap.get('4-4');
+  const mainTheme = mainCell?.text?.trim() || '';
+
+  const result: Record<string, MandalartBlock> = {};
+
+  for (const { label, br, bc } of SUBGOAL_BLOCK_MAP) {
+    const minRow = br * 3;
+    const maxRow = minRow + 2;
+    const minCol = bc * 3;
+    const maxCol = minCol + 2;
+    const centerRow = br * 3 + 1;
+    const centerCol = bc * 3 + 1;
+
+    const keywords: string[] = [];
+    for (let r = minRow; r <= maxRow; r++) {
+      for (let c = minCol; c <= maxCol; c++) {
+        if (r === centerRow && c === centerCol) continue; // skip center (linked cell)
+        const cell = cellMap.get(`${r}-${c}`);
+        if (cell?.text?.trim()) keywords.push(cell.text.trim());
+      }
+    }
+    result[label] = { label, keywords };
+  }
+
+  return {
+    mainTheme,
+    분위기: result['분위기'],
+    스토리: result['스토리'],
+    퍼즐: result['퍼즐'],
+    인물: result['인물'],
+    단서: result['단서'],
+    장치: result['장치'],
+    공간: result['공간'],
+    반전: result['반전'],
+  };
+}
+
+/**
+ * Extract room names from the 공간 block of the mandalart.
+ * Falls back to DEFAULT_ROOMS if no rooms are found.
+ */
+export function extractRoomsFromMandalart(cells: MandalartCellData[]): string[] {
+  const structure = extractMandalartStructure(cells);
+  const rooms = structure.공간.keywords.filter((k) => k.length > 0);
+  return rooms.length > 0 ? rooms : DEFAULT_ROOMS;
+}
+
 // ── Step count by playtime ────────────────────────────────────────────────────
 
 function parsePlaytime(playtime: string): number {
@@ -213,58 +302,51 @@ const XKIT_POOL = [
 
 // ── Keyword extraction from mandalart cells ─────────────────────────────────
 
-function extractKeywordsByTheme(cells: MandalartCellData[]): {
-  rose: string[];
-  sky: string[];
-  amber: string[];
-  other: string[];
-  subGoals: string[];
-} {
-  const filled = cells.filter((c) => !c.isCenter && c.text.trim());
-  return {
-    rose:     filled.filter((c) => c.theme === 'rose' && !c.isSubGoal).map((c) => c.text.trim()),
-    sky:      filled.filter((c) => c.theme === 'sky'  && !c.isSubGoal).map((c) => c.text.trim()),
-    amber:    filled.filter((c) => c.theme === 'amber' && !c.isSubGoal).map((c) => c.text.trim()),
-    other:    filled.filter((c) => !c.theme && !c.isSubGoal).map((c) => c.text.trim()),
-    subGoals: filled.filter((c) => c.isSubGoal).map((c) => c.text.trim()),
-  };
-}
-
 function pickN<T>(arr: T[], n: number, offset = 0): T[] {
   if (arr.length === 0) return [];
   return Array.from({ length: Math.min(n, arr.length) }, (_, i) => arr[(i + offset) % arr.length]);
 }
 
-function getStageKeywords(
+/**
+ * Build clueTags and deviceTags per stage using structured mandalart blocks.
+ * Maps sub-goal categories to game flow elements:
+ * - 단서 block → clueTags (primary clue source)
+ * - 장치 block → deviceTags (primary device source)
+ * - 퍼즐 block → clueTags (puzzle-type clues)
+ * - 반전 block → clueTags for twist stages
+ * - 인물 block → character references
+ * - 분위기 block → atmosphere notes
+ */
+function getStageKeywordsFromStructure(
   stage: StageLabel,
-  kw: ReturnType<typeof extractKeywordsByTheme>,
+  ms: MandalartStructure,
   offset: number,
 ): { clueTags: string[]; deviceTags: string[] } {
   switch (stage) {
     case '기':
       return {
-        clueTags: [...pickN(kw.amber, 2, offset), ...pickN(kw.other, 1, offset)],
-        deviceTags: pickN(kw.sky, 1, offset),
+        clueTags: [...pickN(ms.단서.keywords, 2, offset), ...pickN(ms.분위기.keywords, 1, offset)],
+        deviceTags: pickN(ms.장치.keywords, 1, offset),
       };
     case '승':
       return {
-        clueTags: [...pickN(kw.amber, 3, offset + 2), ...pickN(kw.rose, 1, offset)],
-        deviceTags: pickN(kw.sky, 2, offset + 1),
+        clueTags: [...pickN(ms.단서.keywords, 2, offset + 2), ...pickN(ms.퍼즐.keywords, 1, offset), ...pickN(ms.인물.keywords, 1, offset)],
+        deviceTags: pickN(ms.장치.keywords, 2, offset + 1),
       };
     case '전':
       return {
-        clueTags: [...pickN(kw.amber, 2, offset + 4), ...pickN(kw.rose, 1, offset + 2)],
-        deviceTags: pickN(kw.sky, 2, offset + 3),
+        clueTags: [...pickN(ms.퍼즐.keywords, 2, offset + 2), ...pickN(ms.단서.keywords, 1, offset + 4)],
+        deviceTags: pickN(ms.장치.keywords, 2, offset + 3),
       };
     case '반전':
       return {
-        clueTags: [...pickN(kw.rose, 3, offset + 3), ...pickN(kw.amber, 1, offset + 6)],
-        deviceTags: pickN(kw.sky, 1, offset + 5),
+        clueTags: [...pickN(ms.반전.keywords, 2, offset), ...pickN(ms.단서.keywords, 1, offset + 6), ...pickN(ms.인물.keywords, 1, offset + 2)],
+        deviceTags: pickN(ms.장치.keywords, 1, offset + 5),
       };
     case '결':
       return {
-        clueTags: [...pickN(kw.amber, 2, offset + 8), ...pickN(kw.rose, 1, offset + 5)],
-        deviceTags: pickN(kw.sky, 1, offset + 7),
+        clueTags: [...pickN(ms.단서.keywords, 2, offset + 8), ...pickN(ms.반전.keywords, 1, offset + 3)],
+        deviceTags: pickN(ms.장치.keywords, 1, offset + 7),
       };
     default:
       return { clueTags: [], deviceTags: [] };
@@ -373,12 +455,21 @@ function buildDynamicContent(
 export function generateGameFlowFromStory(
   story: StoryProposal,
   cells: MandalartCellData[] = [],
-  rooms: string[] = DEFAULT_ROOMS,
+  rooms?: string[],
 ): GameFlowPlan {
   const minutes = parsePlaytime(story.meta.playtime);
   const totalSteps = calcTotalSteps(minutes);
   const stepDist = distributeSteps(totalSteps);
-  const kw = extractKeywordsByTheme(cells);
+
+  // Extract structured mandalart data
+  const ms = cells.length > 0 ? extractMandalartStructure(cells) : null;
+
+  // Use mandalart 공간 block for rooms, then explicit rooms, then defaults
+  const effectiveRooms = rooms && rooms.length > 0
+    ? rooms
+    : ms && ms.공간.keywords.length > 0
+    ? ms.공간.keywords
+    : DEFAULT_ROOMS;
 
   const steps: GameFlowStep[] = [];
   let stepNumber = 1;
@@ -389,8 +480,10 @@ export function generateGameFlowFromStory(
 
     for (let i = 0; i < count; i++) {
       const blueprint = pool[i % pool.length];
-      const room = getRoomForStep(stage, i, rooms);
-      const stageTags = getStageKeywords(stage, kw, i);
+      const room = getRoomForStep(stage, i, effectiveRooms);
+      const stageTags = ms
+        ? getStageKeywordsFromStructure(stage, ms, i)
+        : { clueTags: [], deviceTags: [] };
       const content = buildDynamicContent(blueprint, stage, i, story, stageTags);
 
       steps.push({
@@ -430,7 +523,7 @@ export function generateGameFlowFromStory(
   return {
     storyId: story.id,
     title: story.title,
-    rooms,
+    rooms: effectiveRooms,
     steps,
   };
 }
@@ -438,10 +531,10 @@ export function generateGameFlowFromStory(
 export async function regenerateGameFlow(
   story: StoryProposal,
   cells: MandalartCellData[] = [],
-  rooms?: string[],
 ): Promise<GameFlowPlan> {
   await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
-  return generateGameFlowFromStory(story, cells, rooms);
+  // Rooms are now auto-derived from mandalart 공간 block inside generateGameFlowFromStory
+  return generateGameFlowFromStory(story, cells);
 }
 
 // ── Add step to stage ────────────────────────────────────────────────────────
@@ -564,51 +657,66 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro'];
 
 function buildMandalaPrompt(keywords: MandalartCellData[], story: StoryProposal): string {
-  const themed = keywords.filter((c) => !c.isCenter && c.text.trim());
+  // Extract structured mandalart data organized by sub-goal block
+  const ms = extractMandalartStructure(keywords);
 
-  const byTheme: Record<string, string[]> = {
-    '컨셉': [],
-    '연출/장치': [],
-    '단서/소품': [],
-    '기타': [],
-  };
-
-  themed.forEach((k) => {
-    if (k.theme === 'rose') byTheme['컨셉'].push(k.text);
-    else if (k.theme === 'sky') byTheme['연출/장치'].push(k.text);
-    else if (k.theme === 'amber') byTheme['단서/소품'].push(k.text);
-    else byTheme['기타'].push(k.text);
-  });
+  const blockEntries = [
+    { label: '분위기 (Atmosphere)', kw: ms.분위기.keywords },
+    { label: '스토리 (Story Arc)', kw: ms.스토리.keywords },
+    { label: '퍼즐 (Puzzles)', kw: ms.퍼즐.keywords },
+    { label: '인물 (Characters)', kw: ms.인물.keywords },
+    { label: '단서 (Clues)', kw: ms.단서.keywords },
+    { label: '장치 (Devices)', kw: ms.장치.keywords },
+    { label: '공간 (Rooms/Spaces)', kw: ms.공간.keywords },
+    { label: '반전 (Twists)', kw: ms.반전.keywords },
+  ];
 
   let kwCtx = '';
-  for (const [label, kws] of Object.entries(byTheme)) {
-    if (kws.length) kwCtx += `${label}: ${kws.join(', ')}\n`;
+  for (const { label, kw } of blockEntries) {
+    if (kw.length) kwCtx += `- ${label}: ${kw.join(', ')}\n`;
   }
 
+  // Room names from 공간 block
+  const roomNames = ms.공간.keywords.length > 0
+    ? ms.공간.keywords.join(', ')
+    : DEFAULT_ROOMS.join(', ');
+
+  // Investigation context
+  const inv = story.investigation;
+  const invCtx = inv
+    ? `\n【수사 정보】\n- 범행동기: ${inv.motive ?? '미정'}\n- 용의자: ${inv.perpetrator ?? '미정'}\n- 피해자: ${inv.victim ?? '미정'}\n- 현장: ${inv.scene ?? '미정'}`
+    : '';
+
   return `당신은 XCAPE 방탈출 게임 플로우 설계 전문가입니다.
-아래 스토리와 만다라트 키워드를 활용하여 방탈출 게임의 스텝 플로우를 설계하세요.
+아래 스토리, 수사 정보, 만다라트 키워드를 활용하여 방탈출 게임의 스텝 플로우를 설계하세요.
 
 【스토리】
 제목: ${story.title}
+메인 테마: ${ms.mainTheme || story.title}
 설명: ${story.description}
+${invCtx}
 
-【만다라트 키워드】
+【만다라트 키워드 (하위목표별)】
 ${kwCtx}
 
-【최신 트렌드 포함 요소】
-1. 몰입감 있는 오프닝 (호기심 유발)
-2. 단서 발견의 쾌감 (보상 시스템)
-3. 예상치 못한 반전 (스토리 전개)
-4. 협력 플레이 강제 (팀 플레이)
-5. 기술 장치 활용 (현대 감각)
-6. 시간 압박감 (긴장감)
-7. 명확한 엔딩 (만족감)
+【중요 설계 규칙】
+1. **공간(Room) 연동**: 반드시 아래 공간 이름을 Room으로 사용하세요. 임의의 방 이름을 만들지 마세요.
+   사용할 공간: ${roomNames}
+2. **단서 연동**: '단서' 블록의 키워드를 각 스텝의 단서/힌트에 직접 활용하세요.
+3. **장치 연동**: '장치' 블록의 키워드를 실제 장치 유형과 매칭하세요.
+4. **인물 연동**: '인물' 블록의 캐릭터를 스텝 내러티브에 등장시키세요.
+5. **퍼즐 연동**: '퍼즐' 블록의 키워드를 퍼즐 디자인에 반영하세요.
+6. **스토리 개연성**: '스토리'와 '반전' 키워드로 기승전반전결의 서사적 흐름을 만드세요.
+7. **분위기 연출**: '분위기' 키워드를 각 스텝의 연출/설명에 활용하세요.
 
-각 스테이지별 10개 정도의 스텝을 생성하되:
-- 각 스텝은 고유한 puzzle/device/output을 가져야 함
-- 스텝의 내용/힌트는 만다라트 키워드 활용
-- 스텝은 단계적으로 어려워져야 함
-- 최소 40개 이상의 스텝 생성
+【스테이지 구조 (기승전반전결)】
+- 기 (Intro): 첫 공간 진입, 기본 탐색, 초기 단서 — 호기심 유발
+- 승 (Development): 단서 연결, 복합 퍼즐, 새 공간 이동 — 몰입 심화
+- 전 (Expansion): 전환점, 숨겨진 공간 발견, 핵심 증거 — 클라이맥스 접근
+- 반전 (Twist): 진실 드러남, 기존 가설 뒤집힘 — 충격과 재해석
+- 결 (Ending): 전 단계 통합, 최종 퍼즐, 탈출 — 만족스러운 결말
+
+각 스테이지별 8~10개 스텝, 총 40개 이상 생성하세요.
 
 JSON 형식으로 다음과 같이 응답하세요:
 {
@@ -617,12 +725,12 @@ JSON 형식으로 다음과 같이 응답하세요:
       "stepNumber": 1,
       "stageLabel": "기",
       "title": "스텝 제목",
-      "description": "스텝 설명",
-      "problemMode": "decryption|input|find_order|multipart",
-      "answerType": "text|number|select",
-      "room": "방 이름",
-      "content": "퍼즐 내용",
-      "hint": "힌트",
+      "description": "스텝 설명 (만다라트 키워드 활용)",
+      "problemMode": "clue|device|clue_device",
+      "answerType": "key|number_4|number_3|alphabet_5|keypad|xkit|auto",
+      "room": "공간 블록에서 가져온 방 이름",
+      "content": "퍼즐 내용 (만다라트 단서/퍼즐 키워드 활용)",
+      "hint": "힌트 (만다라트 키워드 기반)",
       "deviceSubtype": "electronic_pen|magnet|tagging|sensor|light|tv|moving_room|hidden_door|auto_trigger|keypad_device|phone_device|other",
       "outputType": "door_open|hidden_compartment_open|led_on|tv_on|xkit_guide_revealed|item_acquired|next_room_open|ending_video|escape_clear"
     }
@@ -637,9 +745,13 @@ export async function generateGameFlowFromMandala(
   const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
   if (!apiKey) {
     console.error('Missing VITE_GOOGLE_GEMINI_API_KEY');
-    // Fallback to default generation
+    // Fallback to procedural generation (auto-derives rooms from mandalart)
     return generateGameFlowFromStory(story, cells);
   }
+
+  // Pre-extract mandalart rooms for validation
+  const ms = extractMandalartStructure(cells);
+  const mandalartRooms = ms.공간.keywords.length > 0 ? ms.공간.keywords : DEFAULT_ROOMS;
 
   const client = new GoogleGenerativeAI(apiKey);
   const prompt = buildMandalaPrompt(cells, story);
@@ -659,26 +771,37 @@ export async function generateGameFlowFromMandala(
         throw new Error('Invalid steps format');
       }
 
-      // Convert to GameFlowPlan
-      const roomSet = new Set<string>(data.steps.map((s: any) => s.room as string));
-      const rooms: string[] = Array.from(roomSet);
+      // Collect rooms from AI response, but prioritize mandalart rooms
+      const aiRoomSet = new Set<string>(data.steps.map((s: any) => s.room as string).filter(Boolean));
+      // Merge: mandalart rooms first, then any additional AI rooms
+      const rooms: string[] = [
+        ...mandalartRooms,
+        ...Array.from(aiRoomSet).filter((r) => !mandalartRooms.includes(r)),
+      ];
+
       const steps: GameFlowStep[] = data.steps.map((s: any) => ({
         id: `step-${s.stepNumber}`,
         stepNumber: s.stepNumber,
-        stage: s.stageLabel,
-        title: s.title,
+        stageLabel: s.stageLabel,
+        clueTitle: s.title || '',
         description: s.description,
         content: s.content,
         hint: s.hint,
-        room: s.room,
-        problemMode: s.problemMode || 'decryption',
-        answerType: s.answerType || 'text',
-        deviceSubtype: s.deviceSubtype || 'other',
-        outputType: s.outputType || 'item_acquired',
+        room: s.room || mandalartRooms[0],
+        problemMode: s.problemMode || 'clue',
+        answerType: s.answerType || 'number_4',
+        deviceSubtype: s.deviceSubtype || null,
+        inputLabel: '',
+        answer: '',
+        output: s.outputType || 'item_acquired',
+        clueTags: [],
+        deviceTags: [],
+        notes: s.description || '',
       }));
 
       return {
         id: `game-flow-${Date.now()}`,
+        storyId: story.id,
         title: story.title,
         description: story.description,
         rooms,
