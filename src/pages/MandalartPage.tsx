@@ -6,6 +6,7 @@ import type { ProjectBrief } from '../types';
 import MandalartBoard from '../components/mandalart/MandalartBoard';
 import MandalartToolbar from '../components/mandalart/MandalartToolbar';
 import { createExampleCells, EXAMPLE_PROJECT_NAME } from '../data/mockMandalart';
+import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 
 export default function MandalartPage() {
   const navigate = useNavigate();
@@ -293,7 +294,7 @@ export default function MandalartPage() {
             예시 보기
           </button>
           <button
-            onClick={() => navigate('/game-flow')}
+            onClick={() => { saveCurrentProject(); navigate('/game-flow'); }}
             className="px-3 sm:px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
           >
             <span className="hidden sm:inline">Game Flow →</span>
@@ -301,6 +302,9 @@ export default function MandalartPage() {
           </button>
         </div>
       </div>
+
+      {/* Workflow step bar */}
+      <WorkflowStepBar onBeforeNavigate={saveCurrentProject} />
 
       {/* ── Main Content ── */}
       <div className="flex flex-1 gap-4 px-4 py-4 overflow-hidden min-h-0">
