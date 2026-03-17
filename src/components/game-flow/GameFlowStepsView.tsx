@@ -230,6 +230,11 @@ function StepRow({
       </span>
       <StageBadge label={step.stageLabel} />
       <span className="text-[13px] text-white/70 flex-1 truncate">{step.clueTitle}</span>
+      {step.answer && (
+        <span className="text-[11px] font-mono font-semibold text-amber-300/70 bg-amber-500/[0.08] px-2 py-0.5 rounded border border-amber-500/15 truncate max-w-[120px] flex-shrink-0">
+          {step.answer}
+        </span>
+      )}
       <div className="hidden sm:flex items-center gap-0.5 text-[11px] text-white/30 flex-shrink-0">
         <span className="text-[10px]">{MODE_ICON[step.problemMode] ?? '🧩'}</span>
         <span>{MODE_SHORT[step.problemMode] ?? step.problemMode}</span>

@@ -1,17 +1,19 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import type { GameFlowPlan, GameFlowStep, StageLabel } from '../../types/gameFlow';
+import type { MandalartCellData } from '../../types/mandalart';
 import GameFlowChart from './GameFlowChart';
 
 const STAGE_ORDER: StageLabel[] = ['기', '승', '전', '반전', '결'];
 
 interface GameFlowTabProps {
   plan: GameFlowPlan;
+  cells?: MandalartCellData[];
   isRegenerating: boolean;
   onRegenerate: () => void;
   onUpdatePlan: (plan: GameFlowPlan) => void;
 }
 
-export default function GameFlowTab({ plan, isRegenerating, onRegenerate, onUpdatePlan }: GameFlowTabProps) {
+export default function GameFlowTab({ plan, cells, isRegenerating, onRegenerate, onUpdatePlan }: GameFlowTabProps) {
   const [filterRoom, setFilterRoom] = useState<string>('all');
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
   const [editRoomValue, setEditRoomValue] = useState('');
@@ -274,6 +276,7 @@ export default function GameFlowTab({ plan, isRegenerating, onRegenerate, onUpda
       {/* ── Chart ── */}
       <GameFlowChart
         plan={filterRoom === 'all' ? plan : { ...plan, steps: filtered }}
+        cells={cells}
         onUpdateStep={handleUpdateStep}
         onAddStep={handleAddStep}
         onDeleteStep={handleDeleteStep}
