@@ -451,23 +451,19 @@ function BuildTab({
   analyzeFromYoutube, setAnalyzeFromYoutube,
   youtubeAnalysisResult,
 }: BuildTabProps) {
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['basic']));
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ basic: true });
 
   // When YouTube analysis completes, open all sections to show auto-filled data
   const prevAnalysisRef = useRef(youtubeAnalysisResult);
   useEffect(() => {
     if (youtubeAnalysisResult && youtubeAnalysisResult !== prevAnalysisRef.current) {
       prevAnalysisRef.current = youtubeAnalysisResult;
-      setOpenSections(new Set(['youtube', 'basic', 'scenario', 'puzzle', 'story']));
+      setOpenSections({ youtube: true, basic: true, scenario: true, puzzle: true, story: true });
     }
   }, [youtubeAnalysisResult]);
 
   const toggle = (key: string) =>
-    setOpenSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <div className="flex flex-col gap-4">
@@ -475,10 +471,10 @@ function BuildTab({
       <SectionHeader
         title="📺 참고 자료 (선택사항)"
         subtitle="YouTube 영상을 기반으로 테마 기획하기"
-        open={openSections.has('youtube')}
+        open={openSections['youtube']}
         onToggle={() => toggle('youtube')}
       />
-      {openSections.has('youtube') && (
+      {openSections['youtube'] && (
         <div className="flex flex-col gap-4 pl-1">
           <Field label="YouTube 링크">
             <input
@@ -591,10 +587,10 @@ function BuildTab({
       <SectionHeader
         title="기본 정보"
         subtitle="프로젝트명, 시간, 장르"
-        open={openSections.has('basic')}
+        open={openSections['basic']}
         onToggle={() => toggle('basic')}
       />
-      {openSections.has('basic') && (
+      {openSections['basic'] && (
         <div className="flex flex-col gap-4 pl-1">
           <BranchSelector selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
           <Field label="프로젝트 이름">
@@ -633,10 +629,10 @@ function BuildTab({
       <SectionHeader
         title="사건 요소"
         subtitle="인물, 장소, 범행동기, 수사단서"
-        open={openSections.has('scenario')}
+        open={openSections['scenario']}
         onToggle={() => toggle('scenario')}
       />
-      {openSections.has('scenario') && (
+      {openSections['scenario'] && (
         <div className="pl-1">
           <ScenarioForm form={scenarioForm} onChange={setScenarioForm} />
           {scenarioResult && (
@@ -654,10 +650,10 @@ function BuildTab({
       <SectionHeader
         title="문제 유형"
         subtitle="퍼즐 유형 + 클루 형태"
-        open={openSections.has('puzzle')}
+        open={openSections['puzzle']}
         onToggle={() => toggle('puzzle')}
       />
-      {openSections.has('puzzle') && (
+      {openSections['puzzle'] && (
         <div className="flex flex-col gap-4 pl-1">
           <Field label="퍼즐 유형">
             <div className="flex flex-wrap gap-1.5">
@@ -688,10 +684,10 @@ function BuildTab({
       <SectionHeader
         title="스토리 흐름"
         subtitle="시놉시스 + 기승전반결 (선택사항)"
-        open={openSections.has('story')}
+        open={openSections['story']}
         onToggle={() => toggle('story')}
       />
-      {openSections.has('story') && (
+      {openSections['story'] && (
         <div className="flex flex-col gap-4 pl-1">
           <Field label="스토리 핵심 흐름">
             <textarea
