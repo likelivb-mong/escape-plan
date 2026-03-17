@@ -49,57 +49,61 @@ export default function GameFlowStepsView({ plan, onUpdatePlan }: GameFlowStepsV
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-4 sm:px-6 lg:px-10 py-5 max-w-3xl">
-        {/* View Mode & Filters */}
-        <div className="flex items-center gap-3 mb-5 flex-wrap">
-          <div className="flex items-center gap-0.5 p-0.5 rounded-full border border-white/[0.08] bg-white/[0.02]">
-            <TabButton active={viewMode === 'stage'} onClick={() => setViewMode('stage')}>
+      <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-4xl mx-auto">
+
+        {/* ── Toolbar ── */}
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          {/* View mode toggle */}
+          <div className="flex items-center p-0.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <SegmentButton active={viewMode === 'stage'} onClick={() => setViewMode('stage')}>
               단계별
-            </TabButton>
-            <TabButton active={viewMode === 'room'} onClick={() => setViewMode('room')}>
+            </SegmentButton>
+            <SegmentButton active={viewMode === 'room'} onClick={() => setViewMode('room')}>
               공간별
-            </TabButton>
+            </SegmentButton>
           </div>
 
-          {viewMode === 'room' && (
-            <div className="flex items-center gap-1 flex-wrap">
-              <FilterChip active={filterRoom === 'all'} onClick={() => setFilterRoom('all')}>전체</FilterChip>
-              {rooms.map((room) => (
-                <FilterChip key={room} active={filterRoom === room} onClick={() => setFilterRoom(filterRoom === room ? 'all' : room)}>
-                  {room}
-                </FilterChip>
-              ))}
-            </div>
-          )}
+          {/* Filters */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {viewMode === 'room' && (
+              <>
+                <Chip active={filterRoom === 'all'} onClick={() => setFilterRoom('all')}>All</Chip>
+                {rooms.map((room) => (
+                  <Chip key={room} active={filterRoom === room} onClick={() => setFilterRoom(filterRoom === room ? 'all' : room)}>
+                    {room}
+                  </Chip>
+                ))}
+              </>
+            )}
+            {viewMode === 'stage' && (
+              <>
+                <Chip active={filterStage === 'all'} onClick={() => setFilterStage('all')}>All</Chip>
+                {STAGE_ORDER.map((stage) => (
+                  <Chip key={stage} active={filterStage === stage} onClick={() => setFilterStage(filterStage === stage ? 'all' : stage)}>
+                    {stage}
+                  </Chip>
+                ))}
+              </>
+            )}
+          </div>
 
-          {viewMode === 'stage' && (
-            <div className="flex items-center gap-1 flex-wrap">
-              <FilterChip active={filterStage === 'all'} onClick={() => setFilterStage('all')}>전체</FilterChip>
-              {STAGE_ORDER.map((stage) => (
-                <FilterChip key={stage} active={filterStage === stage} onClick={() => setFilterStage(filterStage === stage ? 'all' : stage)}>
-                  {stage}
-                </FilterChip>
-              ))}
-            </div>
-          )}
-
-          <span className="text-caption text-white/35 ml-auto">
-            {filtered.length} / {steps.length} 스텝
+          <span className="text-[11px] text-white/25 ml-auto tabular-nums">
+            {filtered.length}/{steps.length}
           </span>
         </div>
 
-        {/* Grouped step list */}
-        {viewMode === 'room' ? (
-          <div className="flex flex-col gap-5">
-            {byRoom.map(({ room, steps: roomSteps }) => (
-              <div key={room}>
-                <div className="flex items-center gap-2 mb-2">
+        {/* ── Grouped list ── */}
+        <div className="flex flex-col gap-8">
+          {viewMode === 'room' ? (
+            byRoom.map(({ room, steps: roomSteps }) => (
+              <section key={room}>
+                <div className="flex items-center gap-2.5 mb-3">
                   <RoomBadge room={room} rooms={rooms} />
-                  <span className="text-caption text-white/35">{roomSteps.length}개 스텝</span>
+                  <span className="text-[11px] text-white/30">{roomSteps.length} steps</span>
                 </div>
-                <div className="flex flex-col gap-1 pl-2 border-l border-white/[0.06]">
+                <div className="flex flex-col gap-0.5 ml-3 pl-3 border-l border-white/[0.06]">
                   {roomSteps.map((step) => (
-                    <EditableStepRow
+                    <StepRow
                       key={step.id}
                       step={step}
                       rooms={rooms}
@@ -109,20 +113,18 @@ export default function GameFlowStepsView({ plan, onUpdatePlan }: GameFlowStepsV
                     />
                   ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-5">
-            {byStage.map(({ stage, steps: stageSteps }) => (
-              <div key={stage}>
-                <div className="flex items-center gap-2 mb-2">
+              </section>
+            ))
+          ) : (
+            byStage.map(({ stage, steps: stageSteps }) => (
+              <section key={stage}>
+                <div className="flex items-center gap-2.5 mb-3">
                   <StageBadge label={stage} />
-                  <span className="text-caption text-white/35">{stageSteps.length}개 스텝</span>
+                  <span className="text-[11px] text-white/30">{stageSteps.length} steps</span>
                 </div>
-                <div className="flex flex-col gap-1 pl-2 border-l border-white/[0.06]">
+                <div className="flex flex-col gap-0.5 ml-3 pl-3 border-l border-white/[0.06]">
                   {stageSteps.map((step) => (
-                    <EditableStepRow
+                    <StepRow
                       key={step.id}
                       step={step}
                       rooms={rooms}
@@ -132,8 +134,14 @@ export default function GameFlowStepsView({ plan, onUpdatePlan }: GameFlowStepsV
                     />
                   ))}
                 </div>
-              </div>
-            ))}
+              </section>
+            ))
+          )}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="py-16 text-center">
+            <p className="text-sm text-white/25">해당 조건에 맞는 스텝이 없습니다</p>
           </div>
         )}
       </div>
@@ -141,14 +149,10 @@ export default function GameFlowStepsView({ plan, onUpdatePlan }: GameFlowStepsV
   );
 }
 
-// ── Editable Step Row ────────────────────────────────────────────────────────
+// ── Step Row (collapsed / expanded) ──────────────────────────────────────────
 
-function EditableStepRow({
-  step,
-  rooms,
-  isEditing,
-  onToggleEdit,
-  onUpdate,
+function StepRow({
+  step, rooms, isEditing, onToggleEdit, onUpdate,
 }: {
   step: GameFlowStep;
   rooms: string[];
@@ -158,9 +162,10 @@ function EditableStepRow({
 }) {
   if (isEditing) {
     return (
-      <div className="px-3 py-3 rounded-xl border border-white/[0.12] bg-white/[0.04] mb-1">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-micro font-mono text-white/25 w-4 text-right">
+      <div className="rounded-xl border border-white/[0.10] bg-white/[0.03] p-4 my-1 transition-all">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-[10px] font-mono text-white/25 w-5 text-right tabular-nums">
             {String(step.stepNumber).padStart(2, '0')}
           </span>
           <StageBadge label={step.stageLabel} />
@@ -168,22 +173,26 @@ function EditableStepRow({
           <div className="flex-1" />
           <button
             onClick={onToggleEdit}
-            className="text-micro text-white/30 hover:text-white/60 transition-colors px-2 py-0.5 rounded border border-white/[0.08]"
+            className="text-[11px] text-white/35 hover:text-white/60 transition-colors px-2.5 py-1 rounded-lg hover:bg-white/[0.04]"
           >
-            접기
+            Done
           </button>
         </div>
-        <div className="flex flex-col gap-2">
-          <EditField label="단서 제목" value={step.clueTitle} onChange={(v) => onUpdate({ clueTitle: v })} />
-          <EditField label="정답" value={step.answer} onChange={(v) => onUpdate({ answer: v })} />
-          <EditField label="설명" value={step.description ?? ''} onChange={(v) => onUpdate({ description: v })} multiline />
-          <EditField label="힌트" value={step.hint ?? ''} onChange={(v) => onUpdate({ hint: v })} />
-          <EditField label="메모" value={step.notes ?? ''} onChange={(v) => onUpdate({ notes: v })} multiline />
-          <div className="flex items-center gap-1.5 flex-wrap mt-1">
-            <ProblemModeBadge mode={step.problemMode} size="xs" />
-            <AnswerTypeBadge type={step.answerType} size="xs" />
-            <OutputBadge output={step.output} />
-          </div>
+
+        {/* Fields */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="단서 제목" value={step.clueTitle} onChange={(v) => onUpdate({ clueTitle: v })} />
+          <Field label="정답" value={step.answer} onChange={(v) => onUpdate({ answer: v })} />
+          <Field label="설명" value={step.description ?? ''} onChange={(v) => onUpdate({ description: v })} multiline className="sm:col-span-2" />
+          <Field label="힌트" value={step.hint ?? ''} onChange={(v) => onUpdate({ hint: v })} />
+          <Field label="메모" value={step.notes ?? ''} onChange={(v) => onUpdate({ notes: v })} multiline />
+        </div>
+
+        {/* Badges */}
+        <div className="flex items-center gap-1.5 flex-wrap mt-4 pt-3 border-t border-white/[0.06]">
+          <ProblemModeBadge mode={step.problemMode} size="xs" />
+          <AnswerTypeBadge type={step.answerType} size="xs" />
+          <OutputBadge output={step.output} />
         </div>
       </div>
     );
@@ -191,84 +200,76 @@ function EditableStepRow({
 
   return (
     <div
-      className="flex items-center gap-2.5 py-1.5 group cursor-pointer hover:bg-white/[0.02] rounded-lg px-1 -mx-1"
+      className="flex items-center gap-2.5 py-2 px-2 -mx-2 group cursor-pointer rounded-lg hover:bg-white/[0.03] transition-all"
       onClick={onToggleEdit}
     >
-      <span className="text-micro font-mono text-white/20 w-4 text-right">
+      <span className="text-[10px] font-mono text-white/20 w-5 text-right tabular-nums flex-shrink-0">
         {String(step.stepNumber).padStart(2, '0')}
       </span>
       <StageBadge label={step.stageLabel} />
-      <span className="text-footnote text-white/60 flex-1 truncate">{step.clueTitle}</span>
-      <ProblemModeBadge mode={step.problemMode} size="xs" />
-      <AnswerTypeBadge type={step.answerType} size="xs" />
-      <OutputBadge output={step.output} />
-      <span className="text-micro text-white/15 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-        ✎
+      <span className="text-[13px] text-white/70 flex-1 truncate">{step.clueTitle}</span>
+      <div className="hidden sm:flex items-center gap-1.5">
+        <ProblemModeBadge mode={step.problemMode} size="xs" />
+        <AnswerTypeBadge type={step.answerType} size="xs" />
+        <OutputBadge output={step.output} />
+      </div>
+      <span className="text-[10px] text-white/15 opacity-0 group-hover:opacity-100 transition-opacity">
+        Edit →
       </span>
     </div>
   );
 }
 
-// ── Edit field ──────────────────────────────────────────────────────────────
+// ── Field ────────────────────────────────────────────────────────────────────
 
-function EditField({
-  label, value, onChange, multiline,
+function Field({
+  label, value, onChange, multiline, className = '',
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   multiline?: boolean;
+  className?: string;
 }) {
+  const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[13px] text-white/75 outline-none focus:border-white/[0.18] focus:bg-white/[0.06] transition-all placeholder:text-white/15';
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-micro text-white/35 font-medium uppercase tracking-wider">{label}</label>
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      <label className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{label}</label>
       {multiline ? (
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={2}
-          className="px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/[0.03] text-footnote text-white/70 outline-none focus:border-white/25 transition-colors resize-none"
-        />
+        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={2} className={`${inputClass} resize-none`} />
       ) : (
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="px-2.5 py-1.5 rounded-lg border border-white/[0.10] bg-white/[0.03] text-footnote text-white/70 outline-none focus:border-white/25 transition-colors"
-        />
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className={inputClass} />
       )}
     </div>
   );
 }
 
-// ── Tab button ──────────────────────────────────────────────────────────────
+// ── Segment Button ───────────────────────────────────────────────────────────
 
-function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function SegmentButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
-      className={[
-        'px-3 py-1 rounded-full text-caption font-medium transition-all duration-150',
-        active ? 'bg-white text-black' : 'text-white/40 hover:text-white/65',
-      ].join(' ')}
+      className={`px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 ${
+        active ? 'bg-white text-black shadow-sm' : 'text-white/40 hover:text-white/60'
+      }`}
     >
       {children}
     </button>
   );
 }
 
-// ── Filter chip ─────────────────────────────────────────────────────────────
+// ── Filter Chip ──────────────────────────────────────────────────────────────
 
-function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
-      className={[
-        'px-2.5 py-0.5 rounded-full border text-caption font-medium transition-all duration-150',
+      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
         active
-          ? 'bg-white/10 text-white/75 border-white/15'
-          : 'text-white/30 border-white/[0.07] hover:text-white/55 hover:border-white/12',
-      ].join(' ')}
+          ? 'bg-white/[0.10] text-white/75 border border-white/[0.12]'
+          : 'text-white/30 border border-transparent hover:text-white/50 hover:bg-white/[0.04]'
+      }`}
     >
       {children}
     </button>
