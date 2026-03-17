@@ -61,6 +61,10 @@ export default function PlanPage() {
     projectBrief?.beats.forEach((b) => { map[b.label] = b.description; });
     return map;
   });
+  const [editMotives, setEditMotives] = useState<string>(projectBrief?.investigation.motives.join(', ') ?? '');
+  const [editMethods, setEditMethods] = useState<string>(projectBrief?.investigation.methods.join(', ') ?? '');
+  const [editClues, setEditClues] = useState<string>(projectBrief?.investigation.clues.join(', ') ?? '');
+  const [editTechniques, setEditTechniques] = useState<string>(projectBrief?.investigation.techniques.join(', ') ?? '');
 
   // Debounce YouTube URL fetching
   useEffect(() => {
@@ -145,6 +149,10 @@ export default function PlanPage() {
     setEditTimes(projectBrief?.playTimes ?? [60]);
     setEditPuzzleTypes(projectBrief?.puzzleTypes ?? []);
     setEditClueFormats(projectBrief?.clueFormats ?? []);
+    setEditMotives(projectBrief?.investigation.motives.join(', ') ?? '');
+    setEditMethods(projectBrief?.investigation.methods.join(', ') ?? '');
+    setEditClues(projectBrief?.investigation.clues.join(', ') ?? '');
+    setEditTechniques(projectBrief?.investigation.techniques.join(', ') ?? '');
     setYoutubeUrl(projectBrief?.videoId ? `https://www.youtube.com/watch?v=${projectBrief.videoId}` : '');
     const map: Record<string, string> = { '기': '', '승': '', '전': '', '반전': '', '결': '' };
     projectBrief?.beats.forEach((b) => { map[b.label] = b.description; });
@@ -168,6 +176,12 @@ export default function PlanPage() {
       beats: BEAT_LABELS
         .filter((l) => editBeats[l]?.trim())
         .map((l) => ({ label: l, description: editBeats[l].trim() })),
+      investigation: {
+        motives: editMotives.split(',').map((m) => m.trim()).filter((m) => m),
+        methods: editMethods.split(',').map((m) => m.trim()).filter((m) => m),
+        clues: editClues.split(',').map((c) => c.trim()).filter((c) => c),
+        techniques: editTechniques.split(',').map((t) => t.trim()).filter((t) => t),
+      },
     });
     setIsEditing(false);
   };
@@ -478,6 +492,53 @@ export default function PlanPage() {
                     />
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* 사건 요소 */}
+            <div>
+              <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">사건 요소 (쉼표로 구분)</label>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-caption text-white/30 mb-2">동기</p>
+                  <textarea
+                    value={editMotives}
+                    onChange={(e) => setEditMotives(e.target.value)}
+                    rows={3}
+                    placeholder="예: 금전 문제, 복수, 질투..."
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-footnote text-white placeholder:text-white/15 outline-none focus:border-white/20 transition-all resize-none"
+                  />
+                </div>
+                <div>
+                  <p className="text-caption text-white/30 mb-2">수법</p>
+                  <textarea
+                    value={editMethods}
+                    onChange={(e) => setEditMethods(e.target.value)}
+                    rows={3}
+                    placeholder="예: 독약, 흉기, 방화..."
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-footnote text-white placeholder:text-white/15 outline-none focus:border-white/20 transition-all resize-none"
+                  />
+                </div>
+                <div>
+                  <p className="text-caption text-white/30 mb-2">단서</p>
+                  <textarea
+                    value={editClues}
+                    onChange={(e) => setEditClues(e.target.value)}
+                    rows={3}
+                    placeholder="예: 지문, 목격증거, 편지..."
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-footnote text-white placeholder:text-white/15 outline-none focus:border-white/20 transition-all resize-none"
+                  />
+                </div>
+                <div>
+                  <p className="text-caption text-white/30 mb-2">기법</p>
+                  <textarea
+                    value={editTechniques}
+                    onChange={(e) => setEditTechniques(e.target.value)}
+                    rows={3}
+                    placeholder="예: 위장, 허위진술, 증거은폐..."
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-footnote text-white placeholder:text-white/15 outline-none focus:border-white/20 transition-all resize-none"
+                  />
+                </div>
               </div>
             </div>
 
