@@ -223,18 +223,22 @@ export default function ProjectsPage() {
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [syncStatus, setSyncStatus] = useState<string>('');
 
   const refreshFromSupabase = useCallback(async () => {
     try {
+      setSyncStatus('Supabase 연결 중...');
       const [remoteProjects, remoteTrashed] = await Promise.all([
         listSavedProjectsFromSupabase(),
         listTrashedProjectsFromSupabase(),
       ]);
       setProjects(remoteProjects);
       setTrashed(remoteTrashed);
-    } catch {
+      setSyncStatus(`Supabase 동기화 완료 (프로젝트 ${remoteProjects.length}개)`);
+    } catch (err) {
       // Fallback to localStorage cache
       setProjects(listSavedProjects());
+      setSyncStatus(`Supabase 오류: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }
@@ -243,7 +247,10 @@ export default function ProjectsPage() {
   // Load: migrate local data to Supabase, then refresh
   useEffect(() => {
     setProjects(listSavedProjects()); // instant cache
-    migrateLocalToSupabase().then(() => refreshFromSupabase()).catch(() => refreshFromSupabase());
+    setSyncStatus('localStorage → Supabase 마이그레이션 중...');
+    migrateLocalToSupabase()
+      .then(() => { setSyncStatus('마이그레이션 완료, Supabase에서 불러오는 중...'); return refreshFromSupabase(); })
+      .catch(() => refreshFromSupabase());
   }, [refreshFromSupabase]);
 
   useEffect(() => { refreshFromSupabase(); }, [refreshKey, refreshFromSupabase]);
@@ -343,6 +350,19 @@ export default function ProjectsPage() {
           </div>
         </div>
       </div>
+
+      {/* Sync status debug banner */}
+      {syncStatus && (
+        <div className="max-w-5xl mx-auto mb-3">
+          <div className={`px-3 py-2 rounded-lg text-caption font-mono ${
+            syncStatus.includes('오류') ? 'bg-red-500/10 text-red-400' :
+            syncStatus.includes('완료') ? 'bg-emerald-500/10 text-emerald-400' :
+            'bg-white/[0.05] text-white/40'
+          }`}>
+            {syncStatus}
+          </div>
+        </div>
+      )}
 
       {/* Branch Filter Tabs */}
       <div className="max-w-5xl mx-auto mb-6">
