@@ -4,92 +4,60 @@ interface StoryStructurePreviewProps {
   beats: StoryBeat[];
 }
 
-const BEAT_INFO: Record<string, { label: string; dot: string; label_color: string; bar: string; icon: string; description: string }> = {
-  기: {
-    label: '기',
-    dot: 'bg-sky-400/70',
-    label_color: 'text-sky-300/80',
-    bar: 'bg-sky-500/25',
-    icon: '🎬',
-    description: '도입',
-  },
-  승: {
-    label: '승',
-    dot: 'bg-emerald-400/70',
-    label_color: 'text-emerald-300/80',
-    bar: 'bg-emerald-500/25',
-    icon: '📈',
-    description: '전개',
-  },
-  전: {
-    label: '전',
-    dot: 'bg-amber-400/70',
-    label_color: 'text-amber-300/80',
-    bar: 'bg-amber-500/25',
-    icon: '🔄',
-    description: '전환',
-  },
-  반전: {
-    label: '반전',
-    dot: 'bg-rose-400/70',
-    label_color: 'text-rose-300/80',
-    bar: 'bg-rose-500/25',
-    icon: '⚡',
-    description: '반전',
-  },
-  결: {
-    label: '결',
-    dot: 'bg-purple-400/70',
-    label_color: 'text-purple-300/80',
-    bar: 'bg-purple-500/25',
-    icon: '🎭',
-    description: '결말',
-  },
+const BEAT_CONFIG: Record<string, {
+  label: string;
+  sub: string;
+  dot: string;
+  line: string;
+  badge: string;
+  text: string;
+}> = {
+  기:   { label: '기', sub: '도입',  dot: 'bg-sky-400',      line: 'bg-sky-400/20',    badge: 'bg-sky-500/10 text-sky-300 border-sky-400/20',    text: 'text-sky-200/60' },
+  승:   { label: '승', sub: '전개',  dot: 'bg-emerald-400',  line: 'bg-emerald-400/20', badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20', text: 'text-emerald-200/60' },
+  전:   { label: '전', sub: '전환',  dot: 'bg-amber-400',    line: 'bg-amber-400/20',   badge: 'bg-amber-500/10 text-amber-300 border-amber-400/20',   text: 'text-amber-200/60' },
+  반전: { label: '반전', sub: '반전', dot: 'bg-rose-400',    line: 'bg-rose-400/20',    badge: 'bg-rose-500/10 text-rose-300 border-rose-400/20',    text: 'text-rose-200/60' },
+  결:   { label: '결', sub: '결말',  dot: 'bg-purple-400',   line: 'bg-purple-400/20',  badge: 'bg-purple-500/10 text-purple-300 border-purple-400/20',  text: 'text-purple-200/60' },
 };
 
-const DEFAULT_STYLE = {
-  label: '결',
-  dot: 'bg-white/30',
-  label_color: 'text-white/40',
-  bar: 'bg-white/10',
-  icon: '❓',
-  description: '',
+const DEFAULT_CONFIG = {
+  label: '?', sub: '', dot: 'bg-white/40', line: 'bg-white/10',
+  badge: 'bg-white/5 text-white/40 border-white/10', text: 'text-white/40',
 };
 
 export default function StoryStructurePreview({ beats }: StoryStructurePreviewProps) {
-  // Responsive: mobile 세로, lg+ 가로
-  const isCompact = beats.length <= 3;
-
   return (
-    <div className={`grid gap-4 ${
-      isCompact
-        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 auto-rows-min'
-        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 auto-rows-min'
-    }`}>
-      {beats.map((beat) => {
-        const info = BEAT_INFO[beat.label] ?? DEFAULT_STYLE;
+    <div className="relative">
+      {beats.map((beat, i) => {
+        const cfg = BEAT_CONFIG[beat.label] ?? DEFAULT_CONFIG;
+        const isLast = i === beats.length - 1;
+
         return (
-          <div
-            key={beat.label}
-            className="rounded-lg border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-3.5 transition-all hover:border-white/[0.15] hover:bg-white/[0.06]"
-          >
-            {/* Header: Icon + Label */}
-            <div className="flex items-center gap-2 mb-2.5">
-              <span className="text-lg flex-shrink-0">{info.icon}</span>
-              <span className={`text-body font-bold tracking-wider flex-shrink-0 ${info.label_color}`}>
-                {info.label}
-              </span>
+          <div key={beat.label} className="relative flex gap-3.5">
+            {/* Timeline rail */}
+            <div className="flex flex-col items-center flex-shrink-0 w-5">
+              {/* Dot */}
+              <div className={`w-2.5 h-2.5 rounded-full ${cfg.dot} mt-[7px] flex-shrink-0 ring-[3px] ring-black/30`} />
+              {/* Connecting line */}
+              {!isLast && (
+                <div className={`w-px flex-1 ${cfg.line} min-h-[12px]`} />
+              )}
             </div>
 
-            {/* Stage name */}
-            <p className="text-micro font-semibold text-white/25 uppercase tracking-widest mb-2">
-              {info.description}
-            </p>
+            {/* Content */}
+            <div className={`flex-1 ${isLast ? 'pb-0' : 'pb-4'}`}>
+              {/* Beat label row */}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={`px-2 py-0.5 rounded-md border text-micro font-bold tracking-wide ${cfg.badge}`}>
+                  {cfg.label}
+                </span>
+                <span className="text-micro text-white/20 font-medium">{cfg.sub}</span>
+              </div>
 
-            {/* Description */}
-            <p className="text-footnote text-white/50 leading-relaxed whitespace-pre-wrap break-words">
-              {beat.description}
-            </p>
+              {/* Description */}
+              <p className="text-footnote text-white/45 leading-[1.7] whitespace-pre-wrap break-words">
+                {beat.description}
+              </p>
+            </div>
           </div>
         );
       })}
