@@ -4,6 +4,9 @@ import {
   listHistorySnapshots,
   formatSnapshotTime,
   getSnapshotSummary,
+  extractPageData,
+  PAGE_LABELS,
+  type HistoryPage,
   type HistorySnapshot,
 } from '../../utils/projectHistory';
 
@@ -12,18 +15,33 @@ interface HistoryDrawerProps {
   onClose: () => void;
 }
 
+const PAGE_TABS: HistoryPage[] = ['plan', 'story', 'mandalart', 'gameFlow', 'setting'];
+
 export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
-  const { currentProjectId, loadProject, saveCurrentProject } = useProject();
+  const {
+    currentProjectId,
+    saveCurrentProject,
+    setCells,
+    setSelectedStory,
+    setGameFlowDesign,
+    setFloorPlanData,
+    setProjectBrief,
+  } = useProject();
+
+  const [activePage, setActivePage] = useState<HistoryPage>('mandalart');
   const [snapshots, setSnapshots] = useState<HistorySnapshot[]>([]);
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     if (!currentProjectId) return;
-    setSnapshots(listHistorySnapshots(currentProjectId));
-  }, [currentProjectId]);
+    setSnapshots(listHistorySnapshots(currentProjectId, activePage));
+  }, [currentProjectId, activePage]);
 
   useEffect(() => {
-    if (open) refresh();
+    if (open) {
+      refresh();
+      setConfirmId(null);
+    }
   }, [open, refresh]);
 
   const handleRestore = (snap: HistorySnapshot) => {
@@ -31,26 +49,42 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
       setConfirmId(snap.id);
       return;
     }
-    // Save current state first as a snapshot before restoring
+
+    // Save current state first
     saveCurrentProject();
-    // Load the snapshot data
-    loadProject(snap.data.id);
+
+    // Restore only the page-specific data
+    const { page, data } = extractPageData(snap);
+    switch (page) {
+      case 'plan':
+        if (data.projectBrief !== undefined) setProjectBrief(data.projectBrief);
+        break;
+      case 'story':
+        if (data.selectedStory !== undefined) setSelectedStory(data.selectedStory);
+        break;
+      case 'mandalart':
+        if (data.cells) setCells(data.cells);
+        break;
+      case 'gameFlow':
+        if (data.gameFlowDesign !== undefined) setGameFlowDesign(data.gameFlowDesign);
+        break;
+      case 'setting':
+        if (data.floorPlanData !== undefined) setFloorPlanData(data.floorPlanData);
+        break;
+    }
+
     setConfirmId(null);
     onClose();
   };
 
   if (!open) return null;
 
-  // Group snapshots by date
   const grouped = groupByDate(snapshots);
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/40 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
 
       {/* Drawer */}
       <div className="fixed right-0 top-0 bottom-0 w-80 sm:w-96 bg-[#1a1a1a] border-l border-white/[0.08] z-50 flex flex-col shadow-2xl">
@@ -58,7 +92,7 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07] flex-shrink-0">
           <div>
             <h2 className="text-[15px] font-semibold text-white/90">버전 히스토리</h2>
-            <p className="text-[11px] text-white/30 mt-0.5">최근 7일간 저장 기록</p>
+            <p className="text-[11px] text-white/30 mt-0.5">페이지별 저장 기록 · 최근 7일</p>
           </div>
           <button
             onClick={onClose}
@@ -68,13 +102,31 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
           </button>
         </div>
 
+        {/* Page Tabs */}
+        <div className="flex items-center gap-0.5 px-3 py-2 border-b border-white/[0.06] flex-shrink-0 overflow-x-auto">
+          {PAGE_TABS.map((page) => (
+            <button
+              key={page}
+              onClick={() => { setActivePage(page); setConfirmId(null); }}
+              className={[
+                'px-2.5 py-1.5 rounded-md text-[11px] font-medium whitespace-nowrap transition-all',
+                activePage === page
+                  ? 'bg-white/[0.10] text-white/80'
+                  : 'text-white/30 hover:text-white/55 hover:bg-white/[0.04]',
+              ].join(' ')}
+            >
+              {PAGE_LABELS[page]}
+            </button>
+          ))}
+        </div>
+
         {/* List */}
         <div className="flex-1 overflow-y-auto px-3 py-3">
           {snapshots.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-[13px] text-white/25 text-center">
-                저장된 히스토리가 없습니다.<br />
-                프로젝트를 저장하면 자동으로 기록됩니다.
+                {PAGE_LABELS[activePage]} 페이지의<br />
+                저장된 히스토리가 없습니다.
               </p>
             </div>
           ) : (
@@ -109,7 +161,7 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
                             </span>
                             {isLatest && (
                               <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/[0.12] text-emerald-400/80 font-medium">
-                                현재
+                                최신
                               </span>
                             )}
                           </div>
@@ -128,25 +180,12 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
                           )}
                         </div>
 
-                        {/* Summary badges */}
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <Badge
-                            label={`만다라트 ${summary.cellsFilled}/81`}
-                            active={summary.cellsFilled > 0}
-                          />
-                          <Badge label="스토리" active={summary.hasStory} />
-                          {summary.hasGameFlow && (
-                            <Badge
-                              label={`Flow ${summary.stepCount}스텝 · ${summary.roomCount}룸`}
-                              active
-                            />
-                          )}
-                          {summary.hasFloorPlan && <Badge label="배치도" active />}
-                        </div>
+                        {/* Summary */}
+                        <p className="text-[11px] text-white/35">{summary}</p>
 
                         {isConfirming && (
                           <p className="text-[10px] text-amber-400/60 mt-1.5">
-                            이 버전으로 되돌립니다. 현재 상태는 자동 저장됩니다.
+                            {PAGE_LABELS[activePage]} 데이터만 이 버전으로 복원됩니다.
                           </p>
                         )}
                       </div>
@@ -161,26 +200,11 @@ export default function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
         {/* Footer */}
         <div className="px-5 py-3 border-t border-white/[0.06] flex-shrink-0">
           <p className="text-[10px] text-white/20 leading-relaxed">
-            7일이 지난 기록은 자동으로 삭제됩니다
+            각 페이지의 데이터만 개별 복원됩니다 · 7일 후 자동 삭제
           </p>
         </div>
       </div>
     </>
-  );
-}
-
-function Badge({ label, active }: { label: string; active: boolean }) {
-  return (
-    <span
-      className={[
-        'text-[9px] px-1.5 py-0.5 rounded font-medium',
-        active
-          ? 'bg-white/[0.06] text-white/40'
-          : 'bg-transparent text-white/15',
-      ].join(' ')}
-    >
-      {label}
-    </span>
   );
 }
 

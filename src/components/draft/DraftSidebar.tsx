@@ -16,7 +16,7 @@ export default function DraftSidebar({ doc, status }: DraftSidebarProps) {
   const handleSave = () => {
     setSaveState('saving');
     try {
-      saveCurrentProject();
+      saveCurrentProject('plan');
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2500);
     } catch {

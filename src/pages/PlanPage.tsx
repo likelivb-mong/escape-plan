@@ -188,7 +188,7 @@ export default function PlanPage() {
 
   const handleSave = () => {
     if (isEditing) handleSaveEdit();
-    saveCurrentProject();
+    saveCurrentProject('plan');
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };

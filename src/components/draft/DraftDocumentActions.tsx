@@ -17,7 +17,7 @@ export default function DraftDocumentActions({ doc }: DraftDocumentActionsProps)
     if (!doc) return;
     setSaveState('saving');
     try {
-      saveCurrentProject();
+      saveCurrentProject('plan');
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2500);
     } catch {

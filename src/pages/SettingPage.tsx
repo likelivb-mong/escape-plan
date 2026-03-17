@@ -302,7 +302,7 @@ export default function SettingPage() {
             </button>
           )}
           <button
-            onClick={() => { saveCurrentProject(); setSaveMessage('저장됨'); setTimeout(() => setSaveMessage(null), 1500); }}
+            onClick={() => { saveCurrentProject('setting'); setSaveMessage('저장됨'); setTimeout(() => setSaveMessage(null), 1500); }}
             disabled={!isEditing}
             className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
               isEditing

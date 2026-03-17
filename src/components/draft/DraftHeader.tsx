@@ -18,7 +18,7 @@ export default function DraftHeader({ projectName, doc }: DraftHeaderProps) {
     if (!doc) return;
     setSaveState('saving');
     try {
-      saveCurrentProject();
+      saveCurrentProject('plan');
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2500);
     } catch {

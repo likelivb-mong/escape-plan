@@ -72,7 +72,7 @@ export default function MandalartPage() {
   // 셀 변경 후 1.5초 debounce 자동 저장
   const debounceSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => saveCurrentProject(), 1500);
+    saveTimerRef.current = setTimeout(() => saveCurrentProject('mandalart'), 1500);
   }, [saveCurrentProject]);
 
   // ── Auto-fit board size to container ──────────────────────────────────────
@@ -352,7 +352,7 @@ export default function MandalartPage() {
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
-            onClick={() => saveCurrentProject()}
+            onClick={() => saveCurrentProject('mandalart')}
             disabled={!editingCellId && selectedCellIds.size === 0}
             className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
               editingCellId || selectedCellIds.size > 0
@@ -374,7 +374,7 @@ export default function MandalartPage() {
             예시 보기
           </button>
           <button
-            onClick={() => { saveCurrentProject(); navigate('/game-flow'); }}
+            onClick={() => { saveCurrentProject('mandalart'); navigate('/game-flow'); }}
             className="px-3 sm:px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
           >
             <span className="hidden sm:inline">Game Flow →</span>

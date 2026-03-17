@@ -71,7 +71,7 @@ export default function GameFlowPage() {
       setSaved(true);
       setTimeout(() => {
         setSaved(false);
-        saveCurrentProject();
+        saveCurrentProject('gameFlow');
       }, 300);
     }
   };
@@ -80,7 +80,7 @@ export default function GameFlowPage() {
     if (gamePlan) {
       setGameFlowDesign(gamePlan);
       setHasChanges(false);
-      setTimeout(() => saveCurrentProject(), 0);
+      setTimeout(() => saveCurrentProject('gameFlow'), 0);
     }
     navigate('/setting');
   };

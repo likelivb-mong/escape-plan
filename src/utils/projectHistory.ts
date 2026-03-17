@@ -3,11 +3,22 @@ import type { SavedProject } from './projectStorage';
 const HISTORY_PREFIX = 'xcape-project-history-';
 const RETENTION_DAYS = 7;
 
+/** Pages that can have independent history */
+export type HistoryPage = 'plan' | 'story' | 'mandalart' | 'gameFlow' | 'setting';
+
+export const PAGE_LABELS: Record<HistoryPage, string> = {
+  plan: 'Plan',
+  story: 'Story',
+  mandalart: '만다라트',
+  gameFlow: 'Game Flow',
+  setting: 'Pass Map',
+};
+
 export interface HistorySnapshot {
   id: string;
   projectId: string;
   savedAt: string; // ISO timestamp
-  label: string;   // human-readable page/action label
+  page: HistoryPage;
   data: SavedProject;
 }
 
@@ -16,11 +27,11 @@ function storageKey(projectId: string): string {
 }
 
 /**
- * Save a snapshot of the current project state to history.
+ * Save a snapshot of the current project state to history, tagged with a page.
  */
 export function saveHistorySnapshot(
   project: SavedProject,
-  label: string = '자동 저장',
+  page: HistoryPage = 'mandalart',
 ): void {
   const key = storageKey(project.id);
   const existing = listHistorySnapshots(project.id);
@@ -29,11 +40,10 @@ export function saveHistorySnapshot(
     id: `snap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     projectId: project.id,
     savedAt: new Date().toISOString(),
-    label,
+    page,
     data: project,
   };
 
-  // Prepend (newest first)
   existing.unshift(snapshot);
 
   // Purge entries older than 7 days
@@ -43,7 +53,6 @@ export function saveHistorySnapshot(
   try {
     localStorage.setItem(key, JSON.stringify(pruned));
   } catch {
-    // If localStorage is full, keep only last 20
     const trimmed = pruned.slice(0, 20);
     localStorage.setItem(key, JSON.stringify(trimmed));
   }
@@ -51,9 +60,9 @@ export function saveHistorySnapshot(
 
 /**
  * List all history snapshots for a project (newest first).
- * Auto-purges entries older than 7 days.
+ * Optionally filter by page.
  */
-export function listHistorySnapshots(projectId: string): HistorySnapshot[] {
+export function listHistorySnapshots(projectId: string, page?: HistoryPage): HistorySnapshot[] {
   const key = storageKey(projectId);
   try {
     const raw = localStorage.getItem(key);
@@ -64,11 +73,11 @@ export function listHistorySnapshots(projectId: string): HistorySnapshot[] {
     const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
     const valid = snapshots.filter((s) => new Date(s.savedAt).getTime() > cutoff);
 
-    // Persist purge if needed
     if (valid.length < snapshots.length) {
       localStorage.setItem(key, JSON.stringify(valid));
     }
 
+    if (page) return valid.filter((s) => s.page === page);
     return valid;
   } catch {
     return [];
@@ -115,23 +124,52 @@ export function formatSnapshotTime(isoString: string): string {
 }
 
 /**
- * Get a summary of what changed between two snapshots.
+ * Get a summary of the snapshot's data, scoped to a specific page.
  */
-export function getSnapshotSummary(snapshot: HistorySnapshot): {
-  cellsFilled: number;
-  hasStory: boolean;
-  hasGameFlow: boolean;
-  hasFloorPlan: boolean;
-  roomCount: number;
-  stepCount: number;
+export function getSnapshotSummary(snapshot: HistorySnapshot): string {
+  const d = snapshot.data;
+  switch (snapshot.page) {
+    case 'plan': {
+      const genres = d.projectBrief?.genres?.join(', ') ?? '';
+      return genres ? `장르: ${genres}` : '기획 데이터';
+    }
+    case 'story': {
+      return d.selectedStory?.title ?? '스토리 없음';
+    }
+    case 'mandalart': {
+      const filled = d.cells.filter((c) => c.text.trim()).length;
+      return `${filled}/81 칸 작성`;
+    }
+    case 'gameFlow': {
+      const steps = d.gameFlowDesign?.steps?.length ?? 0;
+      const rooms = d.gameFlowDesign?.rooms?.length ?? 0;
+      return steps > 0 ? `${steps}스텝 · ${rooms}룸` : 'Flow 없음';
+    }
+    case 'setting': {
+      return d.floorPlanData ? '배치도 있음' : '배치도 없음';
+    }
+  }
+}
+
+/**
+ * Restore only the data belonging to a specific page from a snapshot.
+ * Returns partial state setters to call.
+ */
+export function extractPageData(snapshot: HistorySnapshot): {
+  page: HistoryPage;
+  data: Partial<SavedProject>;
 } {
   const d = snapshot.data;
-  return {
-    cellsFilled: d.cells.filter((c) => c.text.trim()).length,
-    hasStory: !!d.selectedStory,
-    hasGameFlow: !!d.gameFlowDesign,
-    hasFloorPlan: !!d.floorPlanData,
-    roomCount: d.gameFlowDesign?.rooms?.length ?? 0,
-    stepCount: d.gameFlowDesign?.steps?.length ?? 0,
-  };
+  switch (snapshot.page) {
+    case 'plan':
+      return { page: 'plan', data: { projectBrief: d.projectBrief } };
+    case 'story':
+      return { page: 'story', data: { selectedStory: d.selectedStory } };
+    case 'mandalart':
+      return { page: 'mandalart', data: { cells: d.cells } };
+    case 'gameFlow':
+      return { page: 'gameFlow', data: { gameFlowDesign: d.gameFlowDesign } };
+    case 'setting':
+      return { page: 'setting', data: { floorPlanData: d.floorPlanData } };
+  }
 }

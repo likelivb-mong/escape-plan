@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useProject } from '../../context/ProjectContext';
+import type { HistoryPage } from '../../utils/projectHistory';
 
 const STEPS = [
   { key: 'plan',      label: 'Plan',      path: '/plan'      },
@@ -31,10 +32,16 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
     passmap:   !!floorPlanData,
   };
 
+  const PATH_TO_PAGE: Record<string, HistoryPage> = {
+    '/plan': 'plan', '/story': 'story', '/mandalart': 'mandalart',
+    '/game-flow': 'gameFlow', '/setting': 'setting',
+  };
+
   const handleNavigate = (path: string, idx: number) => {
     if (idx >= currentIdx) return;
     onBeforeNavigate?.();
-    saveCurrentProject();
+    const currentPage = Object.entries(PATH_TO_PAGE).find(([p]) => location.pathname.startsWith(p))?.[1];
+    saveCurrentProject(currentPage);
     navigate(path);
   };
 

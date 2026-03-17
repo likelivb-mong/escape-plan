@@ -130,7 +130,7 @@ export default function HomePage() {
   // 자동 저장 후 네비게이션 처리
   useEffect(() => {
     if (shouldNavigateAfterSave && projectBrief) {
-      saveCurrentProject();
+      saveCurrentProject('plan');
       setShouldNavigateAfterSave(false);
       navigate('/plan');
     }

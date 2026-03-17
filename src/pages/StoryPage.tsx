@@ -163,7 +163,7 @@ export default function StoryPage() {
       const merged = [...newProposals, ...aiProposals];
       setAiProposals(merged);
       setAiStoryProposals(merged);
-      setTimeout(() => saveCurrentProject(), 0);
+      setTimeout(() => saveCurrentProject('story'), 0);
     } finally {
       setIsAddingBatch(false);
     }
@@ -188,7 +188,7 @@ export default function StoryPage() {
     setSelectedStory(proposal);
     setProjectName(proposal.title);
     setCells(populateMandalartFromStory(proposal));
-    setTimeout(() => saveCurrentProject(), 0);
+    setTimeout(() => saveCurrentProject('story'), 0);
     navigate('/mandalart');
   };
 
@@ -219,7 +219,7 @@ export default function StoryPage() {
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
-            onClick={() => saveCurrentProject()}
+            onClick={() => saveCurrentProject('story')}
             disabled={!selectedId}
             className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
               selectedId
