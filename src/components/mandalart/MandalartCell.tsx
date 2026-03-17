@@ -26,21 +26,11 @@ interface MandalartCellProps {
   onDrop?: (id: string) => void;
 }
 
-const THEME_BORDER: Record<NonNullable<MandalartTheme>, string> = {
-  rose: 'border-rose-400/55',
-  sky: 'border-sky-400/55',
-  amber: 'border-amber-400/55',
-};
-const THEME_BG: Record<NonNullable<MandalartTheme>, string> = {
-  rose: 'bg-rose-500/[0.06]',
-  sky: 'bg-sky-500/[0.06]',
-  amber: 'bg-amber-500/[0.06]',
-};
-const SELECTED_RING: Record<NonNullable<MandalartTheme> | 'default', string> = {
-  rose: 'ring-rose-400/50',
-  sky: 'ring-sky-400/50',
-  amber: 'ring-amber-400/50',
-  default: 'ring-white/35',
+// Theme only affects text color, not cell background/border
+const THEME_TEXT: Record<NonNullable<MandalartTheme>, string> = {
+  rose: 'text-rose-400/90',
+  sky: 'text-sky-400/90',
+  amber: 'text-amber-400/90',
 };
 
 export default function MandalartCell({
@@ -156,9 +146,6 @@ export default function MandalartCell({
     inlineStyle.borderColor = palette.border;
     borderClass = '';
     bgClass = '';
-  } else if (theme) {
-    borderClass = THEME_BORDER[theme];
-    bgClass = THEME_BG[theme];
   } else if (isCenter) {
     borderClass = 'border-purple-400/50';
     bgClass = 'bg-purple-500/[0.14]';
@@ -177,7 +164,7 @@ export default function MandalartCell({
       inlineStyle.boxShadow = `0 0 0 1.5px ${palette.ring}`;
       ringClass = 'z-10';
     } else {
-      ringClass = `ring-[1.5px] ${theme ? SELECTED_RING[theme] : SELECTED_RING.default}`;
+      ringClass = 'ring-[1.5px] ring-white/35';
     }
   } else {
     ringClass = '';
@@ -204,6 +191,9 @@ export default function MandalartCell({
     textColorClass = 'font-semibold text-white/70';
   } else if (isSubGoal) {
     textColorClass = 'font-medium text-white/65';
+  } else if (theme) {
+    // Manual theme → font color only
+    textColorClass = `font-medium ${THEME_TEXT[theme]}`;
   } else {
     textColorClass = 'text-white/55';
   }

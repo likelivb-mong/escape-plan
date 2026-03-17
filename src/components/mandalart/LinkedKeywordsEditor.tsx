@@ -158,11 +158,11 @@ export default function LinkedKeywordsEditor({
                     isBlockCenter && palette
                       ? 'font-semibold'
                       : cell.theme === 'rose'
-                      ? 'bg-rose-500/[0.06] border-rose-400/20 text-white/70 hover:bg-rose-500/[0.10] hover:border-rose-400/30'
+                      ? 'bg-white/[0.04] border-white/[0.07] text-rose-400/90 hover:bg-white/[0.06] hover:border-white/[0.10]'
                       : cell.theme === 'sky'
-                      ? 'bg-sky-500/[0.06] border-sky-400/20 text-white/70 hover:bg-sky-500/[0.10] hover:border-sky-400/30'
+                      ? 'bg-white/[0.04] border-white/[0.07] text-sky-400/90 hover:bg-white/[0.06] hover:border-white/[0.10]'
                       : cell.theme === 'amber'
-                      ? 'bg-amber-500/[0.06] border-amber-400/20 text-white/70 hover:bg-amber-500/[0.10] hover:border-amber-400/30'
+                      ? 'bg-white/[0.04] border-white/[0.07] text-amber-400/90 hover:bg-white/[0.06] hover:border-white/[0.10]'
                       : 'bg-white/[0.04] border-white/[0.07] text-white/60 hover:bg-white/[0.06] hover:border-white/[0.10]'
                   }`}
                 >
