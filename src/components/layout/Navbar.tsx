@@ -16,7 +16,7 @@ const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/sett
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { projectName, currentProjectId } = useProject();
+  const { projectName, currentProjectId, projectBrief, selectedStory, cells, gameFlowDesign, floorPlanData } = useProject();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const isProjectDashboard = location.pathname.startsWith('/projects/') && location.pathname !== '/projects';
@@ -104,7 +104,8 @@ export default function Navbar() {
           {WORKFLOW_STEPS.map((step, idx) => {
             const isActive = location.pathname.startsWith(step.path);
             const currentMobileIdx = WORKFLOW_STEPS.findIndex((s) => location.pathname.startsWith(s.path));
-            const accessible = idx <= currentMobileIdx;
+            const mobileDone = [!!projectBrief, !!selectedStory, !!(cells?.some((c) => !c.isCenter && c.text.trim())), !!gameFlowDesign, !!floorPlanData][idx];
+            const accessible = idx <= currentMobileIdx || mobileDone;
             return accessible ? (
               <Link
                 key={step.path}
