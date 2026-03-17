@@ -208,6 +208,12 @@ export default function GameFlowChart({
 
 // ── Step Card ─────────────────────────────────────────────────────────────────
 
+const OUTPUT_LABEL: Record<string, string> = {
+  door_open: '문 열림', hidden_compartment_open: '비밀 공간', led_on: 'LED',
+  tv_on: 'TV/모니터', xkit_guide_revealed: 'X-KIT', item_acquired: '아이템',
+  next_room_open: '다음 공간', ending_video: '엔딩', escape_clear: '탈출',
+};
+
 function StepCard({
   step,
   isDragging,
@@ -223,15 +229,20 @@ function StepCard({
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
 }) {
+  const hasDescription = !!(step.description || step.puzzleSetup);
+  const hasAnswer = !!step.answer;
+  const previewText = step.description || step.puzzleSetup || '';
+
   return (
     <div
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onClick={onSelect}
       className={`group relative rounded-lg border bg-white/[0.02] text-left transition-all select-none ${
         isDragging
           ? 'opacity-30 border-white/[0.05]'
-          : 'border-white/[0.07] hover:border-white/[0.15] hover:bg-white/[0.045] cursor-grab active:cursor-grabbing'
+          : 'border-white/[0.07] hover:border-white/[0.15] hover:bg-white/[0.045] cursor-pointer active:cursor-grabbing'
       }`}
     >
       {/* Drag handle + step meta */}
@@ -248,10 +259,7 @@ function StepCard({
             <span className="text-[10px] text-white/20">·</span>
             <span className="text-[10px] text-white/30 truncate">{step.room}</span>
           </div>
-          <p
-            className="text-footnote font-medium text-white/75 line-clamp-2 leading-snug cursor-pointer hover:text-white transition-colors"
-            onClick={onSelect}
-          >
+          <p className="text-footnote font-medium text-white/75 line-clamp-2 leading-snug">
             {step.clueTitle}
           </p>
         </div>
@@ -267,6 +275,23 @@ function StepCard({
         )}
       </div>
 
+      {/* Description preview */}
+      {hasDescription && (
+        <p className="text-[11px] text-white/30 line-clamp-2 leading-relaxed px-3 pb-1.5">
+          {previewText}
+        </p>
+      )}
+
+      {/* Answer badge */}
+      {hasAnswer && (
+        <div className="flex items-center gap-1.5 px-3 pb-1.5">
+          <span className="text-[10px] text-amber-400/50">🔑</span>
+          <span className="text-[10px] font-mono text-amber-300/40 truncate max-w-[140px]">
+            {step.answer}
+          </span>
+        </div>
+      )}
+
       {/* Tags */}
       <div className="flex gap-1 px-3 pb-2.5 flex-wrap">
         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/30">
@@ -275,6 +300,14 @@ function StepCard({
         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/30">
           {ANSWER_LABEL[step.answerType] ?? step.answerType}
         </span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/30">
+          {OUTPUT_LABEL[step.output] ?? step.output}
+        </span>
+      </div>
+
+      {/* Click hint */}
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-white/20 text-center pb-1.5">
+        클릭하여 상세 보기
       </div>
     </div>
   );

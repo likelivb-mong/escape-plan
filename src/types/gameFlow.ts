@@ -54,10 +54,12 @@ export interface GameFlowStep {
   clueTags: string[];
   deviceTags: string[];
   notes?: string;
-  // UI fields
-  description?: string;
-  hint?: string;
-  content?: string;
+  // Puzzle detail fields
+  description?: string;      // 퍼즐 상황 설명
+  puzzleSetup?: string;      // 문제 설정 (플레이어가 마주하는 상황)
+  puzzleSolution?: string;   // 풀이 방법 (정답에 도달하는 과정)
+  hint?: string;             // 힌트
+  content?: string;          // 추가 연출/내용
   // xkit-specific fields
   xkitPrompt?: string;
   xkitAnswer?: string;
