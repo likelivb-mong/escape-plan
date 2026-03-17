@@ -408,7 +408,7 @@ function ThemeBriefSection({
           {brief.beats.map((beat) => (
             <div key={beat.label} className="p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
               <p className="text-caption font-bold text-white/30 mb-1">{beat.label}</p>
-              <p className="text-footnote text-white/55 leading-relaxed line-clamp-4">{beat.description}</p>
+              <p className="text-footnote text-white/55 leading-relaxed">{beat.description}</p>
             </div>
           ))}
         </div>
