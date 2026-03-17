@@ -50,7 +50,24 @@ export default function MandalartToolbar({
   return (
     <div className="flex items-center gap-1.5 flex-wrap w-full">
 
-      {/* Color theme buttons */}
+      {/* ── Multi-select toggle (always visible, independent ON/OFF) ── */}
+      <button
+        onClick={onToggleMultiSelect}
+        title={multiSelectMode ? '중복 선택 모드 끄기' : '중복 선택 모드 켜기 (여러 칸 연속 선택)'}
+        className={[
+          'px-3 py-1.5 rounded-full border text-footnote font-medium transition-all duration-150',
+          multiSelectMode
+            ? 'border-indigo-400/40 bg-indigo-500/[0.12] text-indigo-300/90'
+            : 'border-white/[0.10] text-white/30 hover:text-white/50 hover:border-white/20',
+        ].join(' ')}
+      >
+        {multiSelectMode ? '● 다중 선택' : '○ 다중 선택'}
+      </button>
+
+      {/* ── Divider ── */}
+      <div className="h-4 w-px bg-white/10 mx-0.5" />
+
+      {/* ── Color theme buttons ── */}
       {THEME_BUTTONS.map(({ theme, label, dot, style }) => (
         <button
           key={theme}
@@ -69,12 +86,11 @@ export default function MandalartToolbar({
         </button>
       ))}
 
-      {/* Divider */}
-      <div className="h-4 w-px bg-white/10 mx-0.5" />
-
-      {/* Color reset + Delete — only visible when selected */}
-      {hasSelection ? (
+      {/* ── Selection actions (only when cells are selected) ── */}
+      {hasSelection && (
         <>
+          <div className="h-4 w-px bg-white/10 mx-0.5" />
+
           <button
             onClick={onClearTheme}
             className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/40 hover:text-white/65 hover:border-white/20 transition-all duration-150"
@@ -91,40 +107,22 @@ export default function MandalartToolbar({
 
           <div className="h-4 w-px bg-white/10 mx-0.5" />
 
-          {/* Combined multi-select / deselect toggle */}
           <button
-            onClick={multiSelectMode ? onClearSelection : onToggleMultiSelect}
-            title={multiSelectMode ? '선택 해제' : '중복 선택 모드 (Ctrl/Cmd 없이 여러 칸 선택)'}
-            className={[
-              'px-3 py-1.5 rounded-full border text-footnote font-medium transition-all duration-150',
-              multiSelectMode
-                ? 'border-white/30 bg-white/[0.10] text-white/80'
-                : 'border-white/[0.08] text-white/25 hover:text-white/45 hover:border-white/15',
-            ].join(' ')}
+            onClick={onClearSelection}
+            className="px-2.5 py-1.5 rounded-full border border-white/[0.08] text-footnote font-medium text-white/25 hover:text-white/50 hover:border-white/15 transition-all duration-150"
           >
-            {multiSelectMode ? '선택 해제' : '중복 선택'}
+            선택 해제
           </button>
 
           <span className="text-footnote text-white/30 tabular-nums">
             {selectedCount}칸
           </span>
         </>
-      ) : (
-        <>
-          <button
-            onClick={onToggleMultiSelect}
-            title={multiSelectMode ? '중복 선택 해제 (현재 ON)' : '중복 선택 모드 (Ctrl/Cmd 없이 여러 칸 선택)'}
-            className={[
-              'px-3 py-1.5 rounded-full border text-footnote font-medium transition-all duration-150',
-              multiSelectMode
-                ? 'border-white/30 bg-white/[0.10] text-white/80'
-                : 'border-white/[0.10] text-white/30 hover:text-white/50 hover:border-white/20',
-            ].join(' ')}
-          >
-            {multiSelectMode ? '선택 해제' : '중복 선택'}
-          </button>
-          <span className="text-footnote text-white/20">칸을 클릭해 선택하세요</span>
-        </>
+      )}
+
+      {/* ── Hint when no selection ── */}
+      {!hasSelection && (
+        <span className="text-footnote text-white/20">칸을 클릭해 선택하세요</span>
       )}
     </div>
   );
