@@ -3,6 +3,7 @@ import type { GameFlowPlan, GameFlowStep, StageLabel, ProblemMode, AnswerType } 
 import type { MandalartCellData } from '../../types/mandalart';
 import StepDetailDrawer from './StepDetailDrawer';
 import { StageBadge } from './badges';
+import { TechSettingsBar } from './TechSettings';
 
 const STAGES: { label: StageLabel; title: string; accent: string; accentBg: string; border: string }[] = [
   { label: '기', title: '오프닝',  accent: 'text-red-400',    accentBg: 'bg-red-500/10',    border: 'border-red-500/20' },
@@ -32,34 +33,6 @@ const GOAL_THEME_CLASS: Record<string, { bg: string; border: string; text: strin
   amber: { bg: 'bg-amber-500/[0.06]', border: 'border-amber-500/15', text: 'text-amber-300/80', dot: 'bg-amber-400/60' },
 };
 
-// ── Tag styles (no emojis) ──────────────────────────────────────────────────
-const MODE_TAG: Record<string, { label: string; cls: string }> = {
-  clue:        { label: '단서', cls: 'text-sky-300/90 bg-sky-500/[0.12] border-sky-500/20' },
-  device:      { label: '장치', cls: 'text-amber-300/90 bg-amber-500/[0.12] border-amber-500/20' },
-  clue_device: { label: '복합', cls: 'text-violet-300/90 bg-violet-500/[0.12] border-violet-500/20' },
-};
-
-const ANSWER_TAG: Record<string, { label: string; cls: string }> = {
-  key:         { label: '열쇠',   cls: 'text-rose-300/80 bg-rose-500/[0.10] border-rose-500/15' },
-  number_4:    { label: '4자리',  cls: 'text-white/60 bg-white/[0.06] border-white/[0.10]' },
-  number_3:    { label: '3자리',  cls: 'text-white/60 bg-white/[0.06] border-white/[0.10]' },
-  alphabet_5:  { label: '영문5',  cls: 'text-green-300/80 bg-green-500/[0.10] border-green-500/15' },
-  keypad:      { label: '키패드', cls: 'text-cyan-300/80 bg-cyan-500/[0.10] border-cyan-500/15' },
-  xkit:        { label: 'X-KIT',  cls: 'text-purple-300/80 bg-purple-500/[0.10] border-purple-500/15' },
-  auto:        { label: '자동',   cls: 'text-orange-300/80 bg-orange-500/[0.10] border-orange-500/15' },
-};
-
-const OUTPUT_TAG: Record<string, { label: string; cls: string }> = {
-  door_open:                { label: '문열림',   cls: 'text-emerald-300/80 bg-emerald-500/[0.10] border-emerald-500/15' },
-  hidden_compartment_open:  { label: '비밀공간', cls: 'text-teal-300/80 bg-teal-500/[0.10] border-teal-500/15' },
-  led_on:                   { label: 'LED',      cls: 'text-yellow-300/80 bg-yellow-500/[0.10] border-yellow-500/15' },
-  tv_on:                    { label: 'TV',       cls: 'text-blue-300/80 bg-blue-500/[0.10] border-blue-500/15' },
-  xkit_guide_revealed:      { label: 'X-KIT',    cls: 'text-purple-300/80 bg-purple-500/[0.10] border-purple-500/15' },
-  item_acquired:            { label: '아이템',   cls: 'text-amber-300/80 bg-amber-500/[0.10] border-amber-500/15' },
-  next_room_open:           { label: '다음방',   cls: 'text-sky-300/80 bg-sky-500/[0.10] border-sky-500/15' },
-  ending_video:             { label: '엔딩',     cls: 'text-rose-300/80 bg-rose-500/[0.10] border-rose-500/15' },
-  escape_clear:             { label: '탈출',     cls: 'text-white/80 bg-white/[0.10] border-white/[0.15]' },
-};
 
 interface GameFlowChartProps {
   plan: GameFlowPlan;
@@ -238,6 +211,7 @@ export default function GameFlowChart({
                           isDragging={isDragging}
                           onSelect={() => setSelectedStep(step)}
                           onDelete={onDeleteStep ? () => onDeleteStep(step.id) : undefined}
+                          onUpdate={onUpdateStep ? (updates) => onUpdateStep(step.id, updates) : undefined}
                           onDragStart={(e) => handleDragStart(e, step.id)}
                           onDragEnd={handleDragEnd}
                         />
@@ -303,6 +277,7 @@ function StepCard({
   isDragging,
   onSelect,
   onDelete,
+  onUpdate,
   onDragStart,
   onDragEnd,
 }: {
@@ -310,16 +285,13 @@ function StepCard({
   isDragging: boolean;
   onSelect: () => void;
   onDelete?: () => void;
+  onUpdate?: (updates: Partial<GameFlowStep>) => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
 }) {
   const hasDescription = !!(step.description || step.puzzleSetup);
   const hasAnswer = !!step.answer;
   const previewText = step.description || step.puzzleSetup || '';
-
-  const mode = MODE_TAG[step.problemMode] ?? MODE_TAG.clue;
-  const answer = ANSWER_TAG[step.answerType] ?? ANSWER_TAG.number_4;
-  const output = OUTPUT_TAG[step.output] ?? OUTPUT_TAG.door_open;
 
   return (
     <div
@@ -344,7 +316,6 @@ function StepCard({
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Drag handle */}
           <span className="text-white/15 group-hover:text-white/30 transition-colors text-[10px] leading-none">
             ⠿
           </span>
@@ -380,23 +351,17 @@ function StepCard({
         </div>
       )}
 
-      {/* Tags row: 방식 · 입력 ▸ 출력 */}
-      <div className="flex items-center gap-0 px-3 pb-2.5">
-        {/* 방식 + 입력 그룹 */}
-        <div className="flex items-center rounded-l border border-r-0 border-white/[0.06] overflow-hidden">
-          <span className={`px-1.5 py-[3px] text-[9px] font-semibold leading-none ${mode.cls} border-r border-white/[0.06]`}>
-            {mode.label}
-          </span>
-          <span className={`px-1.5 py-[3px] text-[9px] font-semibold leading-none ${answer.cls}`}>
-            {answer.label}
-          </span>
-        </div>
-        {/* 화살표 구분자 */}
-        <span className="text-[9px] text-white/20 px-1">▸</span>
-        {/* 출력 결과 */}
-        <span className={`px-1.5 py-[3px] rounded text-[9px] font-semibold border leading-none ${output.cls}`}>
-          {output.label}
-        </span>
+      {/* Tags row: [방식|입력] ▸ [출력] — editable inline */}
+      <div className="px-3 pb-2.5">
+        <TechSettingsBar
+          problemMode={step.problemMode}
+          answerType={step.answerType}
+          output={step.output}
+          onChangeMode={onUpdate ? (v) => onUpdate({ problemMode: v as GameFlowStep['problemMode'] }) : undefined}
+          onChangeAnswer={onUpdate ? (v) => onUpdate({ answerType: v as GameFlowStep['answerType'] }) : undefined}
+          onChangeOutput={onUpdate ? (v) => onUpdate({ output: v as GameFlowStep['output'] }) : undefined}
+          compact
+        />
       </div>
     </div>
   );

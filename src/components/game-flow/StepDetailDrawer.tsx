@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import type { GameFlowStep, ProblemMode, AnswerType, OutputType } from '../../types/gameFlow';
+import type { GameFlowStep } from '../../types/gameFlow';
 import { StageBadge } from './badges';
-
-const PROBLEM_MODES: ProblemMode[] = ['clue', 'device', 'clue_device'];
-const ANSWER_TYPES: AnswerType[] = ['key', 'number_4', 'number_3', 'alphabet_5', 'keypad', 'xkit', 'auto'];
-const OUTPUT_TYPES: OutputType[] = [
-  'door_open', 'hidden_compartment_open', 'led_on', 'tv_on',
-  'xkit_guide_revealed', 'item_acquired', 'next_room_open', 'ending_video', 'escape_clear',
-];
+import {
+  TechSettingsBar,
+  InlineSelect,
+  MODE_OPTIONS,
+  ANSWER_OPTIONS,
+  OUTPUT_OPTIONS,
+} from './TechSettings';
 
 const MODE_LABEL: Record<string, string> = {
   clue: '단서 탐색', device: '장치 조작', clue_device: '단서+장치',
@@ -299,47 +299,40 @@ export default function StepDetailDrawer({
 
               {showTechnical && (
                 <div className="mt-2 pt-3 border-t border-white/[0.05] space-y-3">
-                  {/* ── Flow summary: 방식 · 입력 ▸ 출력 ── */}
-                  <div className="flex items-center gap-0 mb-1">
-                    <div className="flex items-center rounded-l border border-r-0 border-white/[0.08] overflow-hidden">
-                      <span className="text-[10px] font-semibold text-sky-300/80 bg-sky-500/[0.10] px-2 py-1 border-r border-white/[0.08]">
-                        {MODE_LABEL[step.problemMode] ?? step.problemMode}
-                      </span>
-                      <span className="text-[10px] font-semibold text-white/55 bg-white/[0.05] px-2 py-1">
-                        {ANSWER_LABEL[step.answerType] ?? step.answerType}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-white/25 px-1.5">▸</span>
-                    <span className="text-[10px] font-semibold text-emerald-300/80 bg-emerald-500/[0.10] px-2 py-1 rounded border border-emerald-500/15">
-                      {OUTPUT_LABEL[step.output] ?? step.output}
-                    </span>
+                  {/* ── Flow summary: [방식|입력] ▸ [출력] — editable ── */}
+                  <div className="mb-1">
+                    <TechSettingsBar
+                      problemMode={step.problemMode}
+                      answerType={step.answerType}
+                      output={step.output}
+                      onChangeMode={onUpdateStep ? v => onUpdateStep({ problemMode: v as GameFlowStep['problemMode'] }) : undefined}
+                      onChangeAnswer={onUpdateStep ? v => onUpdateStep({ answerType: v as GameFlowStep['answerType'] }) : undefined}
+                      onChangeOutput={onUpdateStep ? v => onUpdateStep({ output: v as GameFlowStep['output'] }) : undefined}
+                    />
                   </div>
 
-                  {/* ── Structured settings grid ── */}
+                  {/* ── Structured settings grid with 직접입력 ── */}
                   <div className="rounded-lg border border-white/[0.06] overflow-hidden divide-y divide-white/[0.05]">
                     <TechRow
                       indicator="sky"
                       label="방식"
                       value={step.problemMode}
-                      options={PROBLEM_MODES}
-                      labels={MODE_LABEL}
-                      onChange={onUpdateStep ? v => onUpdateStep({ problemMode: v as ProblemMode }) : undefined}
+                      options={MODE_OPTIONS}
+                      onChange={onUpdateStep ? v => onUpdateStep({ problemMode: v as GameFlowStep['problemMode'] }) : undefined}
                     />
                     <TechRow
                       indicator="white"
                       label="입력"
                       value={step.answerType}
-                      options={ANSWER_TYPES}
-                      labels={ANSWER_LABEL}
-                      onChange={onUpdateStep ? v => onUpdateStep({ answerType: v as AnswerType }) : undefined}
+                      options={ANSWER_OPTIONS}
+                      onChange={onUpdateStep ? v => onUpdateStep({ answerType: v as GameFlowStep['answerType'] }) : undefined}
                     />
                     <TechRow
                       indicator="emerald"
                       label="출력"
                       value={step.output}
-                      options={OUTPUT_TYPES}
-                      labels={OUTPUT_LABEL}
-                      onChange={onUpdateStep ? v => onUpdateStep({ output: v as OutputType }) : undefined}
+                      options={OUTPUT_OPTIONS}
+                      onChange={onUpdateStep ? v => onUpdateStep({ output: v as GameFlowStep['output'] }) : undefined}
                     />
                   </div>
 
@@ -370,7 +363,7 @@ export default function StepDetailDrawer({
   );
 }
 
-// ── Tech Row (compact inline label + select) ────────────────────────────────
+// ── Tech Row (compact inline label + InlineSelect with 직접입력) ─────────────
 
 const INDICATOR_COLOR: Record<string, string> = {
   sky:     'bg-sky-400/70',
@@ -383,16 +376,16 @@ function TechRow({
   label,
   value,
   options,
-  labels,
   onChange,
 }: {
   indicator: string;
   label: string;
   value: string;
-  options: string[];
-  labels: Record<string, string>;
+  options: readonly { value: string; label: string }[];
   onChange?: (v: string) => void;
 }) {
+  const displayLabel = options.find((o) => o.value === value)?.label ?? value;
+
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
       <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${INDICATOR_COLOR[indicator] ?? 'bg-white/40'}`} />
@@ -400,19 +393,16 @@ function TechRow({
         {label}
       </span>
       {onChange ? (
-        <select
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          className="flex-1 px-2.5 py-1.5 rounded-md border border-white/[0.10] bg-white/[0.04] text-[12px] text-white/75 cursor-pointer appearance-none outline-none hover:border-white/20 transition-colors font-medium"
-        >
-          {options.map(opt => (
-            <option key={opt} value={opt} className="bg-black text-white/70">
-              {labels[opt] ?? opt}
-            </option>
-          ))}
-        </select>
+        <div className="flex-1">
+          <InlineSelect
+            value={value}
+            options={options}
+            onChange={onChange}
+            className="text-[12px] text-white/75 font-medium"
+          />
+        </div>
       ) : (
-        <span className="text-[12px] text-white/65 font-medium">{labels[value] ?? value}</span>
+        <span className="text-[12px] text-white/65 font-medium">{displayLabel}</span>
       )}
     </div>
   );

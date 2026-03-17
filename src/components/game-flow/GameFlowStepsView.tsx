@@ -1,20 +1,9 @@
 import { useState, useMemo } from 'react';
 import type { GameFlowPlan, GameFlowStep, StageLabel } from '../../types/gameFlow';
-import { StageBadge, ProblemModeBadge, AnswerTypeBadge, OutputBadge, RoomBadge } from './badges';
+import { StageBadge, RoomBadge } from './badges';
+import { TechSettingsBar } from './TechSettings';
 
 const STAGE_ORDER: StageLabel[] = ['기', '승', '전', '반전', '결'];
-
-// ── Compact labels for collapsed row ────────────────────────────────────────
-const MODE_LABEL: Record<string, string> = { clue: '단서', device: '장치', clue_device: '복합' };
-const ANSWER_LABEL: Record<string, string> = {
-  key: '열쇠', number_4: '4자리', number_3: '3자리',
-  alphabet_5: '영문', keypad: '키패드', xkit: 'X-KIT', auto: '자동',
-};
-const OUTPUT_LABEL: Record<string, string> = {
-  door_open: '문열림', hidden_compartment_open: '비밀공간', led_on: 'LED',
-  tv_on: 'TV', xkit_guide_revealed: 'X-KIT', item_acquired: '아이템',
-  next_room_open: '다음방', ending_video: '엔딩', escape_clear: '탈출',
-};
 
 type ViewMode = 'room' | 'stage';
 
@@ -200,18 +189,16 @@ function StepRow({
           <Field label="메모" value={step.notes ?? ''} onChange={(v) => onUpdate({ notes: v })} multiline />
         </div>
 
-        {/* Badges: 방식 · 입력 ▸ 출력 */}
-        <div className="flex items-center gap-0 mt-4 pt-3 border-t border-white/[0.06]">
-          <div className="flex items-center rounded-l border border-r-0 border-white/[0.08] overflow-hidden">
-            <span className="text-[10px] font-semibold px-2 py-1">
-              <ProblemModeBadge mode={step.problemMode} size="xs" />
-            </span>
-            <span className="text-[10px] font-semibold px-2 py-1 border-l border-white/[0.08]">
-              <AnswerTypeBadge type={step.answerType} size="xs" />
-            </span>
-          </div>
-          <span className="text-[10px] text-white/25 px-1.5">▸</span>
-          <OutputBadge output={step.output} />
+        {/* Tech settings: [방식|입력] ▸ [출력] — editable */}
+        <div className="mt-4 pt-3 border-t border-white/[0.06]">
+          <TechSettingsBar
+            problemMode={step.problemMode}
+            answerType={step.answerType}
+            output={step.output}
+            onChangeMode={(v) => onUpdate({ problemMode: v as GameFlowStep['problemMode'] })}
+            onChangeAnswer={(v) => onUpdate({ answerType: v as GameFlowStep['answerType'] })}
+            onChangeOutput={(v) => onUpdate({ output: v as GameFlowStep['output'] })}
+          />
         </div>
       </div>
     );
@@ -235,20 +222,14 @@ function StepRow({
         </span>
       )}
 
-      {/* Compact meta: 방식 · 입력 ▸ 출력 */}
-      <div className="hidden sm:flex items-center gap-0 flex-shrink-0">
-        <div className="flex items-center rounded-l border border-r-0 border-white/[0.06] overflow-hidden">
-          <span className="text-[9px] font-semibold text-sky-300/60 bg-sky-500/[0.08] px-1.5 py-[2px] border-r border-white/[0.06]">
-            {MODE_LABEL[step.problemMode] ?? step.problemMode}
-          </span>
-          <span className="text-[9px] font-semibold text-white/45 bg-white/[0.05] px-1.5 py-[2px]">
-            {ANSWER_LABEL[step.answerType] ?? step.answerType}
-          </span>
-        </div>
-        <span className="text-[9px] text-white/20 px-1">▸</span>
-        <span className="text-[9px] font-semibold text-emerald-300/60 bg-emerald-500/[0.08] px-1.5 py-[2px] rounded border border-emerald-500/10">
-          {OUTPUT_LABEL[step.output] ?? step.output}
-        </span>
+      {/* Compact meta: [방식|입력] ▸ [출력] */}
+      <div className="hidden sm:flex flex-shrink-0">
+        <TechSettingsBar
+          problemMode={step.problemMode}
+          answerType={step.answerType}
+          output={step.output}
+          compact
+        />
       </div>
     </div>
   );
