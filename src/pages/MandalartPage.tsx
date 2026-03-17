@@ -369,17 +369,6 @@ export default function MandalartPage() {
             {savedVersionLabel ?? '저장'}
           </button>
           <button
-            onMouseDown={handleExamplePressStart}
-            onMouseUp={handleExamplePressEnd}
-            onMouseLeave={handleExamplePressEnd}
-            onTouchStart={handleExamplePressStart}
-            onTouchEnd={handleExamplePressEnd}
-            title="누르는 동안 예시 미리보기"
-            className="hidden sm:block px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/25 hover:bg-white/[0.04] active:border-white/40 active:text-white/70 transition-all duration-150 select-none"
-          >
-            예시 보기
-          </button>
-          <button
             onClick={() => setShowApplyDialog(true)}
             className="px-3 sm:px-4 py-1.5 rounded-full bg-white text-black text-subhead font-semibold hover:bg-white/90 active:bg-white/80 transition-colors"
           >
@@ -471,6 +460,24 @@ export default function MandalartPage() {
               다시하기
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+              </svg>
+            </button>
+
+            <div className="h-3 w-px bg-white/[0.06] mx-1" />
+
+            {/* Example preview — small icon */}
+            <button
+              onMouseDown={handleExamplePressStart}
+              onMouseUp={handleExamplePressEnd}
+              onMouseLeave={handleExamplePressEnd}
+              onTouchStart={handleExamplePressStart}
+              onTouchEnd={handleExamplePressEnd}
+              title="누르는 동안 예시 미리보기"
+              className="p-1.5 rounded-full text-white/15 hover:text-white/40 hover:bg-white/[0.04] active:text-white/60 transition-all duration-150 select-none"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
             </button>
           </div>
