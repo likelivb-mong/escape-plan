@@ -198,77 +198,86 @@ export default function HomePage() {
     setCtxProjectName(name);
     setCtxBranchCode(selectedBranch);
 
-    // If YouTube analysis was selected, use that as base
-    if (youtubeAnalysisResult && analyzeFromYoutube) {
-      setCells(youtubeAnalysisResult.cells);
-      setAiStoryProposals(youtubeAnalysisResult.stories);
-      setProjectBrief({
-        source: 'youtube',
-        videoId: extractYouTubeId(youtubeUrl) ?? null,
-        videoTitle: youtubeAnalysisResult.videoTitle,
-        videoChannel: youtubeAnalysisResult.channelName,
-        synopsis: youtubeAnalysisResult.videoSynopsis,
-        beats: youtubeAnalysisResult.videoBeats,
-        genres,
-        playTimes,
-        investigation: { motives: [], methods: [], clues: [], techniques: [] },
-        puzzleTypes,
-        clueFormats,
-      });
-      setShouldNavigateAfterSave(true);
-      return;
-    }
-
-    // If scenario form has data, use scenario-based generation
-    if (scenarioResult) {
-      setCells(populateMandalartFromScenario(scenarioForm));
-      const proposals = generateStoryProposalsFromScenario(scenarioForm, scenarioResult);
-      setAiStoryProposals(proposals);
-      setProjectBrief({
-        source: 'scenario',
-        videoId: null,
-        videoTitle: null,
-        videoChannel: null,
-        synopsis: synopsis || scenarioResult.scenarioText,
-        beats: [
-          { label: '기', description: beats['기'] || scenarioResult.summary.caseOverview },
-          { label: '승', description: beats['승'] || `핵심 단서: ${scenarioResult.summary.coreClue}` },
-          { label: '전', description: beats['전'] || scenarioResult.summary.recommendedFocus },
-          { label: '반전', description: beats['반전'] || scenarioForm.memo || '(미입력)' },
-          { label: '결', description: beats['결'] || '만다라트에서 세부 기획 진행' },
-        ],
-        genres,
-        playTimes,
-        investigation: {
+    // ── Build investigation from scenario form (if any) ──
+    const hasScenario = scenarioResult != null;
+    const investigation = hasScenario
+      ? {
           motives: scenarioForm.motive.item ? [scenarioForm.motive.item] : [],
           methods: scenarioForm.crimeType.item ? [scenarioForm.crimeType.item] : [],
           clues: scenarioForm.clue.item ? [scenarioForm.clue.item] : [],
           techniques: scenarioForm.method.item ? [scenarioForm.method.item] : [],
-        },
-        puzzleTypes,
-        clueFormats,
-      });
+        }
+      : { motives: [], methods: [], clues: [], techniques: [] };
+
+    // ── Determine source & cells/stories ──
+    const useYoutube = youtubeAnalysisResult && analyzeFromYoutube;
+
+    if (useYoutube) {
+      setCells(youtubeAnalysisResult.cells);
+      setAiStoryProposals(youtubeAnalysisResult.stories);
+    } else if (hasScenario) {
+      setCells(populateMandalartFromScenario(scenarioForm));
+      setAiStoryProposals(generateStoryProposalsFromScenario(scenarioForm, scenarioResult!));
     } else {
-      // Manual-only flow
       const freshCells = createInitialCells();
       setCells(freshCells.map((c) => (c.isCenter ? { ...c, text: name } : c)));
       setAiStoryProposals(null);
-      setProjectBrief({
-        source: 'manual',
-        videoId: null,
-        videoTitle: null,
-        videoChannel: null,
-        synopsis,
-        beats: (['기', '승', '전', '반전', '결'] as const)
-          .filter((l) => beats[l])
-          .map((l) => ({ label: l, description: beats[l] })),
-        genres,
-        playTimes,
-        investigation: { motives: [], methods: [], clues: [], techniques: [] },
-        puzzleTypes,
-        clueFormats,
-      });
     }
+
+    // ── Build beats: manual input takes priority, then YouTube/scenario fallback ──
+    const BEAT_KEYS = ['기', '승', '전', '반전', '결'] as const;
+    const hasManualBeats = BEAT_KEYS.some((k) => beats[k]?.trim());
+
+    let finalBeats: { label: string; description: string }[];
+    if (hasManualBeats) {
+      // User typed beats — use them, fill gaps from YouTube/scenario if available
+      finalBeats = BEAT_KEYS.map((k) => {
+        if (beats[k]?.trim()) return { label: k, description: beats[k] };
+        // Fallback to YouTube beat for this label
+        const ytBeat = useYoutube
+          ? youtubeAnalysisResult.videoBeats?.find((b: any) => b.label === k)
+          : null;
+        if (ytBeat) return ytBeat;
+        // Fallback to scenario beat
+        if (hasScenario && k === '기') return { label: k, description: scenarioResult!.summary.caseOverview };
+        if (hasScenario && k === '승') return { label: k, description: `핵심 단서: ${scenarioResult!.summary.coreClue}` };
+        if (hasScenario && k === '전') return { label: k, description: scenarioResult!.summary.recommendedFocus };
+        return { label: k, description: '' };
+      }).filter((b) => b.description);
+    } else if (useYoutube && youtubeAnalysisResult.videoBeats?.length) {
+      finalBeats = youtubeAnalysisResult.videoBeats;
+    } else if (hasScenario) {
+      finalBeats = [
+        { label: '기', description: scenarioResult!.summary.caseOverview },
+        { label: '승', description: `핵심 단서: ${scenarioResult!.summary.coreClue}` },
+        { label: '전', description: scenarioResult!.summary.recommendedFocus },
+        { label: '반전', description: scenarioForm.memo || '(미입력)' },
+        { label: '결', description: '만다라트에서 세부 기획 진행' },
+      ];
+    } else {
+      finalBeats = [];
+    }
+
+    // ── Synopsis: manual takes priority ──
+    const finalSynopsis = synopsis.trim()
+      || (useYoutube ? youtubeAnalysisResult.videoSynopsis : '')
+      || (hasScenario ? scenarioResult!.scenarioText : '')
+      || '';
+
+    // ── Assemble brief (all sources merged) ──
+    setProjectBrief({
+      source: useYoutube ? 'youtube' : hasScenario ? 'scenario' : 'manual',
+      videoId: useYoutube ? (extractYouTubeId(youtubeUrl) ?? null) : null,
+      videoTitle: useYoutube ? youtubeAnalysisResult.videoTitle : null,
+      videoChannel: useYoutube ? youtubeAnalysisResult.channelName : null,
+      synopsis: finalSynopsis,
+      beats: finalBeats,
+      genres,
+      playTimes,
+      investigation,
+      puzzleTypes,
+      clueFormats,
+    });
 
     // 상태 업데이트 후 저장 및 네비게이션
     // 상태 업데이트 후 저장 및 네비게이션
