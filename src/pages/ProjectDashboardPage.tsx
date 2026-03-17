@@ -114,6 +114,12 @@ export default function ProjectDashboardPage() {
       setProject(saved);
       loadProject(id);
       setLoaded(true);
+      // Still fetch from Supabase to get latest data
+      loadProjectByIdFromSupabase(id).then((remote) => {
+        if (remote && remote.updatedAt > saved.updatedAt) {
+          setProject(remote);
+        }
+      }).catch(() => { /* local cache is shown */ });
       return;
     }
     // Not in localStorage — try Supabase
@@ -125,6 +131,8 @@ export default function ProjectDashboardPage() {
       setProject(remote);
       loadProject(id);
       setLoaded(true);
+    }).catch(() => {
+      navigate('/projects');
     });
   }, [id, navigate, loadProject]);
 

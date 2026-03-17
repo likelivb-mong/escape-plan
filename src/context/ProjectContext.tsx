@@ -197,6 +197,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           applyProject(remote);
         }
       }
+    }).catch((err) => {
+      console.error('Failed to sync project from Supabase:', err);
     });
 
     return !!saved;

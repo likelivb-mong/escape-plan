@@ -273,26 +273,28 @@ export function moveToTrash(id: string): void {
 
   // Soft-delete in Supabase (set deleted_at)
   if (supabase) {
-    supabase
-      .from('projects')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id)
-      .then(({ error }) => {
-        if (error) console.error('Failed to move project to trash in Supabase:', error);
-      });
+    Promise.resolve(
+      supabase
+        .from('projects')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+    ).then(({ error }) => {
+      if (error) console.error('Failed to move project to trash in Supabase:', error);
+    }).catch((err: unknown) => console.error('moveToTrash network error:', err));
   }
 }
 
 export function restoreFromTrash(id: string): void {
   // Clear deleted_at in Supabase to restore
   if (supabase) {
-    supabase
-      .from('projects')
-      .update({ deleted_at: null })
-      .eq('id', id)
-      .then(({ error }) => {
-        if (error) console.error('Failed to restore project from Supabase:', error);
-      });
+    Promise.resolve(
+      supabase
+        .from('projects')
+        .update({ deleted_at: null })
+        .eq('id', id)
+    ).then(({ error }) => {
+      if (error) console.error('Failed to restore project from Supabase:', error);
+    }).catch((err: unknown) => console.error('restoreFromTrash network error:', err));
   }
 }
 
@@ -304,13 +306,14 @@ export function permanentlyDelete(id: string): void {
 export function emptyTrash(): void {
   // Delete all trashed projects from Supabase
   if (supabase) {
-    supabase
-      .from('projects')
-      .delete()
-      .not('deleted_at', 'is', null)
-      .then(({ error }) => {
-        if (error) console.error('Failed to empty trash in Supabase:', error);
-      });
+    Promise.resolve(
+      supabase
+        .from('projects')
+        .delete()
+        .not('deleted_at', 'is', null)
+    ).then(({ error }) => {
+      if (error) console.error('Failed to empty trash in Supabase:', error);
+    }).catch((err: unknown) => console.error('emptyTrash network error:', err));
   }
 }
 
