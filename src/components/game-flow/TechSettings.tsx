@@ -153,31 +153,11 @@ export function InlineSelect({
 // ── TechSettingsBar ─────────────────────────────────────────────────────────
 // Reusable [방식|입력] ▸ [출력] inline editor
 
-const MODE_CLS: Record<string, string> = {
-  clue: 'text-sky-300/90 bg-sky-500/[0.12]',
-  device: 'text-amber-300/90 bg-amber-500/[0.12]',
-  clue_device: 'text-violet-300/90 bg-violet-500/[0.12]',
-};
-const ANSWER_CLS: Record<string, string> = {
-  key: 'text-rose-300/80 bg-rose-500/[0.10]',
-  number_4: 'text-white/60 bg-white/[0.06]',
-  number_3: 'text-white/60 bg-white/[0.06]',
-  alphabet_5: 'text-green-300/80 bg-green-500/[0.10]',
-  keypad: 'text-cyan-300/80 bg-cyan-500/[0.10]',
-  xkit: 'text-purple-300/80 bg-purple-500/[0.10]',
-  auto: 'text-orange-300/80 bg-orange-500/[0.10]',
-};
-const OUTPUT_CLS: Record<string, string> = {
-  door_open: 'text-emerald-300/80 bg-emerald-500/[0.10]',
-  hidden_compartment_open: 'text-teal-300/80 bg-teal-500/[0.10]',
-  led_on: 'text-yellow-300/80 bg-yellow-500/[0.10]',
-  tv_on: 'text-blue-300/80 bg-blue-500/[0.10]',
-  xkit_guide_revealed: 'text-purple-300/80 bg-purple-500/[0.10]',
-  item_acquired: 'text-amber-300/80 bg-amber-500/[0.10]',
-  next_room_open: 'text-sky-300/80 bg-sky-500/[0.10]',
-  ending_video: 'text-rose-300/80 bg-rose-500/[0.10]',
-  escape_clear: 'text-white/80 bg-white/[0.10]',
-};
+// All tag styles use neutral — no per-type color variation
+const MODE_CLS  = 'text-white/55 bg-transparent';
+const ANSWER_CLS = 'text-white/55 bg-transparent';
+// Output tag is the "result" — slightly brighter to read as destination
+const OUTPUT_CLS = 'text-white/65 bg-transparent';
 
 interface TechSettingsBarProps {
   problemMode: string;
@@ -198,9 +178,9 @@ export function TechSettingsBar({
   onChangeOutput,
   compact = false,
 }: TechSettingsBarProps) {
-  const modeCls = MODE_CLS[problemMode] ?? 'text-white/60 bg-white/[0.06]';
-  const answerCls = ANSWER_CLS[answerType] ?? 'text-white/60 bg-white/[0.06]';
-  const outputCls = OUTPUT_CLS[output] ?? 'text-white/60 bg-white/[0.06]';
+  const modeCls  = MODE_CLS;
+  const answerCls = ANSWER_CLS;
+  const outputCls = OUTPUT_CLS;
 
   if (!onChangeMode && !onChangeAnswer && !onChangeOutput) {
     // Read-only mode

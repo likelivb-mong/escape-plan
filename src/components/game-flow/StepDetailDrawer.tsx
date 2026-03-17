@@ -187,9 +187,9 @@ export default function StepDetailDrawer({
             {/* ── Answer + Tech settings ── */}
             <div className="grid grid-cols-2 gap-3">
               {/* Answer */}
-              <div className="col-span-1 rounded-xl bg-amber-500/[0.07] border border-amber-400/15 px-3 py-3">
+              <div className="col-span-1 rounded-xl bg-white/[0.03] border border-white/[0.08] px-3 py-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-semibold text-amber-300/60 uppercase tracking-widest">정답</span>
+                  <span className="text-[10px] font-semibold text-white/40 uppercase tracking-widest">정답</span>
                   {u ? (
                     <InlineSelect
                       value={step.answerType}
@@ -213,14 +213,14 @@ export default function StepDetailDrawer({
               {/* Tech: 방식 + 출력 */}
               <div className="col-span-1 rounded-xl bg-white/[0.02] border border-white/[0.07] px-3 py-3 space-y-2.5">
                 <TechRow
-                  dot="bg-sky-400/60"
+                  dot="bg-white/30"
                   label="방식"
                   value={step.problemMode}
                   options={MODE_OPTIONS}
                   onChange={u ? v => u({ problemMode: v as GameFlowStep['problemMode'] }) : undefined}
                 />
                 <TechRow
-                  dot="bg-emerald-400/60"
+                  dot="bg-white/30"
                   label="출력"
                   value={step.output}
                   options={OUTPUT_OPTIONS}
@@ -242,8 +242,8 @@ export default function StepDetailDrawer({
 
             {/* ── Puzzle Setup + Solution (2-col) ── */}
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="rounded-xl bg-indigo-500/[0.05] border border-indigo-400/12 px-3 py-3">
-                <p className="text-[10px] font-semibold text-indigo-300/60 uppercase tracking-widest mb-2">문제 설정</p>
+              <div className="rounded-xl bg-white/[0.02] border border-white/[0.07] px-3 py-3">
+                <p className="text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-2">문제 설정</p>
                 <Field
                   value={step.puzzleSetup || ''}
                   placeholder="퍼즐 배치, 발견해야 할 것"
@@ -252,8 +252,8 @@ export default function StepDetailDrawer({
                   rows={4}
                 />
               </div>
-              <div className="rounded-xl bg-emerald-500/[0.05] border border-emerald-400/12 px-3 py-3">
-                <p className="text-[10px] font-semibold text-emerald-300/60 uppercase tracking-widest mb-2">풀이 방법</p>
+              <div className="rounded-xl bg-white/[0.02] border border-white/[0.07] px-3 py-3">
+                <p className="text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-2">풀이 방법</p>
                 <Field
                   value={step.puzzleSolution || ''}
                   placeholder="정답까지의 단계별 과정"

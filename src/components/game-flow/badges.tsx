@@ -9,9 +9,9 @@ import {
 // ── Problem Mode Badge ─────────────────────────────────────────────────────────
 
 const PROBLEM_MODE_STYLES: Record<ProblemMode, string> = {
-  clue:         'text-sky-300/80 border-sky-400/30 bg-sky-500/[0.08]',
-  device:       'text-amber-300/80 border-amber-400/30 bg-amber-500/[0.08]',
-  clue_device:  'text-violet-300/80 border-violet-400/30 bg-violet-500/[0.08]',
+  clue:         'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  device:       'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  clue_device:  'text-white/55 border-white/[0.10] bg-white/[0.04]',
 };
 
 export function ProblemModeBadge({
@@ -34,13 +34,13 @@ export function ProblemModeBadge({
 // ── Answer Type Badge ──────────────────────────────────────────────────────────
 
 const ANSWER_TYPE_STYLES: Record<AnswerType, string> = {
-  key:          'text-rose-300/75 border-rose-400/25 bg-rose-500/[0.07]',
-  number_4:     'text-white/55 border-white/15 bg-white/[0.04]',
-  number_3:     'text-white/55 border-white/15 bg-white/[0.04]',
-  alphabet_5:   'text-green-300/70 border-green-400/25 bg-green-500/[0.07]',
-  keypad:       'text-cyan-300/70 border-cyan-400/25 bg-cyan-500/[0.07]',
-  xkit:         'text-purple-300/80 border-purple-400/30 bg-purple-500/[0.08]',
-  auto:         'text-orange-300/70 border-orange-400/25 bg-orange-500/[0.07]',
+  key:          'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  number_4:     'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  number_3:     'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  alphabet_5:   'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  keypad:       'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  xkit:         'text-white/55 border-white/[0.10] bg-white/[0.04]',
+  auto:         'text-white/55 border-white/[0.10] bg-white/[0.04]',
 };
 
 export function AnswerTypeBadge({
@@ -106,10 +106,7 @@ export function AnswerTypeVisual({
     return (
       <div className="flex items-center gap-1.5">
         {chars.map((c, i) => (
-          <div
-            key={i}
-            className="w-8 h-9 flex items-center justify-center rounded-lg border border-green-400/20 bg-green-500/[0.06] text-body font-mono font-bold text-green-300/80"
-          >
+          <div key={i} className="w-8 h-9 flex items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-body font-mono font-bold text-white/75">
             {c}
           </div>
         ))}
@@ -121,10 +118,7 @@ export function AnswerTypeVisual({
     return (
       <div className="grid grid-cols-3 gap-1">
         {['1','2','3','4','5','6','7','8','9','*','0','#'].map((k) => (
-          <div
-            key={k}
-            className="w-6 h-6 flex items-center justify-center rounded border border-cyan-400/15 bg-cyan-500/[0.05] text-micro text-cyan-300/60 font-mono"
-          >
+          <div key={k} className="w-6 h-6 flex items-center justify-center rounded border border-white/[0.10] bg-white/[0.04] text-micro text-white/55 font-mono">
             {k}
           </div>
         ))}
@@ -134,27 +128,24 @@ export function AnswerTypeVisual({
 
   if (type === 'xkit') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-400/25 bg-purple-500/[0.07]">
-        <span className="text-title3">📱</span>
-        <span className="text-footnote text-purple-300/70 font-medium">X-KIT 앱 입력</span>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/[0.12] bg-white/[0.04]">
+        <span className="text-footnote text-white/60 font-medium">X-KIT 앱 입력</span>
       </div>
     );
   }
 
   if (type === 'key') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-rose-400/20 bg-rose-500/[0.06]">
-        <span className="text-title3">🗝</span>
-        <span className="text-footnote text-rose-300/70 font-medium">열쇠 슬롯</span>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/[0.12] bg-white/[0.04]">
+        <span className="text-footnote text-white/60 font-medium">열쇠 슬롯</span>
       </div>
     );
   }
 
   if (type === 'auto') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-orange-400/20 bg-orange-500/[0.06]">
-        <span className="text-title3">⚡</span>
-        <span className="text-footnote text-orange-300/70 font-medium">자동 트리거</span>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/[0.12] bg-white/[0.04]">
+        <span className="text-footnote text-white/60 font-medium">자동 트리거</span>
       </div>
     );
   }
@@ -164,16 +155,17 @@ export function AnswerTypeVisual({
 
 // ── Output Badge ───────────────────────────────────────────────────────────────
 
+// Output badge: uniform neutral, slightly brighter as the "result" slot
 const OUTPUT_STYLES: Record<OutputType, string> = {
-  door_open:                'text-emerald-300/80 border-emerald-400/25 bg-emerald-500/[0.07]',
-  hidden_compartment_open:  'text-teal-300/75 border-teal-400/25 bg-teal-500/[0.07]',
-  led_on:                   'text-yellow-300/80 border-yellow-400/25 bg-yellow-500/[0.07]',
-  tv_on:                    'text-blue-300/75 border-blue-400/25 bg-blue-500/[0.07]',
-  xkit_guide_revealed:      'text-purple-300/80 border-purple-400/30 bg-purple-500/[0.08]',
-  item_acquired:            'text-amber-300/80 border-amber-400/30 bg-amber-500/[0.08]',
-  next_room_open:           'text-sky-300/80 border-sky-400/30 bg-sky-500/[0.08]',
-  ending_video:             'text-rose-300/80 border-rose-400/30 bg-rose-500/[0.08]',
-  escape_clear:             'text-white/80 border-white/30 bg-white/[0.08]',
+  door_open:                'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  hidden_compartment_open:  'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  led_on:                   'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  tv_on:                    'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  xkit_guide_revealed:      'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  item_acquired:            'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  next_room_open:           'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  ending_video:             'text-white/65 border-white/[0.12] bg-white/[0.05]',
+  escape_clear:             'text-white/80 border-white/[0.18] bg-white/[0.07]',
 };
 
 const OUTPUT_ICONS: Record<OutputType, string> = {
@@ -190,8 +182,7 @@ const OUTPUT_ICONS: Record<OutputType, string> = {
 
 export function OutputBadge({ output }: { output: OutputType }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-footnote font-medium ${OUTPUT_STYLES[output]}`}>
-      <span>{OUTPUT_ICONS[output]}</span>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-micro font-medium ${OUTPUT_STYLES[output]}`}>
       {OUTPUT_LABELS[output]}
     </span>
   );

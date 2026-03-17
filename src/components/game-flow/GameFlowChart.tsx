@@ -344,8 +344,8 @@ function StepCard({
 
       {/* Answer */}
       {hasAnswer && (
-        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-md bg-amber-500/[0.08] border border-amber-500/15">
-          <span className="text-[11px] font-mono font-bold text-amber-200/90 tracking-wide">
+        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-md bg-white/[0.05] border border-white/[0.10]">
+          <span className="text-[11px] font-mono font-bold text-white/75 tracking-wide">
             {step.answer}
           </span>
         </div>
