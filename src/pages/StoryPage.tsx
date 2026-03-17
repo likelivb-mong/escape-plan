@@ -220,9 +220,14 @@ export default function StoryPage() {
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={() => saveCurrentProject()}
-            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
+            disabled={!selectedId}
+            className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
+              selectedId
+                ? 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
+                : 'border-white/[0.08] text-white/20 bg-white/[0.02] cursor-not-allowed'
+            }`}
           >
-            저장
+            {selectedId ? '저장' : '저장됨'}
           </button>
           {isStoryLocked && (
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-caption font-medium max-w-[140px] truncate">
