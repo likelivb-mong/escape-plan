@@ -306,9 +306,14 @@ export default function SettingPage() {
           )}
           <button
             onClick={() => { saveCurrentProject(); setSaveMessage('저장됨'); setTimeout(() => setSaveMessage(null), 1500); }}
-            className="px-3 py-1.5 rounded-lg border border-white/[0.10] text-footnote font-medium text-white/45 hover:border-white/20 hover:text-white/70 transition-all"
+            disabled={!isEditing}
+            className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
+              isEditing
+                ? 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
+                : 'border-white/[0.08] text-white/20 bg-white/[0.02] cursor-not-allowed'
+            }`}
           >
-            저장
+            {isEditing ? '저장' : '저장됨'}
           </button>
         </div>
       </div>

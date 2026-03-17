@@ -251,13 +251,16 @@ export default function PlanPage() {
         )}
         <button
           onClick={handleSave}
+          disabled={!isEditing}
           className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
             saved
               ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300/80'
-              : 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
+              : isEditing
+              ? 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
+              : 'border-white/[0.08] text-white/20 bg-white/[0.02] cursor-not-allowed'
           }`}
         >
-          {saved ? '✓ 저장됨' : '저장'}
+          {saved ? '✓ 저장됨' : isEditing ? '저장' : '저장됨'}
         </button>
         <button
           onClick={() => { handleSave(); navigate('/story'); }}
