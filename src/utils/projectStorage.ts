@@ -133,19 +133,20 @@ export function listSavedProjects(): SavedProject[] {
   return readLocalProjects();
 }
 
-/** Primary list from Supabase (active projects only, deleted_at IS NULL) */
+/** Primary list from Supabase (active projects only) */
 export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
   if (!supabase) return [];
   try {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .is('deleted_at', null)
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
 
-    const projects = (data || []).map(mapRowToProject);
+    // Filter out trashed projects client-side (resilient to schema cache lag)
+    const activeRows = (data || []).filter((row: any) => !row.deleted_at);
+    const projects = activeRows.map(mapRowToProject);
 
     // Update localStorage cache with the fresh list
     writeLocalProjects(projects);
@@ -166,11 +167,13 @@ export async function listTrashedProjectsFromSupabase(): Promise<TrashedProject[
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .not('deleted_at', 'is', null)
-      .order('deleted_at', { ascending: false });
+      .order('updated_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(mapRowToTrashedProject);
+
+    // Filter trashed projects client-side (resilient to schema cache lag)
+    const trashedRows = (data || []).filter((row: any) => !!row.deleted_at);
+    return trashedRows.map(mapRowToTrashedProject);
   } catch (error) {
     console.error('Failed to load trashed projects from Supabase:', error);
     return [];
@@ -197,10 +200,7 @@ async function upsertProjectToSupabase(project: SavedProject): Promise<void> {
   try {
     const { error } = await supabase
       .from('projects')
-      .upsert({
-        ...projectToRow(project),
-        deleted_at: null, // ensure it's active when upserting
-      });
+      .upsert(projectToRow(project));
 
     if (error) throw error;
   } catch (error) {
@@ -229,7 +229,6 @@ export async function loadProjectByIdFromSupabase(id: string): Promise<SavedProj
       .from('projects')
       .select('*')
       .eq('id', id)
-      .is('deleted_at', null)
       .single();
 
     if (error) throw error;
