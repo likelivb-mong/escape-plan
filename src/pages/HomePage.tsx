@@ -228,9 +228,7 @@ export default function HomePage() {
   };
 
   const togglePlayTime = (t: PlayTime) =>
-    setPlayTimes((prev) =>
-      prev.includes(t) ? (prev.length > 1 ? prev.filter((v) => v !== t) : prev) : [...prev, t],
-    );
+    setPlayTimes([t]);
 
   const toggleGenre = (g: Genre) =>
     setGenres((prev) =>
