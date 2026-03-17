@@ -13,13 +13,6 @@ const STAGES: { label: StageLabel; title: string; accent: string; border: string
 
 const STAGE_ORDER: StageLabel[] = ['기', '승', '전', '반전', '결'];
 
-const MODE_LABEL: Record<string, string> = {
-  clue: '단서', device: '장치', clue_device: '단서+장치',
-};
-const ANSWER_LABEL: Record<string, string> = {
-  key: '열쇠', number_4: '4자리', number_3: '3자리',
-  alphabet_5: '알파벳', keypad: '키패드', xkit: 'X-KIT', auto: '자동',
-};
 
 interface GameFlowChartProps {
   plan: GameFlowPlan;
@@ -208,10 +201,29 @@ export default function GameFlowChart({
 
 // ── Step Card ─────────────────────────────────────────────────────────────────
 
-const OUTPUT_LABEL: Record<string, string> = {
-  door_open: '문 열림', hidden_compartment_open: '비밀 공간', led_on: 'LED',
-  tv_on: 'TV/모니터', xkit_guide_revealed: 'X-KIT', item_acquired: '아이템',
-  next_room_open: '다음 공간', ending_video: '엔딩', escape_clear: '탈출',
+const MODE_ICON: Record<string, string> = {
+  clue: '🧩', device: '⚙️', clue_device: '🧩⚙️',
+};
+const MODE_SHORT: Record<string, string> = {
+  clue: '단서', device: '장치', clue_device: '복합',
+};
+const ANSWER_ICON: Record<string, string> = {
+  key: '🔐', number_4: '🔢', number_3: '🔢',
+  alphabet_5: '🔤', keypad: '⌨️', xkit: '📟', auto: '⏩',
+};
+const ANSWER_SHORT: Record<string, string> = {
+  key: '열쇠', number_4: '4자리', number_3: '3자리',
+  alphabet_5: '영문', keypad: '키패드', xkit: 'X-KIT', auto: '자동',
+};
+const OUTPUT_ICON: Record<string, string> = {
+  door_open: '🚪', hidden_compartment_open: '📦', led_on: '💡',
+  tv_on: '📺', xkit_guide_revealed: '📟', item_acquired: '🎁',
+  next_room_open: '🚪', ending_video: '🎬', escape_clear: '🏁',
+};
+const OUTPUT_SHORT: Record<string, string> = {
+  door_open: '문열림', hidden_compartment_open: '비밀공간', led_on: 'LED',
+  tv_on: 'TV', xkit_guide_revealed: 'X-KIT', item_acquired: '아이템',
+  next_room_open: '다음방', ending_video: '엔딩', escape_clear: '탈출',
 };
 
 function StepCard({
@@ -247,7 +259,6 @@ function StepCard({
     >
       {/* Drag handle + step meta */}
       <div className="flex items-start gap-2 px-3 pt-2.5 pb-1">
-        {/* Drag grip */}
         <span className="text-white/15 group-hover:text-white/30 transition-colors mt-0.5 flex-shrink-0 text-xs leading-none">
           ⠿
         </span>
@@ -264,7 +275,6 @@ function StepCard({
           </p>
         </div>
 
-        {/* Delete button (hover only) */}
         {onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
@@ -277,37 +287,31 @@ function StepCard({
 
       {/* Description preview */}
       {hasDescription && (
-        <p className="text-[11px] text-white/30 line-clamp-2 leading-relaxed px-3 pb-1.5">
+        <p className="text-[11px] text-white/30 line-clamp-1 leading-relaxed px-3 pb-1">
           {previewText}
         </p>
       )}
 
       {/* Answer badge */}
       {hasAnswer && (
-        <div className="flex items-center gap-1.5 px-3 pb-1.5">
-          <span className="text-[10px] text-amber-400/50">🔑</span>
-          <span className="text-[10px] font-mono text-amber-300/40 truncate max-w-[140px]">
+        <div className="flex items-center gap-1 px-3 pb-1">
+          <span className="text-[9px]">🔑</span>
+          <span className="text-[10px] font-mono text-amber-300/45 truncate max-w-[140px]">
             {step.answer}
           </span>
         </div>
       )}
 
-      {/* Tags */}
-      <div className="flex gap-1 px-3 pb-2.5 flex-wrap">
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/30">
-          {MODE_LABEL[step.problemMode] ?? step.problemMode}
-        </span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/30">
-          {ANSWER_LABEL[step.answerType] ?? step.answerType}
-        </span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/30">
-          {OUTPUT_LABEL[step.output] ?? step.output}
-        </span>
-      </div>
-
-      {/* Click hint */}
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-white/20 text-center pb-1.5">
-        클릭하여 상세 보기
+      {/* Icon · abbreviation line */}
+      <div className="flex items-center gap-0.5 px-3 pb-2.5 text-[10px] text-white/25">
+        <span className="text-[9px]">{MODE_ICON[step.problemMode] ?? '🧩'}</span>
+        <span>{MODE_SHORT[step.problemMode] ?? step.problemMode}</span>
+        <span className="text-white/10 mx-0.5">·</span>
+        <span className="text-[9px]">{ANSWER_ICON[step.answerType] ?? '🔢'}</span>
+        <span>{ANSWER_SHORT[step.answerType] ?? step.answerType}</span>
+        <span className="text-white/10 mx-0.5">·</span>
+        <span className="text-[9px]">{OUTPUT_ICON[step.output] ?? '🚪'}</span>
+        <span>{OUTPUT_SHORT[step.output] ?? step.output}</span>
       </div>
     </div>
   );
