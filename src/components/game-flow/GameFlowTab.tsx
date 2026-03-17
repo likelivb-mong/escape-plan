@@ -13,8 +13,9 @@ interface GameFlowTabProps {
 
 export default function GameFlowTab({ plan, isRegenerating, onRegenerate, onUpdatePlan }: GameFlowTabProps) {
   const [filterRoom, setFilterRoom] = useState<string>('all');
-  const [editingRoom, setEditingRoom] = useState<string | null>(null); // room being renamed
+  const [editingRoom, setEditingRoom] = useState<string | null>(null);
   const [editRoomValue, setEditRoomValue] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -43,6 +44,22 @@ export default function GameFlowTab({ plan, isRegenerating, onRegenerate, onUpda
       steps: plan.steps.map((s) => (s.room === oldName ? { ...s, room: trimmed } : s)),
     });
     if (filterRoom === oldName) setFilterRoom(trimmed);
+  };
+
+  // ── Room delete ──────────────────────────────────────────────────────────────
+  const handleDeleteRoom = (roomName: string) => {
+    const roomSteps = plan.steps.filter((s) => s.room === roomName);
+    if (roomSteps.length > 0) {
+      alert(`"${roomName}" 공간에 ${roomSteps.length}개의 스텝이 있어서 삭제할 수 없습니다.`);
+      return;
+    }
+
+    onUpdatePlan({
+      ...plan,
+      rooms: plan.rooms.filter((r) => r !== roomName),
+    });
+    if (filterRoom === roomName) setFilterRoom('all');
+    setConfirmDelete(null);
   };
 
   const startEditRoom = (room: string) => {
@@ -118,62 +135,116 @@ export default function GameFlowTab({ plan, isRegenerating, onRegenerate, onUpda
   return (
     <div className="flex flex-col flex-1 overflow-hidden min-h-0">
       {/* ── Room Name section ── */}
-      <div className="px-4 py-3 border-b border-white/[0.06] flex-shrink-0">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="px-3 sm:px-4 lg:px-6 py-3 border-b border-white/[0.06] flex-shrink-0 overflow-x-auto">
+        <div className="flex items-center gap-2 mb-3 flex-wrap min-w-min">
           <span className="text-caption font-semibold text-white/30 uppercase tracking-widest flex-shrink-0">
             Room Name
           </span>
           <span className="w-px h-3 bg-white/[0.08] flex-shrink-0" />
 
-          {plan.rooms.map((room) => (
-            <div key={room} className="flex items-center gap-0.5">
-              {editingRoom === room ? (
-                /* Inline edit input */
-                <input
-                  ref={editInputRef}
-                  value={editRoomValue}
-                  onChange={(e) => setEditRoomValue(e.target.value)}
-                  onBlur={commitRoomEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') commitRoomEdit();
-                    if (e.key === 'Escape') setEditingRoom(null);
-                  }}
-                  className="px-2.5 py-1 rounded-full border border-white/30 bg-white/[0.08] text-caption text-white outline-none min-w-[60px] max-w-[120px]"
-                  style={{ width: `${Math.max(60, editRoomValue.length * 9 + 24)}px` }}
-                />
-              ) : (
-                <div className="flex items-center gap-0.5 group">
-                  <button
-                    onClick={() => setFilterRoom(filterRoom === room ? 'all' : room)}
-                    className={`px-2.5 py-1 rounded-l-full border-l border-y text-caption font-medium transition-all ${
-                      filterRoom === room
-                        ? 'bg-white/10 text-white/75 border-white/20'
-                        : 'text-white/45 border-white/[0.07] hover:border-white/15 hover:text-white/65'
-                    }`}
-                  >
-                    {room}
-                  </button>
-                  {/* Edit pencil */}
-                  <button
-                    onClick={() => startEditRoom(room)}
-                    title="이름 변경"
-                    className={`px-1.5 py-1 rounded-r-full border-r border-y text-caption transition-all opacity-0 group-hover:opacity-100 ${
-                      filterRoom === room
-                        ? 'bg-white/10 border-white/20 text-white/40 hover:text-white/70'
-                        : 'border-white/[0.07] text-white/25 hover:text-white/55 hover:border-white/15'
-                    }`}
-                  >
-                    ✎
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+          {/* Room tags */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {plan.rooms.map((room) => (
+              <div key={room} className="flex items-center gap-0">
+                {editingRoom === room ? (
+                  /* Inline edit input */
+                  <div className="flex items-center gap-1 bg-white/[0.08] border border-white/30 rounded-lg px-2 py-1">
+                    <input
+                      ref={editInputRef}
+                      value={editRoomValue}
+                      onChange={(e) => setEditRoomValue(e.target.value)}
+                      onBlur={commitRoomEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') commitRoomEdit();
+                        if (e.key === 'Escape') setEditingRoom(null);
+                      }}
+                      className="bg-transparent text-caption text-white outline-none min-w-[60px] max-w-[150px]"
+                    />
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        onClick={commitRoomEdit}
+                        className="text-white/60 hover:text-white/80 text-xs transition-colors"
+                        title="저장"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => setEditingRoom(null)}
+                        className="text-white/60 hover:text-white/80 text-xs transition-colors"
+                        title="취소"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-0 group">
+                    <button
+                      onClick={() => setFilterRoom(filterRoom === room ? 'all' : room)}
+                      className={`px-2.5 py-1 rounded-l-lg border-l border-y text-caption font-medium transition-all whitespace-nowrap ${
+                        filterRoom === room
+                          ? 'bg-white/10 text-white/75 border-white/20'
+                          : 'text-white/45 border-white/[0.07] hover:border-white/15 hover:text-white/65'
+                      }`}
+                    >
+                      {room}
+                    </button>
+                    {/* Edit button */}
+                    <button
+                      onClick={() => startEditRoom(room)}
+                      title="이름 변경"
+                      className={`px-1.5 py-1 text-caption transition-all opacity-0 group-hover:opacity-100 ${
+                        filterRoom === room
+                          ? 'text-white/40 hover:text-white/70'
+                          : 'text-white/25 hover:text-white/55'
+                      }`}
+                    >
+                      ✎
+                    </button>
+                    {/* Delete button */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setConfirmDelete(confirmDelete === room ? null : room)}
+                        title="삭제"
+                        className={`px-1.5 py-1 rounded-r-lg border-r border-y text-caption transition-all opacity-0 group-hover:opacity-100 ${
+                          filterRoom === room
+                            ? 'bg-white/10 border-white/20 text-white/40 hover:text-red-400'
+                            : 'border-white/[0.07] text-white/25 hover:text-red-400 hover:border-red-400/30'
+                        }`}
+                      >
+                        🗑
+                      </button>
+                      {/* Delete confirmation */}
+                      {confirmDelete === room && (
+                        <div className="absolute top-full mt-1 right-0 bg-red-500/20 border border-red-500/30 rounded-lg p-2 z-50 whitespace-nowrap">
+                          <p className="text-[10px] text-red-300 mb-1">정말 삭제?</p>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleDeleteRoom(room)}
+                              className="px-2 py-0.5 text-[10px] rounded bg-red-500/40 text-red-200 hover:bg-red-500/60 transition-all"
+                            >
+                              삭제
+                            </button>
+                            <button
+                              onClick={() => setConfirmDelete(null)}
+                              className="px-2 py-0.5 text-[10px] rounded bg-white/[0.08] text-white/60 hover:bg-white/[0.12] transition-all"
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
 
           {/* 전체 filter */}
           <button
             onClick={() => setFilterRoom('all')}
-            className={`px-2.5 py-1 rounded-full border text-caption font-medium transition-all ${
+            className={`px-2.5 py-1 rounded-lg border text-caption font-medium transition-all flex-shrink-0 ${
               filterRoom === 'all'
                 ? 'bg-white/10 text-white/70 border-white/20'
                 : 'text-white/25 border-white/[0.05] hover:border-white/12 hover:text-white/45'
@@ -186,18 +257,18 @@ export default function GameFlowTab({ plan, isRegenerating, onRegenerate, onUpda
           <button
             onClick={handleAddRoom}
             title="공간 추가"
-            className="px-2 py-1 rounded-full border border-dashed border-white/[0.12] text-caption text-white/25 hover:border-white/25 hover:text-white/50 transition-all"
+            className="px-2.5 py-1 rounded-lg border border-dashed border-white/[0.12] text-caption text-white/25 hover:border-white/25 hover:text-white/50 transition-all flex-shrink-0"
           >
             + 공간
           </button>
 
-          <div className="flex-1" />
+          <div className="flex-1 min-w-[8px]" />
 
           {/* Regenerate */}
           <button
             onClick={onRegenerate}
             disabled={isRegenerating}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/[0.08] text-caption text-white/35 hover:text-white/55 hover:border-white/15 transition-all disabled:opacity-30"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg border border-white/[0.08] text-caption text-white/35 hover:text-white/55 hover:border-white/15 transition-all disabled:opacity-30 flex-shrink-0"
           >
             {isRegenerating ? (
               <span className="inline-block w-3 h-3 border border-white/20 border-t-white/50 rounded-full animate-spin" />
@@ -207,7 +278,7 @@ export default function GameFlowTab({ plan, isRegenerating, onRegenerate, onUpda
         </div>
 
         {/* Step count + filter hint */}
-        <div className="flex items-center gap-2 mt-2">
+        <div className="flex items-center gap-2">
           <span className="text-[10px] text-white/20">
             {filtered.length === plan.steps.length
               ? `총 ${plan.steps.length}스텝`
