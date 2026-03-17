@@ -1,32 +1,38 @@
 -- XCAPE AI — Projects table
--- Run this once in the Supabase SQL Editor:
--- https://supabase.com/dashboard/project/oqccprellupnbmteotmp/sql/new
+-- Run this in the Supabase SQL Editor:
+-- https://supabase.com/dashboard/project/bmgswquftwwryvszrsyp/sql/new
 
-create table if not exists public.projects (
-  id               text        primary key,
-  user_id          uuid        references auth.users(id) on delete cascade not null,
-  name             text        not null,
-  saved_at         timestamptz not null,
-  updated_at       timestamptz not null,
-  story_title      text,
-  genres           text[],
-  play_times       int[],
-  synopsis         text,
-  completion_level text        not null default 'brief',
-  data             jsonb       not null,
-  deleted_at       timestamptz,
-  created_at       timestamptz not null default now()
+-- Drop old table if exists (fresh start)
+drop table if exists public.projects;
+
+create table public.projects (
+  id                            text        primary key,
+  name                          text        not null,
+  saved_at                      timestamptz not null default now(),
+  updated_at                    timestamptz not null default now(),
+  story_title                   text,
+  genres                        jsonb,
+  play_times                    jsonb,
+  synopsis                      text,
+  completion_level              text        not null default 'brief',
+  branch_code                   text,
+  project_brief                 jsonb,
+  cells                         jsonb       not null default '[]'::jsonb,
+  selected_story                jsonb,
+  puzzle_flow_plan              jsonb,
+  puzzle_recommendation_groups  jsonb       not null default '[]'::jsonb,
+  game_flow_design              jsonb,
+  floor_plan_data               jsonb,
+  passmap_link                  jsonb,
+  created_at                    timestamptz not null default now()
 );
 
--- Row Level Security: users can only access their own projects
-alter table public.projects enable row level security;
+-- No RLS — public access (no auth required)
+alter table public.projects disable row level security;
 
-create policy "Users manage own projects"
-  on public.projects
-  for all
-  using  (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+-- Allow anonymous access (insert, select, update, delete)
+grant all on public.projects to anon;
+grant all on public.projects to authenticated;
 
--- Index for fast per-user queries
-create index if not exists projects_user_id_idx on public.projects (user_id);
+-- Index for fast queries
 create index if not exists projects_updated_at_idx on public.projects (updated_at desc);
