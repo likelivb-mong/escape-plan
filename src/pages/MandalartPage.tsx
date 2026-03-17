@@ -198,13 +198,17 @@ export default function MandalartPage() {
     );
   }, [setCells, selectedCellIds]);
 
-  // ── Clear all keywords (keep center cell) ─────────────────────────────────
+  // ── Clear selected cells (text + color) ───────────────────────────────────
   const handleClearAllKeywords = useCallback(() => {
+    if (selectedCellIds.size === 0) return;
     setCells((prev) =>
-      prev.map((c) => (c.isCenter ? c : { ...c, text: '' }))
+      prev.map((c) =>
+        selectedCellIds.has(c.id) && !c.isCenter ? { ...c, text: '', theme: null } : c
+      )
     );
     setSelectedCellIds(new Set());
-  }, [setCells]);
+    debounceSave();
+  }, [setCells, selectedCellIds, debounceSave]);
 
   // ── 예시 보기: 누르는 동안만 표시, 떼면 복원 ──────────────────────────────
   const exampleSnapshotRef = useRef<{ name: string; cells: ReturnType<typeof createExampleCells> } | null>(null);
