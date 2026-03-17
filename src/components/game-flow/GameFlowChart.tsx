@@ -4,16 +4,15 @@ import type { MandalartCellData } from '../../types/mandalart';
 import StepDetailDrawer from './StepDetailDrawer';
 import { StageBadge } from './badges';
 
-const STAGES: { label: StageLabel; title: string; accent: string; border: string }[] = [
-  { label: '기', title: '오프닝',  accent: 'text-red-400/70',    border: 'border-red-500/20' },
-  { label: '승', title: '전개',    accent: 'text-orange-400/70', border: 'border-orange-500/20' },
-  { label: '전', title: '확장',    accent: 'text-yellow-400/70', border: 'border-yellow-500/20' },
-  { label: '반전', title: '반전',  accent: 'text-purple-400/70', border: 'border-purple-500/20' },
-  { label: '결', title: '엔딩',    accent: 'text-sky-400/70',    border: 'border-sky-500/20' },
+const STAGES: { label: StageLabel; title: string; accent: string; accentBg: string; border: string }[] = [
+  { label: '기', title: '오프닝',  accent: 'text-red-400',    accentBg: 'bg-red-500/10',    border: 'border-red-500/20' },
+  { label: '승', title: '전개',    accent: 'text-orange-400', accentBg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+  { label: '전', title: '확장',    accent: 'text-yellow-400', accentBg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+  { label: '반전', title: '반전',  accent: 'text-purple-400', accentBg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+  { label: '결', title: '엔딩',    accent: 'text-sky-400',    accentBg: 'bg-sky-500/10',    border: 'border-sky-500/20' },
 ];
 
 const STAGE_ORDER: StageLabel[] = ['기', '승', '전', '반전', '결'];
-
 
 // ── Sub-goal config (mirrors mandalartFromStory.ts) ─────────────────────────
 const SUB_GOALS = [
@@ -31,6 +30,35 @@ const GOAL_THEME_CLASS: Record<string, { bg: string; border: string; text: strin
   rose:  { bg: 'bg-rose-500/[0.06]',  border: 'border-rose-500/15',  text: 'text-rose-300/80',  dot: 'bg-rose-400/60' },
   sky:   { bg: 'bg-sky-500/[0.06]',   border: 'border-sky-500/15',   text: 'text-sky-300/80',   dot: 'bg-sky-400/60' },
   amber: { bg: 'bg-amber-500/[0.06]', border: 'border-amber-500/15', text: 'text-amber-300/80', dot: 'bg-amber-400/60' },
+};
+
+// ── Tag styles (no emojis) ──────────────────────────────────────────────────
+const MODE_TAG: Record<string, { label: string; cls: string }> = {
+  clue:        { label: '단서', cls: 'text-sky-300/90 bg-sky-500/[0.12] border-sky-500/20' },
+  device:      { label: '장치', cls: 'text-amber-300/90 bg-amber-500/[0.12] border-amber-500/20' },
+  clue_device: { label: '복합', cls: 'text-violet-300/90 bg-violet-500/[0.12] border-violet-500/20' },
+};
+
+const ANSWER_TAG: Record<string, { label: string; cls: string }> = {
+  key:         { label: '열쇠',   cls: 'text-rose-300/80 bg-rose-500/[0.10] border-rose-500/15' },
+  number_4:    { label: '4자리',  cls: 'text-white/60 bg-white/[0.06] border-white/[0.10]' },
+  number_3:    { label: '3자리',  cls: 'text-white/60 bg-white/[0.06] border-white/[0.10]' },
+  alphabet_5:  { label: '영문5',  cls: 'text-green-300/80 bg-green-500/[0.10] border-green-500/15' },
+  keypad:      { label: '키패드', cls: 'text-cyan-300/80 bg-cyan-500/[0.10] border-cyan-500/15' },
+  xkit:        { label: 'X-KIT',  cls: 'text-purple-300/80 bg-purple-500/[0.10] border-purple-500/15' },
+  auto:        { label: '자동',   cls: 'text-orange-300/80 bg-orange-500/[0.10] border-orange-500/15' },
+};
+
+const OUTPUT_TAG: Record<string, { label: string; cls: string }> = {
+  door_open:                { label: '문열림',   cls: 'text-emerald-300/80 bg-emerald-500/[0.10] border-emerald-500/15' },
+  hidden_compartment_open:  { label: '비밀공간', cls: 'text-teal-300/80 bg-teal-500/[0.10] border-teal-500/15' },
+  led_on:                   { label: 'LED',      cls: 'text-yellow-300/80 bg-yellow-500/[0.10] border-yellow-500/15' },
+  tv_on:                    { label: 'TV',       cls: 'text-blue-300/80 bg-blue-500/[0.10] border-blue-500/15' },
+  xkit_guide_revealed:      { label: 'X-KIT',    cls: 'text-purple-300/80 bg-purple-500/[0.10] border-purple-500/15' },
+  item_acquired:            { label: '아이템',   cls: 'text-amber-300/80 bg-amber-500/[0.10] border-amber-500/15' },
+  next_room_open:           { label: '다음방',   cls: 'text-sky-300/80 bg-sky-500/[0.10] border-sky-500/15' },
+  ending_video:             { label: '엔딩',     cls: 'text-rose-300/80 bg-rose-500/[0.10] border-rose-500/15' },
+  escape_clear:             { label: '탈출',     cls: 'text-white/80 bg-white/[0.10] border-white/[0.15]' },
 };
 
 interface GameFlowChartProps {
@@ -59,7 +87,6 @@ export default function GameFlowChart({
     return SUB_GOALS.map((g) => {
       const cell = cells.find((c) => c.row === g.row && c.col === g.col);
       const text = cell?.text || g.label;
-      // Count steps whose clueTags or clueTitle loosely match
       const matchCount = plan.steps.filter((s) =>
         s.clueTags?.some((t) => t.includes(g.label) || g.label.includes(t)) ||
         s.clueTitle?.includes(g.label) ||
@@ -96,7 +123,6 @@ export default function GameFlowChart({
   const handleColumnDragOver = (e: React.DragEvent, stage: StageLabel, stageSteps: GameFlowStep[]) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    // Determine insert index from mouse Y vs each card
     const el = e.currentTarget as HTMLElement;
     const cards = Array.from(el.querySelectorAll('[data-step-card]'));
     let insertIndex = stageSteps.length;
@@ -119,7 +145,6 @@ export default function GameFlowChart({
     setDropTarget(null);
   };
 
-  // sync selectedStep when plan updates
   const syncedSelected = selectedStep
     ? plan.steps.find((s) => s.id === selectedStep.id) ?? null
     : null;
@@ -131,11 +156,13 @@ export default function GameFlowChart({
         <div className="px-5 pt-3 pb-0 flex-shrink-0">
           <button
             onClick={() => setShowGoals(!showGoals)}
-            className="flex items-center gap-2 text-[11px] text-white/35 hover:text-white/55 transition-colors mb-2"
+            className="flex items-center gap-2 text-[11px] text-white/40 hover:text-white/60 transition-colors mb-2"
           >
-            <span className={`transition-transform ${showGoals ? 'rotate-90' : ''}`}>▶</span>
-            <span className="font-medium uppercase tracking-wider">만다라트 세부목표</span>
-            <span className="text-white/20">({subGoals.length})</span>
+            <svg className={`w-3 h-3 transition-transform ${showGoals ? 'rotate-90' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+            </svg>
+            <span className="font-semibold tracking-wide">MANDALART GOALS</span>
+            <span className="text-white/20 font-mono">{subGoals.length}</span>
           </button>
           {showGoals && (
             <div className="flex items-center gap-2 flex-wrap pb-3">
@@ -144,12 +171,12 @@ export default function GameFlowChart({
                 return (
                   <div
                     key={g.label}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${tc.bg} ${tc.border}`}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${tc.bg} ${tc.border}`}
                   >
                     <div className={`w-1.5 h-1.5 rounded-full ${tc.dot}`} />
-                    <span className={`text-xs font-medium ${tc.text}`}>{g.text}</span>
+                    <span className={`text-[11px] font-medium ${tc.text}`}>{g.text}</span>
                     {g.matchCount > 0 && (
-                      <span className="text-[10px] font-mono text-white/30 tabular-nums">
+                      <span className="text-[10px] font-mono text-white/35 tabular-nums">
                         {g.matchCount}
                       </span>
                     )}
@@ -162,14 +189,14 @@ export default function GameFlowChart({
       )}
 
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="flex gap-3 p-5 h-full" style={{ minWidth: 'max-content' }}>
+        <div className="flex gap-3 p-4 h-full" style={{ minWidth: 'max-content' }}>
           {stepsByStage.map((stage) => {
             const isOver = dropTarget?.stage === stage.label;
 
             return (
               <div
                 key={stage.label}
-                className={`flex-shrink-0 w-64 flex flex-col rounded-xl border transition-all duration-150 ${
+                className={`flex-shrink-0 w-[260px] flex flex-col rounded-xl border transition-all duration-150 ${
                   isOver
                     ? `${stage.border} bg-white/[0.03]`
                     : 'border-white/[0.06] bg-white/[0.015]'
@@ -183,18 +210,18 @@ export default function GameFlowChart({
                 onDrop={(e) => handleColumnDrop(e, stage.label)}
               >
                 {/* Column header */}
-                <div className="flex items-center justify-between px-3.5 py-3 border-b border-white/[0.05] flex-shrink-0">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between px-3.5 py-3 border-b border-white/[0.06] flex-shrink-0">
+                  <div className="flex items-center gap-2.5">
                     <StageBadge label={stage.label} />
-                    <span className="text-subhead font-semibold text-white/70">{stage.title}</span>
+                    <span className="text-[13px] font-semibold text-white/80 tracking-tight">{stage.title}</span>
                   </div>
-                  <span className={`text-caption font-mono font-bold ${stage.accent}`}>
+                  <span className={`text-[13px] font-mono font-bold tabular-nums ${stage.accent}`}>
                     {stage.steps.length}
                   </span>
                 </div>
 
                 {/* Steps list */}
-                <div className="flex-1 overflow-y-auto p-2.5 flex flex-col gap-2 min-h-[120px]">
+                <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 min-h-[120px]">
                   {stage.steps.map((step, idx) => {
                     const isDragging = draggingId === step.id;
                     const showTopLine = isOver && dropTarget?.index === idx;
@@ -202,9 +229,8 @@ export default function GameFlowChart({
 
                     return (
                       <div key={step.id} data-step-card>
-                        {/* Drop indicator (top) */}
                         {showTopLine && draggingId !== step.id && (
-                          <div className={`h-0.5 rounded-full mb-1.5 ${stage.accent.replace('text-', 'bg-').replace('/70', '/60')}`} />
+                          <div className={`h-0.5 rounded-full mb-1 ${stage.accent.replace('text-', 'bg-')}`} />
                         )}
 
                         <StepCard
@@ -216,36 +242,33 @@ export default function GameFlowChart({
                           onDragEnd={handleDragEnd}
                         />
 
-                        {/* Drop indicator (bottom of last) */}
                         {showBottomLine && (
-                          <div className={`h-0.5 rounded-full mt-1.5 ${stage.accent.replace('text-', 'bg-').replace('/70', '/60')}`} />
+                          <div className={`h-0.5 rounded-full mt-1 ${stage.accent.replace('text-', 'bg-')}`} />
                         )}
                       </div>
                     );
                   })}
 
-                  {/* Drop indicator when column is empty or at end */}
                   {isOver && dropTarget?.index === 0 && stage.steps.length === 0 && (
-                    <div className={`h-0.5 rounded-full ${stage.accent.replace('text-', 'bg-').replace('/70', '/60')}`} />
+                    <div className={`h-0.5 rounded-full ${stage.accent.replace('text-', 'bg-')}`} />
                   )}
 
-                  {/* Empty state */}
                   {stage.steps.length === 0 && !isOver && (
-                    <div className="flex-1 flex items-center justify-center py-6">
-                      <p className="text-caption text-white/15">스텝 없음</p>
+                    <div className="flex-1 flex items-center justify-center py-8">
+                      <p className="text-[11px] text-white/20">스텝 없음</p>
                     </div>
                   )}
                 </div>
 
                 {/* Add step button */}
                 {onAddStep && (
-                  <div className="p-2 border-t border-white/[0.04] flex-shrink-0">
+                  <div className="p-2 border-t border-white/[0.05] flex-shrink-0">
                     <button
                       onClick={() => onAddStep(stage.label)}
-                      className="w-full py-1.5 rounded-lg text-caption text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-all flex items-center justify-center gap-1"
+                      className="w-full py-1.5 rounded-lg text-[11px] text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-all flex items-center justify-center gap-1"
                     >
-                      <span className="text-base leading-none">+</span>
-                      <span>스텝 추가</span>
+                      <span className="text-sm leading-none">+</span>
+                      <span>추가</span>
                     </button>
                   </div>
                 )}
@@ -275,31 +298,6 @@ export default function GameFlowChart({
 
 // ── Step Card ─────────────────────────────────────────────────────────────────
 
-const MODE_ICON: Record<string, string> = {
-  clue: '🧩', device: '⚙️', clue_device: '🧩⚙️',
-};
-const MODE_SHORT: Record<string, string> = {
-  clue: '단서', device: '장치', clue_device: '복합',
-};
-const ANSWER_ICON: Record<string, string> = {
-  key: '🔐', number_4: '🔢', number_3: '🔢',
-  alphabet_5: '🔤', keypad: '⌨️', xkit: '📟', auto: '⏩',
-};
-const ANSWER_SHORT: Record<string, string> = {
-  key: '열쇠', number_4: '4자리', number_3: '3자리',
-  alphabet_5: '영문', keypad: '키패드', xkit: 'X-KIT', auto: '자동',
-};
-const OUTPUT_ICON: Record<string, string> = {
-  door_open: '🚪', hidden_compartment_open: '📦', led_on: '💡',
-  tv_on: '📺', xkit_guide_revealed: '📟', item_acquired: '🎁',
-  next_room_open: '🚪', ending_video: '🎬', escape_clear: '🏁',
-};
-const OUTPUT_SHORT: Record<string, string> = {
-  door_open: '문열림', hidden_compartment_open: '비밀공간', led_on: 'LED',
-  tv_on: 'TV', xkit_guide_revealed: 'X-KIT', item_acquired: '아이템',
-  next_room_open: '다음방', ending_video: '엔딩', escape_clear: '탈출',
-};
-
 function StepCard({
   step,
   isDragging,
@@ -319,73 +317,80 @@ function StepCard({
   const hasAnswer = !!step.answer;
   const previewText = step.description || step.puzzleSetup || '';
 
+  const mode = MODE_TAG[step.problemMode] ?? MODE_TAG.clue;
+  const answer = ANSWER_TAG[step.answerType] ?? ANSWER_TAG.number_4;
+  const output = OUTPUT_TAG[step.output] ?? OUTPUT_TAG.door_open;
+
   return (
     <div
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onSelect}
-      className={`group relative rounded-lg border bg-white/[0.02] text-left transition-all select-none ${
+      className={`group relative rounded-lg border text-left transition-all select-none ${
         isDragging
-          ? 'opacity-30 border-white/[0.05]'
-          : 'border-white/[0.07] hover:border-white/[0.15] hover:bg-white/[0.045] cursor-pointer active:cursor-grabbing'
+          ? 'opacity-30 border-white/[0.05] bg-white/[0.01]'
+          : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.18] hover:bg-white/[0.05] cursor-pointer active:cursor-grabbing'
       }`}
     >
-      {/* Drag handle + step meta */}
-      <div className="flex items-start gap-2 px-3 pt-2.5 pb-1">
-        <span className="text-white/15 group-hover:text-white/30 transition-colors mt-0.5 flex-shrink-0 text-xs leading-none">
-          ⠿
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-mono text-white/20">
-              {String(step.stepNumber).padStart(2, '0')}
-            </span>
-            <span className="text-[10px] text-white/20">·</span>
-            <span className="text-[10px] text-white/30 truncate">{step.room}</span>
-          </div>
-          <p className="text-footnote font-medium text-white/75 line-clamp-2 leading-snug">
-            {step.clueTitle}
-          </p>
+      {/* Header: step number + room */}
+      <div className="flex items-center justify-between px-3 pt-2.5 pb-0.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] font-mono font-semibold text-white/35 tabular-nums">
+            {String(step.stepNumber).padStart(2, '0')}
+          </span>
+          <span className="text-[10px] text-white/20">|</span>
+          <span className="text-[10px] text-white/35 truncate max-w-[110px]">{step.room}</span>
         </div>
 
-        {onDelete && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="opacity-0 group-hover:opacity-100 flex-shrink-0 w-5 h-5 rounded flex items-center justify-center text-white/25 hover:text-red-400/70 hover:bg-red-500/10 transition-all text-xs"
-          >
-            ✕
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {/* Drag handle */}
+          <span className="text-white/15 group-hover:text-white/30 transition-colors text-[10px] leading-none">
+            ⠿
+          </span>
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="opacity-0 group-hover:opacity-100 w-4 h-4 rounded flex items-center justify-center text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-all text-[10px]"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Title */}
+      <p className="text-[13px] font-semibold text-white/85 leading-snug line-clamp-2 px-3 pt-1 pb-1.5">
+        {step.clueTitle}
+      </p>
 
       {/* Description preview */}
       {hasDescription && (
-        <p className="text-[11px] text-white/30 line-clamp-1 leading-relaxed px-3 pb-1">
+        <p className="text-[11px] text-white/35 line-clamp-1 leading-relaxed px-3 pb-1.5">
           {previewText}
         </p>
       )}
 
-      {/* Answer badge */}
+      {/* Answer */}
       {hasAnswer && (
-        <div className="flex items-center gap-1 px-3 pb-1">
-          <span className="text-[9px]">🔑</span>
-          <span className="text-[10px] font-mono text-amber-300/45 truncate max-w-[140px]">
+        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-md bg-amber-500/[0.08] border border-amber-500/15">
+          <span className="text-[11px] font-mono font-bold text-amber-200/90 tracking-wide">
             {step.answer}
           </span>
         </div>
       )}
 
-      {/* Icon · abbreviation line */}
-      <div className="flex items-center gap-0.5 px-3 pb-2.5 text-[10px] text-white/25">
-        <span className="text-[9px]">{MODE_ICON[step.problemMode] ?? '🧩'}</span>
-        <span>{MODE_SHORT[step.problemMode] ?? step.problemMode}</span>
-        <span className="text-white/10 mx-0.5">·</span>
-        <span className="text-[9px]">{ANSWER_ICON[step.answerType] ?? '🔢'}</span>
-        <span>{ANSWER_SHORT[step.answerType] ?? step.answerType}</span>
-        <span className="text-white/10 mx-0.5">·</span>
-        <span className="text-[9px]">{OUTPUT_ICON[step.output] ?? '🚪'}</span>
-        <span>{OUTPUT_SHORT[step.output] ?? step.output}</span>
+      {/* Tags row */}
+      <div className="flex items-center gap-1 px-3 pb-2.5 flex-wrap">
+        <span className={`px-1.5 py-[2px] rounded text-[9px] font-semibold border leading-none ${mode.cls}`}>
+          {mode.label}
+        </span>
+        <span className={`px-1.5 py-[2px] rounded text-[9px] font-semibold border leading-none ${answer.cls}`}>
+          {answer.label}
+        </span>
+        <span className={`px-1.5 py-[2px] rounded text-[9px] font-semibold border leading-none ${output.cls}`}>
+          {output.label}
+        </span>
       </div>
     </div>
   );
