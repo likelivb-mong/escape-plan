@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import {
   listSavedProjects,
+  listSavedProjectsFromSupabase,
   listTrashedProjects,
   restoreFromTrash,
   permanentlyDelete,
@@ -227,9 +228,23 @@ export default function ProjectsPage() {
     setTrashed(listTrashedProjects());
   };
 
-  // Load projects on mount
+  // Load projects on mount: localStorage first, then merge from Supabase
   useEffect(() => {
     refresh();
+    // Fetch from Supabase and merge any projects not in localStorage
+    listSavedProjectsFromSupabase().then((remoteProjects) => {
+      if (remoteProjects.length === 0) return;
+      const local = listSavedProjects();
+      const localIds = new Set(local.map((p) => p.id));
+      let merged = false;
+      for (const rp of remoteProjects) {
+        if (!localIds.has(rp.id)) {
+          upsertProject(rp); // saves to localStorage + re-syncs to Supabase
+          merged = true;
+        }
+      }
+      if (merged) refresh();
+    });
   }, []);
 
   useEffect(() => { refresh(); }, [refreshKey]);
