@@ -2,6 +2,28 @@ import { useState, useMemo } from 'react';
 import type { GameFlowPlan, GameFlowStep, StageLabel } from '../../types/gameFlow';
 import { StageBadge, ProblemModeBadge, AnswerTypeBadge, OutputBadge, RoomBadge } from './badges';
 
+// ── Compact icon labels for StepRow ──────────────────────────────────────────
+const MODE_ICON: Record<string, string> = { clue: '🧩', device: '⚙️', clue_device: '🧩⚙️' };
+const MODE_SHORT: Record<string, string> = { clue: '단서', device: '장치', clue_device: '복합' };
+const ANSWER_ICON: Record<string, string> = {
+  key: '🔐', number_4: '🔢', number_3: '🔢',
+  alphabet_5: '🔤', keypad: '⌨️', xkit: '📟', auto: '⏩',
+};
+const ANSWER_SHORT: Record<string, string> = {
+  key: '열쇠', number_4: '4자리', number_3: '3자리',
+  alphabet_5: '영문', keypad: '키패드', xkit: 'X-KIT', auto: '자동',
+};
+const OUTPUT_ICON: Record<string, string> = {
+  door_open: '🚪', hidden_compartment_open: '🔓', led_on: '💡',
+  tv_on: '📺', xkit_guide_revealed: '📟', item_acquired: '📦',
+  next_room_open: '➡️', ending_video: '🎬', escape_clear: '🏁',
+};
+const OUTPUT_SHORT: Record<string, string> = {
+  door_open: '문열림', hidden_compartment_open: '비밀공간', led_on: 'LED',
+  tv_on: 'TV', xkit_guide_revealed: 'X-KIT', item_acquired: '아이템',
+  next_room_open: '다음방', ending_video: '엔딩', escape_clear: '탈출',
+};
+
 const STAGE_ORDER: StageLabel[] = ['기', '승', '전', '반전', '결'];
 
 type ViewMode = 'room' | 'stage';
@@ -208,14 +230,16 @@ function StepRow({
       </span>
       <StageBadge label={step.stageLabel} />
       <span className="text-[13px] text-white/70 flex-1 truncate">{step.clueTitle}</span>
-      <div className="hidden sm:flex items-center gap-1.5">
-        <ProblemModeBadge mode={step.problemMode} size="xs" />
-        <AnswerTypeBadge type={step.answerType} size="xs" />
-        <OutputBadge output={step.output} />
+      <div className="hidden sm:flex items-center gap-0.5 text-[11px] text-white/30 flex-shrink-0">
+        <span className="text-[10px]">{MODE_ICON[step.problemMode] ?? '🧩'}</span>
+        <span>{MODE_SHORT[step.problemMode] ?? step.problemMode}</span>
+        <span className="text-white/10 mx-0.5">·</span>
+        <span className="text-[10px]">{ANSWER_ICON[step.answerType] ?? '🔢'}</span>
+        <span>{ANSWER_SHORT[step.answerType] ?? step.answerType}</span>
+        <span className="text-white/10 mx-0.5">·</span>
+        <span className="text-[10px]">{OUTPUT_ICON[step.output] ?? '🚪'}</span>
+        <span>{OUTPUT_SHORT[step.output] ?? step.output}</span>
       </div>
-      <span className="text-[10px] text-white/15 opacity-0 group-hover:opacity-100 transition-opacity">
-        Edit →
-      </span>
     </div>
   );
 }
