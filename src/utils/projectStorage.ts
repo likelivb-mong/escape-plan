@@ -128,7 +128,7 @@ function projectToRow(project: SavedProject) {
 
 // ── Migrate localStorage projects to Supabase (one-time sync) ────────────────
 
-const MIGRATION_KEY = 'xcape-projects-migrated';
+const MIGRATION_KEY = 'xcape-projects-migrated-v2';
 
 /**
  * Push any localStorage-only projects to Supabase.
@@ -178,7 +178,7 @@ export function listSavedProjects(): SavedProject[] {
 
 /** Primary list from Supabase (active projects only) */
 export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
-  if (!supabase) return [];
+  if (!supabase) return readLocalProjects();
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -189,12 +189,18 @@ export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
 
     // Filter out trashed projects client-side (resilient to schema cache lag)
     const activeRows = (data || []).filter((row: any) => !row.deleted_at);
-    const projects = activeRows.map(mapRowToProject);
+    const remoteProjects = activeRows.map(mapRowToProject);
 
-    // Update localStorage cache with the fresh list
-    writeLocalProjects(projects);
+    // Merge: keep local-only projects that haven't been uploaded yet
+    const localProjects = readLocalProjects();
+    const remoteIds = new Set(remoteProjects.map((p) => p.id));
+    const localOnly = localProjects.filter((p) => !remoteIds.has(p.id));
+    const merged = [...remoteProjects, ...localOnly];
 
-    return projects;
+    // Update localStorage cache with merged list
+    writeLocalProjects(merged);
+
+    return merged;
   } catch (error) {
     console.error('Failed to load projects from Supabase:', error);
     // Fallback to localStorage

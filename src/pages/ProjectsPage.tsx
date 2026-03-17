@@ -247,13 +247,18 @@ export default function ProjectsPage() {
   // Load: migrate local data to Supabase, then refresh
   useEffect(() => {
     setProjects(listSavedProjects()); // instant cache
-    setSyncStatus('localStorage → Supabase 마이그레이션 중...');
+    setSyncStatus('동기화 중...');
     migrateLocalToSupabase()
-      .then(() => { setSyncStatus('마이그레이션 완료, Supabase에서 불러오는 중...'); return refreshFromSupabase(); })
+      .then(() => refreshFromSupabase())
       .catch(() => refreshFromSupabase());
   }, [refreshFromSupabase]);
 
-  useEffect(() => { refreshFromSupabase(); }, [refreshKey, refreshFromSupabase]);
+  // Only refresh on explicit refreshKey changes (not on mount)
+  const initialMount = useState(true);
+  useEffect(() => {
+    if (initialMount[0]) { initialMount[0] = false; return; }
+    refreshFromSupabase();
+  }, [refreshKey, refreshFromSupabase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Subscribe to store changes (e.g. from import, delete theme)
   useEffect(() => {
