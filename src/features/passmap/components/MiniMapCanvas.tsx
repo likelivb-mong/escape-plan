@@ -216,12 +216,7 @@ export default function MiniMapCanvas({
     const { row, col } = cell;
     const ownerIdx = cellOwnerMap.get(`${row},${col}`);
 
-    if (!shapeEditRoomName) {
-      if (ownerIdx !== undefined) {
-        setShapeEditRoomName(rooms![ownerIdx].name);
-      }
-      return;
-    }
+    if (!shapeEditRoomName) return;
 
     const room = rooms?.find(r => r.name === shapeEditRoomName);
     const roomTiles = room?.tiles && room.tiles.length > 0
@@ -386,39 +381,53 @@ export default function MiniMapCanvas({
     [editable, rooms, onRoomMove, onRoomUpdate, shapeEditMode],
   );
 
+  const exitShapeEdit = () => {
+    setShapeEditMode(false);
+    setShapeEditRoomName(null);
+    setHoverCell(null);
+    setPaintAction(null);
+  };
+
+  const enterShapeEdit = (roomName: string) => {
+    setShapeEditMode(true);
+    setShapeEditRoomName(roomName);
+    setLastPaintedCell(null);
+  };
+
   return (
     <div className="flex flex-col gap-2">
-      {/* Toolbar */}
-      {editable && (
-        <div className="flex items-center gap-2 px-1">
-          {!shapeEditMode ? (
+      {/* Shape edit instruction banner */}
+      {shapeEditMode && (
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.15]">
+          <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest flex-shrink-0">모양 편집</span>
+          <span className="text-caption text-white/55 flex-shrink-0 font-medium">{shapeEditRoomName}</span>
+          <span className="text-caption text-white/30 hidden sm:block">· 셀 클릭/드래그로 추가, 이미 있는 셀은 제거</span>
+          <div className="flex items-center gap-1.5 ml-auto">
+            {rooms && rooms.length > 1 && (
+              <div className="flex gap-0.5">
+                {rooms.map((r) => (
+                  <button
+                    key={r.name}
+                    onClick={() => setShapeEditRoomName(r.name)}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-medium transition-all truncate max-w-[60px] ${
+                      r.name === shapeEditRoomName
+                        ? 'bg-white/[0.15] text-white/80'
+                        : 'text-white/30 hover:text-white/60 hover:bg-white/[0.06]'
+                    }`}
+                    title={r.name}
+                  >
+                    {r.name.length > 5 ? r.name.slice(0, 5) + '…' : r.name}
+                  </button>
+                ))}
+              </div>
+            )}
             <button
-              onClick={() => { setShapeEditMode(true); setShapeEditRoomName(null); }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/[0.15] text-caption text-white/50 hover:text-white/75 hover:border-white/30 transition-all ml-auto"
+              onClick={exitShapeEdit}
+              className="px-2.5 py-1 rounded-full bg-white text-black text-caption font-semibold hover:bg-white/90 transition-all flex-shrink-0"
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-              </svg>
-              모양 편집
+              완료
             </button>
-          ) : (
-            <div className="flex items-center gap-2 ml-auto">
-              {shapeEditRoomName ? (
-                <>
-                  <span className="text-caption text-white/50"><span className="text-white/25">편집: </span>{shapeEditRoomName}</span>
-                  <button onClick={() => setShapeEditRoomName(null)} className="px-2 py-0.5 rounded text-caption text-white/40 hover:text-white/65 border border-white/[0.10] transition-all">다른 방</button>
-                </>
-              ) : (
-                <span className="text-caption text-white/35">공간 클릭하여 선택</span>
-              )}
-              <button
-                onClick={() => { setShapeEditMode(false); setShapeEditRoomName(null); setHoverCell(null); setPaintAction(null); }}
-                className="px-2.5 py-1 rounded-full bg-white/[0.08] border border-white/[0.18] text-caption text-white/70 hover:text-white font-medium transition-all"
-              >
-                완료
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -503,10 +512,23 @@ export default function MiniMapCanvas({
                 })}
 
                 {/* Room label */}
-                <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-2 py-1 z-10 pointer-events-none"
+                <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-2 py-1 z-10"
                   style={{ background: colors.bg }}>
                   <span className="text-xs font-bold tracking-wide truncate" style={{ color: colors.name }}>{room.name}</span>
-                  <span className="text-[10px] text-white/25 font-medium flex-shrink-0 ml-1">{count}스텝</span>
+                  <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+                    <span className="text-[10px] text-white/25 font-medium">{count}스텝</span>
+                    {editable && !shapeEditMode && (
+                      <button
+                        title="모양 편집"
+                        onClick={(e) => { e.stopPropagation(); enterShapeEdit(room.name); }}
+                        className="w-4 h-4 flex items-center justify-center rounded text-white/30 hover:text-white/70 hover:bg-white/[0.12] transition-all"
+                      >
+                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Resize handle */}
@@ -538,9 +560,22 @@ export default function MiniMapCanvas({
               }}
               onMouseDown={editable && !shapeEditMode ? (e) => handleRoomDragStart(e, room, 'move') : undefined}
             >
-              <div className="flex items-center justify-between px-2.5 py-1.5 select-none pointer-events-none">
-                <span className="text-xs font-bold tracking-wide" style={{ color: colors.name }}>{room.name}</span>
-                <span className="text-[10px] text-white/25 font-medium">{count}스텝</span>
+              <div className="flex items-center justify-between px-2.5 py-1.5 select-none">
+                <span className="text-xs font-bold tracking-wide pointer-events-none" style={{ color: colors.name }}>{room.name}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-white/25 font-medium pointer-events-none">{count}스텝</span>
+                  {editable && !shapeEditMode && (
+                    <button
+                      title="모양 편집"
+                      onClick={(e) => { e.stopPropagation(); enterShapeEdit(room.name); }}
+                      className="w-4 h-4 flex items-center justify-center rounded text-white/30 hover:text-white/70 hover:bg-white/[0.12] transition-all"
+                    >
+                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
               {editable && !shapeEditMode && (
                 <div
@@ -585,11 +620,11 @@ export default function MiniMapCanvas({
           />
         )}
 
-        {/* Shape edit hint */}
-        {shapeEditMode && !shapeEditRoomName && (
-          <div className="absolute inset-0 flex items-end justify-center pb-4 pointer-events-none" style={{ zIndex: 60 }}>
-            <span className="px-3 py-1.5 rounded-full bg-black/60 text-caption text-white/55 backdrop-blur-sm">
-              공간을 클릭하여 선택 후 셀을 칠해 모양을 변경하세요
+        {/* Shape edit: hint when painting */}
+        {shapeEditMode && shapeEditRoomName && (
+          <div className="absolute top-2 right-2 pointer-events-none" style={{ zIndex: 60 }}>
+            <span className="px-2 py-1 rounded bg-black/70 text-[9px] text-white/40 backdrop-blur-sm">
+              클릭·드래그: 추가 / 칠해진 셀: 제거
             </span>
           </div>
         )}
