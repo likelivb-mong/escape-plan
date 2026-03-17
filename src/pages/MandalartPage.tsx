@@ -439,6 +439,35 @@ export default function MandalartPage() {
               />
             </div>
           </div>
+
+          {/* Undo / Redo bar — below the board */}
+          <div className="flex-shrink-0 flex items-center justify-center gap-3 py-1.5">
+            <button
+              onClick={handleUndo}
+              disabled={undoCount === 0}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/[0.08] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/15 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-150"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+              </svg>
+              되돌리기
+            </button>
+
+            <span className="text-caption text-white/20 tabular-nums min-w-[60px] text-center">
+              {undoCount} / {MAX_UNDO}
+            </span>
+
+            <button
+              onClick={handleRedo}
+              disabled={redoCount === 0}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/[0.08] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/15 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-150"
+            >
+              다시하기
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* ── Right: Linked Keywords Editor ── */}
