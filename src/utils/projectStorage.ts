@@ -49,6 +49,7 @@ export function listSavedProjects(): SavedProject[] {
 }
 
 export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
+  if (!supabase) return [];
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -57,27 +58,7 @@ export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
 
     if (error) throw error;
 
-    return (data || []).map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      savedAt: row.saved_at,
-      updatedAt: row.updated_at,
-      storyTitle: row.story_title,
-      genres: row.genres,
-      playTimes: row.play_times,
-      synopsis: row.synopsis,
-      completionLevel: row.completion_level as CompletionLevel,
-      branchCode: row.branch_code,
-      projectBrief: row.project_brief,
-      cells: row.cells || [],
-      selectedStory: row.selected_story,
-      puzzleFlowPlan: row.puzzle_flow_plan,
-      puzzleRecommendationGroups: row.puzzle_recommendation_groups || [],
-      gameFlowDesign: row.game_flow_design,
-      // ⚠️ Always normalize floor plans from Supabase
-      floorPlanData: row.floor_plan_data ? normalizeFloorPlan(row.floor_plan_data) : null,
-      passmapLink: row.passmap_link,
-    }));
+    return (data || []).map(mapRowToProject);
   } catch (error) {
     console.error('Failed to load projects from Supabase:', error);
     return [];
@@ -85,7 +66,6 @@ export async function listSavedProjectsFromSupabase(): Promise<SavedProject[]> {
 }
 
 export function upsertProject(project: SavedProject): void {
-  // ⚠️ CRITICAL: Normalize floor plan before saving
   const normalizedProject: SavedProject = {
     ...project,
     floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
@@ -106,6 +86,7 @@ export function upsertProject(project: SavedProject): void {
 }
 
 async function upsertProjectToSupabase(project: SavedProject): Promise<void> {
+  if (!supabase) return;
   try {
     const { error } = await supabase
       .from('projects')
@@ -140,8 +121,6 @@ export function loadProjectById(id: string): SavedProject | null {
   const project = listSavedProjects().find((p) => p.id === id);
   if (!project) return null;
 
-  // ⚠️ CRITICAL: Always normalize floorPlanData on load to ensure data integrity
-  // This catches any floor plans saved before normalization was implemented
   return {
     ...project,
     floorPlanData: project.floorPlanData ? normalizeFloorPlan(project.floorPlanData) : null,
@@ -149,6 +128,7 @@ export function loadProjectById(id: string): SavedProject | null {
 }
 
 export async function loadProjectByIdFromSupabase(id: string): Promise<SavedProject | null> {
+  if (!supabase) return null;
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -159,27 +139,7 @@ export async function loadProjectByIdFromSupabase(id: string): Promise<SavedProj
     if (error) throw error;
     if (!data) return null;
 
-    return {
-      id: data.id,
-      name: data.name,
-      savedAt: data.saved_at,
-      updatedAt: data.updated_at,
-      storyTitle: data.story_title,
-      genres: data.genres,
-      playTimes: data.play_times,
-      synopsis: data.synopsis,
-      completionLevel: data.completion_level as CompletionLevel,
-      branchCode: data.branch_code,
-      projectBrief: data.project_brief,
-      cells: data.cells || [],
-      selectedStory: data.selected_story,
-      puzzleFlowPlan: data.puzzle_flow_plan,
-      puzzleRecommendationGroups: data.puzzle_recommendation_groups || [],
-      gameFlowDesign: data.game_flow_design,
-      // ⚠️ Always normalize floor plans from Supabase
-      floorPlanData: data.floor_plan_data ? normalizeFloorPlan(data.floor_plan_data) : null,
-      passmapLink: data.passmap_link,
-    };
+    return mapRowToProject(data);
   } catch (error) {
     console.error('Failed to load project from Supabase:', error);
     return null;
@@ -196,6 +156,7 @@ export function deleteProjectById(id: string): void {
 }
 
 async function deleteProjectFromSupabase(id: string): Promise<void> {
+  if (!supabase) return;
   try {
     const { error } = await supabase
       .from('projects')
@@ -206,6 +167,31 @@ async function deleteProjectFromSupabase(id: string): Promise<void> {
   } catch (error) {
     console.error('Failed to delete project from Supabase:', error);
   }
+}
+
+// ── Row → Project mapping ────────────────────────────────────────────────────
+
+function mapRowToProject(row: any): SavedProject {
+  return {
+    id: row.id,
+    name: row.name,
+    savedAt: row.saved_at,
+    updatedAt: row.updated_at,
+    storyTitle: row.story_title,
+    genres: row.genres,
+    playTimes: row.play_times,
+    synopsis: row.synopsis,
+    completionLevel: row.completion_level as CompletionLevel,
+    branchCode: row.branch_code,
+    projectBrief: row.project_brief,
+    cells: row.cells || [],
+    selectedStory: row.selected_story,
+    puzzleFlowPlan: row.puzzle_flow_plan,
+    puzzleRecommendationGroups: row.puzzle_recommendation_groups || [],
+    gameFlowDesign: row.game_flow_design,
+    floorPlanData: row.floor_plan_data ? normalizeFloorPlan(row.floor_plan_data) : null,
+    passmapLink: row.passmap_link,
+  };
 }
 
 // ── Trash ─────────────────────────────────────────────────────────────────────
