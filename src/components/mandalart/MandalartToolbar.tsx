@@ -95,19 +95,21 @@ export default function MandalartToolbar({
         </span>
       )}
 
-      {/* Spacer pushes 전체 삭제 to the right */}
+      {/* Spacer pushes delete to the right */}
       <div className="flex-1" />
 
-      {/* Divider */}
-      <div className="h-4 w-px bg-white/10" />
-
-      {/* 전체 삭제 — danger button */}
+      {/* Delete selected cells - low visibility to prevent accidental clicks */}
       <button
         onClick={onClearAll}
-        title="메인 테마를 제외한 모든 키워드 삭제"
-        className="px-3 py-1.5 rounded-full border border-red-500/25 text-footnote font-medium text-red-400/50 hover:bg-red-500/10 hover:border-red-400/45 hover:text-red-400/80 transition-all duration-150"
+        disabled={!hasSelection}
+        title={hasSelection ? "선택한 칸 삭제 (색상도 초기화됨)" : "칸을 선택하면 삭제 가능"}
+        className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-150 border ${
+          hasSelection
+            ? 'border-red-400/15 text-red-400/40 hover:border-red-400/25 hover:text-red-400/60 hover:bg-red-500/[0.05]'
+            : 'border-transparent text-white/15 cursor-not-allowed'
+        }`}
       >
-        전체 삭제
+        삭제
       </button>
     </div>
   );

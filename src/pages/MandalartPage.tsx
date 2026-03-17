@@ -5,6 +5,7 @@ import { useProject } from '../context/ProjectContext';
 import type { ProjectBrief } from '../types';
 import MandalartBoard from '../components/mandalart/MandalartBoard';
 import MandalartToolbar from '../components/mandalart/MandalartToolbar';
+import LinkedKeywordsEditor from '../components/mandalart/LinkedKeywordsEditor';
 import { createExampleCells, EXAMPLE_PROJECT_NAME } from '../data/mockMandalart';
 import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 
@@ -364,55 +365,16 @@ export default function MandalartPage() {
           </div>
         </div>
 
-        {/* ── Right: AI Expansion Panel ── */}
-        <div className="hidden lg:flex w-60 flex-shrink-0 flex-col rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-
-          <div className="px-4 pt-4 pb-3 border-b border-white/[0.06]">
-            <h2 className="text-subhead font-semibold text-white/75 mb-1">AI 확장</h2>
-            <p className="text-footnote text-white/30 leading-relaxed">
-              선택한 키워드를 기반으로 스토리 제안을 생성합니다.
-            </p>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2 min-h-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-footnote text-white/30">선택</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-white/[0.08] text-caption text-white/50 font-medium tabular-nums">
-                {selectedCellIds.size}
-              </span>
-            </div>
-
-            {selectedKeywords.length > 0 ? (
-              selectedKeywords.map(({ id, text, theme }) => (
-                <div
-                  key={id}
-                  className={[
-                    'px-2.5 py-2 rounded-lg border text-footnote text-white/60 break-words leading-snug',
-                    theme === 'rose'
-                      ? 'bg-rose-500/[0.06] border-rose-400/20'
-                      : theme === 'sky'
-                      ? 'bg-sky-500/[0.06] border-sky-400/20'
-                      : theme === 'amber'
-                      ? 'bg-amber-500/[0.06] border-amber-400/20'
-                      : 'bg-white/[0.04] border-white/[0.07]',
-                  ].join(' ')}
-                >
-                  {text}
-                </div>
-              ))
-            ) : (
-              <p className="text-footnote text-white/30 italic leading-relaxed mt-1">
-                셀을 클릭해 키워드를 선택하세요. ⌘/Ctrl+클릭으로 다중 선택 가능합니다.
-              </p>
-            )}
-          </div>
-
-          <div className="px-4 pt-3 pb-4 border-t border-white/[0.06] flex-shrink-0">
-            <p className="text-caption text-white/30 leading-relaxed">
-              선택한 키워드는 스토리 생성, 사건 설계, 퍼즐 제안에 활용됩니다.
-            </p>
-          </div>
-        </div>
+        {/* ── Right: Linked Keywords Editor ── */}
+        <LinkedKeywordsEditor
+          cells={cells}
+          selectedCellIds={selectedCellIds}
+          onEditCell={(id, newText) => {
+            const updated = cells.map(c => c.id === id ? { ...c, text: newText } : c);
+            setCells(updated);
+            debounceSave();
+          }}
+        />
       </div>
     </div>
   );
