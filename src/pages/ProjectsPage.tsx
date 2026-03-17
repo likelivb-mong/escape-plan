@@ -373,9 +373,9 @@ export default function ProjectsPage() {
                 }`}
               >
                 {branch.code}
-                {hasContent && (
+                {count > 0 && (
                   <span className="ml-1 text-[10px] text-white/20">
-                    {count + themes.length}
+                    {count}
                   </span>
                 )}
               </button>
