@@ -228,15 +228,17 @@ export default function ProjectsPage() {
   const refreshFromSupabase = useCallback(async () => {
     try {
       setSyncStatus('Supabase 연결 중...');
+      const localBefore = listSavedProjects();
       const [remoteProjects, remoteTrashed] = await Promise.all([
         listSavedProjectsFromSupabase(),
         listTrashedProjectsFromSupabase(),
       ]);
       setProjects(remoteProjects);
       setTrashed(remoteTrashed);
-      setSyncStatus(`Supabase 동기화 완료 (프로젝트 ${remoteProjects.length}개)`);
+      const localNames = localBefore.map((p) => p.name).join(', ');
+      const remoteNames = remoteProjects.map((p) => p.name).join(', ');
+      setSyncStatus(`로컬: ${localBefore.length}개 [${localNames}] | Supabase 결과: ${remoteProjects.length}개 [${remoteNames}]`);
     } catch (err) {
-      // Fallback to localStorage cache
       setProjects(listSavedProjects());
       setSyncStatus(`Supabase 오류: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -249,7 +251,10 @@ export default function ProjectsPage() {
     setProjects(listSavedProjects()); // instant cache
     setSyncStatus('동기화 중...');
     migrateLocalToSupabase()
-      .then(() => refreshFromSupabase())
+      .then((migrationMsg) => {
+        setSyncStatus(`마이그레이션: ${migrationMsg}`);
+        return refreshFromSupabase();
+      })
       .catch(() => refreshFromSupabase());
   }, [refreshFromSupabase]);
 

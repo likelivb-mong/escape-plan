@@ -132,23 +132,23 @@ const MIGRATION_KEY = 'xcape-projects-migrated-v2';
 
 /**
  * Push any localStorage-only projects to Supabase.
- * Runs once per browser; skips projects that already exist remotely.
+ * Returns a debug message for UI display.
  */
-export async function migrateLocalToSupabase(): Promise<void> {
-  if (!supabase) return;
-  if (localStorage.getItem(MIGRATION_KEY)) return; // already done
+export async function migrateLocalToSupabase(): Promise<string> {
+  if (!supabase) return 'supabase=null';
 
   const localProjects = readLocalProjects();
   if (localProjects.length === 0) {
-    localStorage.setItem(MIGRATION_KEY, 'true');
-    return;
+    return 'local=0';
   }
 
   try {
     // Fetch existing IDs from Supabase
-    const { data } = await supabase
+    const { data, error: fetchErr } = await supabase
       .from('projects')
       .select('id');
+
+    if (fetchErr) return `fetch error: ${fetchErr.message}`;
 
     const existingIds = new Set((data ?? []).map((r: { id: string }) => r.id));
     const toUpload = localProjects.filter((p) => !existingIds.has(p.id));
@@ -157,15 +157,14 @@ export async function migrateLocalToSupabase(): Promise<void> {
       const rows = toUpload.map(projectToRow);
       const { error } = await supabase.from('projects').upsert(rows);
       if (error) {
-        console.error('Migration upsert failed:', error);
-        return; // don't mark as done so it retries
+        return `upsert error: ${error.message}`;
       }
-      console.log(`[migration] Synced ${toUpload.length} local project(s) to Supabase`);
+      return `uploaded ${toUpload.length} of ${localProjects.length} local (existing in DB: ${data?.length ?? 0})`;
     }
 
-    localStorage.setItem(MIGRATION_KEY, 'true');
+    return `all ${localProjects.length} local already in DB (DB has ${data?.length ?? 0})`;
   } catch (err) {
-    console.error('Migration failed:', err);
+    return `exception: ${err instanceof Error ? err.message : String(err)}`;
   }
 }
 
