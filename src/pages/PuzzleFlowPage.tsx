@@ -56,11 +56,20 @@ export default function PuzzleFlowPage() {
     else                       setGameH(h  => h.idx < h.stack.length - 1 ? { ...h, idx: h.idx + 1 } : h);
   };
 
-  // ── Generate both plans on mount ─────────────────────────────────────────────
+  // ── Generate both plans on mount (only if not already generated) ────────────
+  const { puzzleFlowPlan: savedPuzzlePlan, gameFlowDesign: savedGamePlan } = useProject();
+
   useEffect(() => {
     if (!selectedStory) return;
-    setStoryH({ stack: [generatePuzzleFlowFromStory(selectedStory, cells, 0)], idx: 0 });
-    setGameH ({ stack: [generateGameFlowFromStory(selectedStory, cells)],       idx: 0 });
+    // Only generate if no existing saved plan — prevents overwriting on revisit
+    if (storyH.idx < 0) {
+      const initial = savedPuzzlePlan ?? generatePuzzleFlowFromStory(selectedStory, cells, 0);
+      setStoryH({ stack: [initial], idx: 0 });
+    }
+    if (gameH.idx < 0) {
+      const initial = savedGamePlan ?? generateGameFlowFromStory(selectedStory, cells);
+      setGameH({ stack: [initial], idx: 0 });
+    }
   }, [selectedStory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Regen story flow ─────────────────────────────────────────────────────────

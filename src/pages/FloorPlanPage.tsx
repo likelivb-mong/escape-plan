@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { generateInitialLayout, reconcileRooms, normalizeFloorPlan } from '../utils/floorPlan';
@@ -53,15 +53,14 @@ export default function FloorPlanPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // ── Auto-generate layout if missing ─────────────────────────────────────────
+  // ── Auto-generate layout ONLY if missing (first time) ──────────────────────
+  const layoutInitializedRef = useRef(false);
   useEffect(() => {
-    if (!gameFlowDesign) return;
-    let plan = floorPlanData || generateInitialLayout(gameFlowDesign.rooms);
-    const reconciled = reconcileRooms(plan, gameFlowDesign.rooms);
-    // Always normalize to ensure stability
-    const normalized = normalizeFloorPlan(reconciled);
-    if (normalized !== floorPlanData) {
-      setFloorPlanData(normalized);
+    if (!gameFlowDesign || layoutInitializedRef.current) return;
+    layoutInitializedRef.current = true;
+    if (!floorPlanData) {
+      const initial = generateInitialLayout(gameFlowDesign.rooms);
+      setFloorPlanData(normalizeFloorPlan(initial));
     }
   }, [gameFlowDesign]); // eslint-disable-line react-hooks/exhaustive-deps
 
