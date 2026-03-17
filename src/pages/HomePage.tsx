@@ -63,7 +63,7 @@ export default function HomePage() {
     setAiStoryProposals,
     setProjectBrief,
     setBranchCode: setCtxBranchCode,
-    saveCurrentProject,
+    persistProject,
     projectBrief,
     resetForNewProject,
   } = useProject();
@@ -130,11 +130,11 @@ export default function HomePage() {
   // 자동 저장 후 네비게이션 처리
   useEffect(() => {
     if (shouldNavigateAfterSave && projectBrief) {
-      saveCurrentProject('plan');
+      persistProject();
       setShouldNavigateAfterSave(false);
       navigate('/plan');
     }
-  }, [shouldNavigateAfterSave, projectBrief, saveCurrentProject, navigate]);
+  }, [shouldNavigateAfterSave, projectBrief, persistProject, navigate]);
 
   // Live scenario result
   const scenarioResult: ScenarioBuildResult | null = useMemo(() => {

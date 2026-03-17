@@ -25,7 +25,7 @@ export default function StoryPage() {
     projectName, setProjectName, cells, setCells,
     selectedStory, setSelectedStory,
     aiStoryProposals, setAiStoryProposals, projectBrief,
-    saveCurrentProject, forkAsNewProject,
+    persistProject, saveVersion, forkAsNewProject,
   } = useProject();
 
   // ── Whether this project already has a locked story ────────────────────────
@@ -163,7 +163,7 @@ export default function StoryPage() {
       const merged = [...newProposals, ...aiProposals];
       setAiProposals(merged);
       setAiStoryProposals(merged);
-      setTimeout(() => saveCurrentProject('story'), 0);
+      setTimeout(() => persistProject(), 0);
     } finally {
       setIsAddingBatch(false);
     }
@@ -188,7 +188,7 @@ export default function StoryPage() {
     setSelectedStory(proposal);
     setProjectName(proposal.title);
     setCells(populateMandalartFromStory(proposal));
-    setTimeout(() => saveCurrentProject('story'), 0);
+    setTimeout(() => persistProject(), 0);
     navigate('/mandalart');
   };
 
@@ -219,7 +219,7 @@ export default function StoryPage() {
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
-            onClick={() => saveCurrentProject('story')}
+            onClick={() => saveVersion('story')}
             disabled={!selectedId}
             className={`px-3 py-1.5 rounded-lg border text-footnote font-medium transition-all ${
               selectedId
@@ -250,7 +250,7 @@ export default function StoryPage() {
       </div>
 
       {/* Workflow step bar */}
-      <WorkflowStepBar onBeforeNavigate={saveCurrentProject} />
+      <WorkflowStepBar onBeforeNavigate={persistProject} />
 
       {/* Info banner when story is already locked */}
       {isStoryLocked && (

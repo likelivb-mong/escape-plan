@@ -11,14 +11,14 @@ interface DraftHeaderProps {
 
 export default function DraftHeader({ projectName, doc }: DraftHeaderProps) {
   const navigate = useNavigate();
-  const { saveCurrentProject } = useProject();
+  const { saveVersion } = useProject();
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const handleSave = () => {
     if (!doc) return;
     setSaveState('saving');
     try {
-      saveCurrentProject('plan');
+      saveVersion('plan');
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2500);
     } catch {

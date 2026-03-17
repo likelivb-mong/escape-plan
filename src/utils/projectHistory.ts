@@ -19,6 +19,7 @@ export interface HistorySnapshot {
   projectId: string;
   savedAt: string; // ISO timestamp
   page: HistoryPage;
+  version: number; // v1, v2, v3... per page
   data: SavedProject;
 }
 
@@ -27,20 +28,26 @@ function storageKey(projectId: string): string {
 }
 
 /**
- * Save a snapshot of the current project state to history, tagged with a page.
+ * Save a version snapshot. Auto-increments version number per page.
  */
-export function saveHistorySnapshot(
+export function saveVersionSnapshot(
   project: SavedProject,
-  page: HistoryPage = 'mandalart',
-): void {
+  page: HistoryPage,
+): number {
   const key = storageKey(project.id);
-  const existing = listHistorySnapshots(project.id);
+  const existing = listAllSnapshots(project.id);
+
+  // Find max version for this page
+  const pageSnapshots = existing.filter((s) => s.page === page);
+  const maxVersion = pageSnapshots.reduce((max, s) => Math.max(max, s.version ?? 0), 0);
+  const nextVersion = maxVersion + 1;
 
   const snapshot: HistorySnapshot = {
     id: `snap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     projectId: project.id,
     savedAt: new Date().toISOString(),
     page,
+    version: nextVersion,
     data: project,
   };
 
@@ -56,20 +63,20 @@ export function saveHistorySnapshot(
     const trimmed = pruned.slice(0, 20);
     localStorage.setItem(key, JSON.stringify(trimmed));
   }
+
+  return nextVersion;
 }
 
 /**
- * List all history snapshots for a project (newest first).
- * Optionally filter by page.
+ * List all snapshots (internal, no page filter).
  */
-export function listHistorySnapshots(projectId: string, page?: HistoryPage): HistorySnapshot[] {
+function listAllSnapshots(projectId: string): HistorySnapshot[] {
   const key = storageKey(projectId);
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return [];
     const snapshots = JSON.parse(raw) as HistorySnapshot[];
 
-    // Auto-purge old entries
     const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
     const valid = snapshots.filter((s) => new Date(s.savedAt).getTime() > cutoff);
 
@@ -77,7 +84,6 @@ export function listHistorySnapshots(projectId: string, page?: HistoryPage): His
       localStorage.setItem(key, JSON.stringify(valid));
     }
 
-    if (page) return valid.filter((s) => s.page === page);
     return valid;
   } catch {
     return [];
@@ -85,10 +91,10 @@ export function listHistorySnapshots(projectId: string, page?: HistoryPage): His
 }
 
 /**
- * Get a specific snapshot by ID.
+ * List history snapshots for a page (newest first).
  */
-export function getHistorySnapshot(projectId: string, snapshotId: string): HistorySnapshot | null {
-  return listHistorySnapshots(projectId).find((s) => s.id === snapshotId) ?? null;
+export function listHistorySnapshots(projectId: string, page: HistoryPage): HistorySnapshot[] {
+  return listAllSnapshots(projectId).filter((s) => s.page === page);
 }
 
 /**
@@ -109,11 +115,13 @@ export function formatSnapshotTime(isoString: string): string {
   const diffHour = Math.floor(diffMs / 3600000);
   const diffDay = Math.floor(diffMs / 86400000);
 
+  const time = date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
   if (diffMin < 1) return '방금 전';
   if (diffMin < 60) return `${diffMin}분 전`;
-  if (diffHour < 24) return `${diffHour}시간 전`;
-  if (diffDay < 2) return '어제';
-  if (diffDay < 7) return `${diffDay}일 전`;
+  if (diffHour < 24) return `오늘 ${time}`;
+  if (diffDay < 2) return `어제 ${time}`;
+  if (diffDay < 7) return `${diffDay}일 전 ${time}`;
 
   return date.toLocaleDateString('ko-KR', {
     month: 'short',
@@ -124,7 +132,7 @@ export function formatSnapshotTime(isoString: string): string {
 }
 
 /**
- * Get a summary of the snapshot's data, scoped to a specific page.
+ * Get a summary of the snapshot's data, scoped to its page.
  */
 export function getSnapshotSummary(snapshot: HistorySnapshot): string {
   const d = snapshot.data;
@@ -133,9 +141,8 @@ export function getSnapshotSummary(snapshot: HistorySnapshot): string {
       const genres = d.projectBrief?.genres?.join(', ') ?? '';
       return genres ? `장르: ${genres}` : '기획 데이터';
     }
-    case 'story': {
+    case 'story':
       return d.selectedStory?.title ?? '스토리 없음';
-    }
     case 'mandalart': {
       const filled = d.cells.filter((c) => c.text.trim()).length;
       return `${filled}/81 칸 작성`;
@@ -145,31 +152,26 @@ export function getSnapshotSummary(snapshot: HistorySnapshot): string {
       const rooms = d.gameFlowDesign?.rooms?.length ?? 0;
       return steps > 0 ? `${steps}스텝 · ${rooms}룸` : 'Flow 없음';
     }
-    case 'setting': {
+    case 'setting':
       return d.floorPlanData ? '배치도 있음' : '배치도 없음';
-    }
   }
 }
 
 /**
- * Restore only the data belonging to a specific page from a snapshot.
- * Returns partial state setters to call.
+ * Extract only the data belonging to a specific page from a snapshot.
  */
-export function extractPageData(snapshot: HistorySnapshot): {
-  page: HistoryPage;
-  data: Partial<SavedProject>;
-} {
+export function extractPageData(snapshot: HistorySnapshot): Partial<SavedProject> {
   const d = snapshot.data;
   switch (snapshot.page) {
     case 'plan':
-      return { page: 'plan', data: { projectBrief: d.projectBrief } };
+      return { projectBrief: d.projectBrief };
     case 'story':
-      return { page: 'story', data: { selectedStory: d.selectedStory } };
+      return { selectedStory: d.selectedStory };
     case 'mandalart':
-      return { page: 'mandalart', data: { cells: d.cells } };
+      return { cells: d.cells };
     case 'gameFlow':
-      return { page: 'gameFlow', data: { gameFlowDesign: d.gameFlowDesign } };
+      return { gameFlowDesign: d.gameFlowDesign };
     case 'setting':
-      return { page: 'setting', data: { floorPlanData: d.floorPlanData } };
+      return { floorPlanData: d.floorPlanData };
   }
 }
