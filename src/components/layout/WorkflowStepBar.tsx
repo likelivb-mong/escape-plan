@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useProject } from '../../context/ProjectContext';
 
@@ -29,6 +30,17 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
     gameflow:  !!gameFlowDesign,
     passmap:   !!floorPlanData,
   };
+
+  // Auto-save when all steps are complete
+  const allDone = Object.values(done).every(Boolean);
+  const autoSavedRef = useRef(false);
+  useEffect(() => {
+    if (allDone && !autoSavedRef.current) {
+      autoSavedRef.current = true;
+      persistProject();
+    }
+    if (!allDone) autoSavedRef.current = false;
+  }, [allDone, persistProject]);
 
   // A step is accessible if it's current/past in this session, OR if it has saved data (visited before)
   const isAccessible = (idx: number) => idx <= currentIdx || done[STEPS[idx].key];
