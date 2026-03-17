@@ -12,7 +12,6 @@ const STEPS = [
 type StepKey = typeof STEPS[number]['key'];
 
 interface WorkflowStepBarProps {
-  /** Called before navigating to a past step (use to save in-progress edits) */
   onBeforeNavigate?: () => void;
 }
 
@@ -31,8 +30,13 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
     passmap:   !!floorPlanData,
   };
 
+  // A step is accessible if it has been reached during this session
+  // (i.e., current or past steps). Future steps are locked.
+  const isAccessible = (idx: number) => idx <= currentIdx;
+
   const handleNavigate = (path: string, idx: number) => {
-    if (idx >= currentIdx) return;
+    if (!isAccessible(idx)) return;
+    if (idx === currentIdx) return; // already here
     onBeforeNavigate?.();
     persistProject();
     navigate(path);
@@ -40,20 +44,21 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
 
   return (
     <div className="flex items-center gap-0 px-3 sm:px-6 py-2.5 border-b border-white/[0.04] bg-white/[0.012] overflow-x-auto flex-shrink-0">
-      {/* Step indicators */}
       <div className="flex items-center gap-0 min-w-0">
         {STEPS.map((step, idx) => {
-          const isActive = idx === currentIdx;
-          const isPast   = idx < currentIdx;
-          const isDone   = done[step.key];
+          const isActive   = idx === currentIdx;
+          const isPast     = idx < currentIdx;
+          const isFuture   = idx > currentIdx;
+          const isDone     = done[step.key];
+          const accessible = isAccessible(idx);
 
           return (
             <div key={step.key} className="flex items-center flex-shrink-0">
-              {/* Connector line between steps */}
+              {/* Connector */}
               {idx > 0 && (
                 <div
                   className={`w-4 sm:w-7 h-px flex-shrink-0 mx-0.5 transition-colors ${
-                    isPast ? 'bg-white/[0.18]' : isActive ? 'bg-white/[0.10]' : 'bg-white/[0.05]'
+                    isPast ? 'bg-white/[0.20]' : isActive ? 'bg-white/[0.10]' : 'bg-white/[0.04]'
                   }`}
                 />
               )}
@@ -61,39 +66,44 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
               {/* Step button */}
               <button
                 onClick={() => handleNavigate(step.path, idx)}
-                disabled={!isPast}
+                disabled={!accessible || isActive}
+                title={isFuture ? '이전 단계를 먼저 완료하세요' : step.label}
                 className={[
-                  'flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg transition-all duration-150 flex-shrink-0',
+                  'flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg transition-all duration-150 flex-shrink-0 group',
                   isActive
-                    ? 'bg-white/[0.10] text-white font-semibold'
+                    ? 'bg-white/[0.10] text-white font-semibold cursor-default'
                     : isPast
-                      ? 'text-white/30 hover:text-white/60 hover:bg-white/[0.05] cursor-pointer font-medium'
-                      : 'text-white/14 cursor-default font-medium',
+                      ? 'text-white/40 hover:text-white/75 hover:bg-white/[0.06] cursor-pointer font-medium'
+                      : 'text-white/15 cursor-not-allowed font-medium',
                 ].join(' ')}
               >
-                {/* Number / check circle */}
+                {/* Number / check / lock */}
                 <span
                   className={[
                     'w-[18px] h-[18px] rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 transition-all',
                     isActive
                       ? 'bg-white text-black shadow-[0_0_8px_rgba(255,255,255,0.3)]'
-                      : isDone
-                        ? 'bg-emerald-500/20 text-emerald-300/80 ring-1 ring-emerald-400/30'
+                      : isDone && isPast
+                        ? 'bg-emerald-500/25 text-emerald-300/90 ring-1 ring-emerald-400/40'
                         : isPast
-                          ? 'bg-white/[0.10] text-white/35'
-                          : 'bg-white/[0.04] text-white/18',
+                          ? 'bg-white/[0.10] text-white/40'
+                          : 'bg-white/[0.04] text-white/15',
                   ].join(' ')}
                 >
-                  {isDone && !isActive ? '✓' : idx + 1}
+                  {isFuture ? (
+                    // Lock icon for future steps
+                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                    </svg>
+                  ) : isDone && !isActive ? (
+                    '✓'
+                  ) : (
+                    idx + 1
+                  )}
                 </span>
 
-                {/* Label — always visible for active, sm+ for others */}
-                <span
-                  className={[
-                    'text-caption leading-tight',
-                    isActive ? '' : 'hidden sm:inline',
-                  ].join(' ')}
-                >
+                {/* Label */}
+                <span className={['text-caption leading-tight', isActive ? '' : 'hidden sm:inline'].join(' ')}>
                   {step.label}
                 </span>
               </button>
@@ -102,10 +112,12 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
         })}
       </div>
 
-      {/* Auto-save hint — only on wider screens */}
-      <p className="ml-auto flex-shrink-0 hidden lg:flex items-center gap-1 text-micro text-white/14 pl-4">
-        <span className="text-[11px]">💾</span>
-        다음 단계 진행 시 자동 저장
+      {/* Right hint */}
+      <p className="ml-auto flex-shrink-0 hidden lg:flex items-center gap-1.5 text-micro text-white/20 pl-4">
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        완료된 단계만 이동 가능 · 자동 저장
       </p>
     </div>
   );

@@ -23,7 +23,6 @@ export default function Navbar() {
   const isInsideProject = isProjectDashboard || PROJECT_PATHS.some((p) => location.pathname.startsWith(p));
   const isProjects = location.pathname === '/projects';
   const isHome = location.pathname === '/';
-  const currentStepIdx = WORKFLOW_STEPS.findIndex((s) => location.pathname.startsWith(s.path));
 
   return (
     <>
@@ -61,30 +60,8 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Center: Workflow pipeline (desktop only) */}
-        {isInsideProject && (
-          <div className="hidden md:flex items-center gap-0.5 px-1 py-0.5 rounded-lg">
-            {WORKFLOW_STEPS.map((step, idx) => {
-              const isActive = location.pathname.startsWith(step.path);
-              const isPast = currentStepIdx > idx;
-              return (
-                <Link
-                  key={step.path}
-                  to={step.path}
-                  className={`px-3 py-1.5 rounded-md text-caption font-medium transition-all ${
-                    isActive
-                      ? 'bg-white/[0.10] text-white'
-                      : isPast
-                      ? 'text-white/40 hover:text-white/60 hover:bg-white/[0.05]'
-                      : 'text-white/20 hover:text-white/40 hover:bg-white/[0.03]'
-                  }`}
-                >
-                  {step.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        {/* Center: intentionally empty on desktop — navigation is via WorkflowStepBar */}
+        <div />
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1 flex-shrink-0">
@@ -124,9 +101,11 @@ export default function Navbar() {
     {isInsideProject && (
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden glass border-t border-white/[0.06]">
         <div className="flex items-stretch h-13">
-          {WORKFLOW_STEPS.map((step) => {
+          {WORKFLOW_STEPS.map((step, idx) => {
             const isActive = location.pathname.startsWith(step.path);
-            return (
+            const currentMobileIdx = WORKFLOW_STEPS.findIndex((s) => location.pathname.startsWith(s.path));
+            const accessible = idx <= currentMobileIdx;
+            return accessible ? (
               <Link
                 key={step.path}
                 to={step.path}
@@ -136,13 +115,23 @@ export default function Navbar() {
                     : 'text-white/30 hover:text-white/55 hover:bg-white/[0.03]'
                 }`}
               >
-                {isActive && (
-                  <div className="w-4 h-0.5 rounded-full bg-white mb-0.5" />
-                )}
+                {isActive && <div className="w-4 h-0.5 rounded-full bg-white mb-0.5" />}
                 <span className="text-[9px] font-medium leading-tight tracking-wide">
                   {step.mobileLabel}
                 </span>
               </Link>
+            ) : (
+              <div
+                key={step.path}
+                className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 text-white/12 cursor-not-allowed"
+              >
+                <svg className="w-2.5 h-2.5 mb-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                </svg>
+                <span className="text-[9px] font-medium leading-tight tracking-wide">
+                  {step.mobileLabel}
+                </span>
+              </div>
             );
           })}
         </div>
