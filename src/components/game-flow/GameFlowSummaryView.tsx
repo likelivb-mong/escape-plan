@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { GameFlowPlan, AnswerType, StageLabel } from '../../types/gameFlow';
+import type { GameFlowPlan, AnswerType, StageLabel, GameFlowStep } from '../../types/gameFlow';
 import { ANSWER_TYPE_LABELS } from '../../utils/gameFlow';
 import { StageBadge, ProblemModeBadge, AnswerTypeBadge, OutputBadge } from './badges';
 
@@ -19,16 +19,19 @@ export default function GameFlowSummaryView({ plan }: GameFlowSummaryViewProps) 
   const keypadAnswerTypes: AnswerType[] = ['keypad', 'auto'];
 
   const lockAnswerSteps = useMemo(() =>
-    steps.filter((s) => lockAnswerTypes.includes(s.answerType)),
+    steps.filter((s) => lockAnswerTypes.includes(s.answerType)).sort((a, b) => a.stepNumber - b.stepNumber),
     [steps],
   );
   const keypadAnswerSteps = useMemo(() =>
-    steps.filter((s) => keypadAnswerTypes.includes(s.answerType)),
+    steps.filter((s) => keypadAnswerTypes.includes(s.answerType)).sort((a, b) => a.stepNumber - b.stepNumber),
     [steps],
   );
-  const xkitSteps = useMemo(() => steps.filter((s) => s.answerType === 'xkit'), [steps]);
+  const xkitSteps = useMemo(() =>
+    steps.filter((s) => s.answerType === 'xkit').sort((a, b) => a.stepNumber - b.stepNumber),
+    [steps],
+  );
   const deviceSteps = useMemo(() =>
-    steps.filter((s) => s.problemMode === 'device' || s.problemMode === 'clue_device'),
+    steps.filter((s) => s.problemMode === 'device' || s.problemMode === 'clue_device').sort((a, b) => a.stepNumber - b.stepNumber),
     [steps],
   );
 
@@ -40,12 +43,12 @@ export default function GameFlowSummaryView({ plan }: GameFlowSummaryViewProps) 
     [steps],
   );
 
-  const TABS: Array<{ key: SummaryTab; label: string; count: number }> = [
-    { key: 'all', label: 'All', count: steps.length },
-    { key: 'lock', label: 'Lock Answers', count: lockAnswerSteps.length },
-    { key: 'keypad', label: 'Keypad Answers', count: keypadAnswerSteps.length },
-    { key: 'xkit', label: 'X-KIT Answers', count: xkitSteps.length },
-    { key: 'device', label: 'Device Triggers', count: deviceSteps.length },
+  const TABS: Array<{ key: SummaryTab; label: string }> = [
+    { key: 'all', label: 'All' },
+    { key: 'lock', label: 'Lock Answers' },
+    { key: 'keypad', label: 'Keypad Answers' },
+    { key: 'xkit', label: 'X-KIT Answers' },
+    { key: 'device', label: 'Device Triggers' },
   ];
 
   return (
@@ -91,7 +94,6 @@ export default function GameFlowSummaryView({ plan }: GameFlowSummaryViewProps) 
               }`}
             >
               {tab.label}
-              <span className="ml-1 text-[10px] opacity-70">{tab.count}</span>
             </button>
           ))}
         </div>
@@ -138,65 +140,30 @@ export default function GameFlowSummaryView({ plan }: GameFlowSummaryViewProps) 
           )}
 
           {activeTab === 'lock' && (
-            <Section title="Lock Answer Types">
-              <div className="flex flex-col gap-2.5">
-                {(Object.entries(answerTypeCounts) as [AnswerType, number][])
-                  .filter(([type]) => lockAnswerTypes.includes(type))
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([type, count]) => {
-                    const maxCount = Math.max(...Object.values(answerTypeCounts), 1);
-                    return (
-                      <div key={type} className="flex items-center gap-3">
-                        <div className="w-24 flex-shrink-0">
-                          <AnswerTypeBadge type={type} />
-                        </div>
-                        <div className="flex-1 h-2 rounded-full bg-white/[0.04] overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-white/15 to-white/25"
-                            style={{ width: `${(count / maxCount) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-white/40 tabular-nums w-6 text-right font-medium">{count}</span>
-                        <span className="text-[10px] text-white/25 w-20 hidden sm:block truncate">
-                          {ANSWER_TYPE_LABELS[type]}
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </Section>
+            lockAnswerSteps.length > 0 ? (
+              <Section title="Lock Answers">
+                <div className="flex flex-col gap-4">
+                  {lockAnswerSteps.map((step) => (
+                    <AnswerStepCard key={step.id} step={step} />
+                  ))}
+                </div>
+              </Section>
+            ) : (
+              <EmptyState message="No lock answers found" />
+            )
           )}
 
           {activeTab === 'keypad' && (
             keypadAnswerSteps.length > 0 ? (
-              <Section title="Keypad Answer Types">
-                <div className="flex flex-col gap-2.5">
-                  {(Object.entries(answerTypeCounts) as [AnswerType, number][])
-                    .filter(([type]) => keypadAnswerTypes.includes(type))
-                    .map(([type, count]) => {
-                      const maxCount = Math.max(...Object.values(answerTypeCounts), 1);
-                      return (
-                        <div key={type} className="flex items-center gap-3">
-                          <div className="w-24 flex-shrink-0">
-                            <AnswerTypeBadge type={type} />
-                          </div>
-                          <div className="flex-1 h-2 rounded-full bg-white/[0.04] overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-gradient-to-r from-white/15 to-white/25"
-                              style={{ width: `${(count / Math.max(...Object.values(answerTypeCounts), 1)) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-white/40 tabular-nums w-6 text-right font-medium">{count}</span>
-                          <span className="text-[10px] text-white/25 w-20 hidden sm:block truncate">
-                            {ANSWER_TYPE_LABELS[type]}
-                          </span>
-                        </div>
-                      );
-                    })}
+              <Section title="Keypad Answers">
+                <div className="flex flex-col gap-4">
+                  {keypadAnswerSteps.map((step) => (
+                    <AnswerStepCard key={step.id} step={step} />
+                  ))}
                 </div>
               </Section>
             ) : (
-              <EmptyState message="Keypad answers not found" />
+              <EmptyState message="No keypad answers found" />
             )
           )}
 
@@ -213,39 +180,108 @@ export default function GameFlowSummaryView({ plan }: GameFlowSummaryViewProps) 
   );
 }
 
+// ── Answer Step Card ─────────────────────────────────────────────────────────
+
+function AnswerStepCard({ step }: { step: GameFlowStep }) {
+  return (
+    <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="text-[10px] font-mono text-white/25 tabular-nums w-6">
+          #{String(step.stepNumber).padStart(2, '0')}
+        </span>
+        <StageBadge label={step.stageLabel} />
+        <span className="text-xs text-white/40">{step.room}</span>
+        <span className="text-[13px] text-white/65 font-medium flex-1 truncate">{step.clueTitle}</span>
+      </div>
+
+      <div className="flex flex-col gap-2.5 ml-8">
+        {/* Answer (strong emphasis) */}
+        {step.answer && (
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <AnswerTypeBadge type={step.answerType} />
+              <span className="text-[10px] text-white/30 uppercase">Answer</span>
+            </div>
+            <p className="text-sm font-mono font-bold text-white/80 bg-white/[0.06] px-3 py-2 rounded-lg border border-white/[0.10]">
+              {step.answer}
+            </p>
+          </div>
+        )}
+
+        {/* Description / Hint / Notes */}
+        <div className="flex flex-col gap-2">
+          {step.description && (
+            <div>
+              <span className="text-[10px] text-white/25 uppercase">Description</span>
+              <p className="text-xs text-white/50 mt-1 leading-relaxed">{step.description}</p>
+            </div>
+          )}
+          {step.hint && (
+            <div>
+              <span className="text-[10px] text-white/25 uppercase">Hint</span>
+              <p className="text-xs text-white/45 mt-1 leading-relaxed">{step.hint}</p>
+            </div>
+          )}
+          {step.notes && (
+            <div>
+              <span className="text-[10px] text-white/25 uppercase">Notes</span>
+              <p className="text-xs text-white/40 mt-1 leading-relaxed">{step.notes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Badges */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-2">
+          <ProblemModeBadge mode={step.problemMode} size="xs" />
+          <OutputBadge output={step.output} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── X-KIT Section ────────────────────────────────────────────────────────────
 
-function XKitSection({ steps }: { steps: any[] }) {
+function XKitSection({ steps }: { steps: GameFlowStep[] }) {
   return (
     <Section title="X-KIT Answers">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {steps.map((step) => (
           <div
             key={step.id}
             className="p-4 rounded-xl border border-purple-500/15 bg-purple-500/[0.04]"
           >
-            <div className="flex items-center gap-2 mb-2.5">
-              <span className="text-[10px] font-mono text-white/25 tabular-nums">
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="text-[10px] font-mono text-white/25 tabular-nums w-6">
                 #{String(step.stepNumber).padStart(2, '0')}
               </span>
               <StageBadge label={step.stageLabel} />
-              <span className="text-[13px] text-white/60 font-medium">{step.clueTitle}</span>
+              <span className="text-xs text-white/40">{step.room}</span>
+              <span className="text-[13px] text-white/65 font-medium flex-1 truncate">{step.clueTitle}</span>
             </div>
-            {step.xkitPrompt && (
-              <p className="text-xs text-white/35 mb-1.5 leading-relaxed">
-                <span className="text-white/20 mr-1">Prompt:</span>{step.xkitPrompt}
-              </p>
-            )}
-            {step.xkitAnswer && (
-              <p className="text-sm text-purple-300/80 font-mono font-semibold">
-                → {step.xkitAnswer}
-              </p>
-            )}
-            {step.xkitNextGuide && (
-              <p className="text-xs text-white/25 mt-1.5 italic">
-                Next: {step.xkitNextGuide}
-              </p>
-            )}
+
+            <div className="ml-8 flex flex-col gap-2.5">
+              {step.xkitPrompt && (
+                <div>
+                  <span className="text-[10px] text-white/25 uppercase">Prompt</span>
+                  <p className="text-xs text-white/50 mt-1 leading-relaxed">{step.xkitPrompt}</p>
+                </div>
+              )}
+              {step.xkitAnswer && (
+                <div>
+                  <span className="text-[10px] text-white/25 uppercase">Answer</span>
+                  <p className="text-sm font-mono font-bold text-purple-300 bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-500/20 mt-1">
+                    {step.xkitAnswer}
+                  </p>
+                </div>
+              )}
+              {step.xkitNextGuide && (
+                <div>
+                  <span className="text-[10px] text-white/25 uppercase">Next Guide</span>
+                  <p className="text-xs text-white/40 mt-1 italic">{step.xkitNextGuide}</p>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -255,26 +291,66 @@ function XKitSection({ steps }: { steps: any[] }) {
 
 // ── Device Section ───────────────────────────────────────────────────────────
 
-function DeviceSection({ steps }: { steps: any[] }) {
+function DeviceSection({ steps }: { steps: GameFlowStep[] }) {
   return (
     <Section title="Device Triggers">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-4">
         {steps.map((step) => (
-          <div key={step.id} className="flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
-            <span className="text-[10px] font-mono text-white/20 w-6 text-right tabular-nums flex-shrink-0">
-              #{String(step.stepNumber).padStart(2, '0')}
-            </span>
-            <span className="text-[13px] text-white/60 font-medium flex-1 min-w-0 truncate">
-              {step.clueTitle}
-            </span>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <ProblemModeBadge mode={step.problemMode} size="xs" />
-              {step.deviceSubtype && (
-                <span className="px-2 py-0.5 rounded-md border border-amber-400/15 text-[10px] text-amber-300/60 hidden sm:inline-block">
-                  {step.deviceSubtype.replace(/_/g, ' ')}
-                </span>
+          <div
+            key={step.id}
+            className="p-4 rounded-xl border border-amber-500/15 bg-amber-500/[0.04]"
+          >
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="text-[10px] font-mono text-white/25 tabular-nums w-6">
+                #{String(step.stepNumber).padStart(2, '0')}
+              </span>
+              <StageBadge label={step.stageLabel} />
+              <span className="text-xs text-white/40">{step.room}</span>
+              <span className="text-[13px] text-white/65 font-medium flex-1 truncate">{step.clueTitle}</span>
+            </div>
+
+            <div className="ml-8 flex flex-col gap-2.5">
+              {/* Answer (for device) */}
+              {step.answer && (
+                <div>
+                  <span className="text-[10px] text-white/25 uppercase">Answer</span>
+                  <p className="text-sm font-mono font-bold text-white/80 bg-white/[0.06] px-3 py-2 rounded-lg border border-white/[0.10] mt-1">
+                    {step.answer}
+                  </p>
+                </div>
               )}
-              <OutputBadge output={step.output} />
+
+              {/* Problem mode and device subtype */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-white/25 uppercase">Device Type</span>
+                <ProblemModeBadge mode={step.problemMode} size="xs" />
+                {step.deviceSubtype && (
+                  <span className="px-2.5 py-1 rounded-lg border border-amber-400/20 text-[10px] text-amber-300/70 bg-amber-500/[0.05]">
+                    {step.deviceSubtype.replace(/_/g, ' ')}
+                  </span>
+                )}
+              </div>
+
+              {/* Description / Notes */}
+              <div className="flex flex-col gap-2">
+                {step.description && (
+                  <div>
+                    <span className="text-[10px] text-white/25 uppercase">Description</span>
+                    <p className="text-xs text-white/50 mt-1 leading-relaxed">{step.description}</p>
+                  </div>
+                )}
+                {step.notes && (
+                  <div>
+                    <span className="text-[10px] text-white/25 uppercase">Notes</span>
+                    <p className="text-xs text-white/40 mt-1 leading-relaxed">{step.notes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Output */}
+              <div className="flex items-center gap-2">
+                <OutputBadge output={step.output} />
+              </div>
             </div>
           </div>
         ))}
