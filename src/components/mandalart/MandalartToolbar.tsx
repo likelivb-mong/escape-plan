@@ -88,29 +88,22 @@ export default function MandalartToolbar({
         선택 해제
       </button>
 
+      {/* Delete selected cells */}
+      <button
+        onClick={onClearAll}
+        disabled={!hasSelection}
+        title={hasSelection ? "선택한 칸 삭제 (색상도 초기화됨)" : "칸을 선택하면 삭제 가능"}
+        className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/35 hover:text-white/55 hover:border-white/20 transition-all duration-150 disabled:opacity-25 disabled:cursor-not-allowed"
+      >
+        삭제
+      </button>
+
       {/* Selection count indicator */}
       {hasSelection && (
         <span className="text-footnote text-white/35 ml-0.5 tabular-nums">
           {selectedCount}칸 선택됨
         </span>
       )}
-
-      {/* Spacer pushes delete to the right */}
-      <div className="flex-1" />
-
-      {/* Delete selected cells - low visibility to prevent accidental clicks */}
-      <button
-        onClick={onClearAll}
-        disabled={!hasSelection}
-        title={hasSelection ? "선택한 칸 삭제 (색상도 초기화됨)" : "칸을 선택하면 삭제 가능"}
-        className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-150 border ${
-          hasSelection
-            ? 'border-red-400/15 text-red-400/40 hover:border-red-400/25 hover:text-red-400/60 hover:bg-red-500/[0.05]'
-            : 'border-transparent text-white/15 cursor-not-allowed'
-        }`}
-      >
-        삭제
-      </button>
     </div>
   );
 }
