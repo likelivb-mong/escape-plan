@@ -571,66 +571,6 @@ export default function PlanPage() {
 
           {/* Theme Brief */}
           {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
-
-          {/* Progress tracker */}
-          <div className="mt-12 mb-8">
-            <p className="text-caption text-white/25 uppercase tracking-widest mb-4">진행 현황</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-              {STAGES.map((stage) => {
-                const done = stageStatus[stage.key];
-                const isCurrent = stage.key === 'plan';
-                return (
-                  <button
-                    key={stage.key}
-                    onClick={() => navigate(stage.path)}
-                    className={`py-3 px-2 rounded-lg text-center transition-all border font-medium text-sm ${
-                      isCurrent
-                        ? 'border-white/25 bg-white/[0.08] text-white/80'
-                        : done
-                        ? 'border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-300/70 hover:border-emerald-500/30'
-                        : 'border-white/[0.06] bg-white/[0.02] text-white/30 hover:border-white/12 hover:text-white/50'
-                    }`}
-                  >
-                    {done && !isCurrent && '✓ '}{stage.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Next step guidance */}
-          {nextStage.key === 'setting' && !stageStatus.setting ? (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-              <p className="text-subhead text-white/40 leading-relaxed">
-                Setting에서 룸 구성을 완성하면 기획이 마무리됩니다.
-              </p>
-              <button
-                onClick={() => navigate(nextStage.path)}
-                className="flex-shrink-0 px-4 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 transition-colors"
-              >
-                Setting →
-              </button>
-            </div>
-          ) : nextStage.key !== 'plan' && !stageStatus[nextStage.key] ? (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-              <p className="text-subhead text-white/40 leading-relaxed">
-                {nextStage.key === 'story' && '스토리를 생성하고 선택하면 다음 단계로 진행됩니다.'}
-                {nextStage.key === 'mandalart' && '만다라트 차트를 완성하면 다음 단계로 진행됩니다.'}
-              </p>
-              <button
-                onClick={() => navigate(nextStage.path)}
-                className="flex-shrink-0 px-4 py-2 rounded-lg bg-white text-black text-subhead font-semibold hover:bg-white/90 transition-colors"
-              >
-                {nextStage.label} →
-              </button>
-            </div>
-          ) : stageStatus.setting ? (
-            <div className="flex items-center justify-center p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06]">
-              <p className="text-subhead text-emerald-300/80 font-medium">
-                ✓ 모든 단계가 완성되었습니다. 기획서를 내보내거나 다시 편집할 수 있습니다.
-              </p>
-            </div>
-          ) : null}
         </div>
       </div>
     </div>
