@@ -3,12 +3,18 @@
  *
  * Converts GameFlowPlan + FloorPlanData into PassMap ThemeStep[] + StepDetail[]
  * and writes directly to passmap-store (localStorage).
- * Preserves room layouts so PassMap MAP view shows rooms with steps inside.
+ *
+ * RULES:
+ * 1. Rooms are always tile-based (FloorPlanRoomLayout.tiles[])
+ * 2. Steps are placed INSIDE their room's tile bounds
+ * 3. PassMap Theme is the single source of truth after sync
  */
 
 import type { GameFlowPlan, GameFlowStep } from '../../../types/gameFlow';
 import { OUTPUT_LABELS } from '../../../utils/gameFlow';
 import type { FloorPlanData, FloorPlanRoomLayout } from '../../../types/floorPlan';
+import { CELL_PCT } from '../../../types/floorPlan';
+import { tilesBBox } from '../../../utils/floorPlan';
 import type { ThemeStep, StepType, StepDetail, Theme, ThemeRoom } from '../types/passmap';
 import {
   getThemesByBranch,
@@ -35,54 +41,45 @@ function mapToStepType(step: GameFlowStep): StepType {
   return 'puzzle';
 }
 
-// ── Position: place steps within their room (percentage-based) ─────────────
+// ── Position: place steps within their room bounds ─────────────────────────
 
-/**
- * Compute step position as percentage within the overall canvas.
- * Steps are placed inside their room bounds with grid-like distribution.
- */
 function computeStepPosition(
-  step: GameFlowStep,
-  floorPlan: FloorPlanData,
   room: FloorPlanRoomLayout | undefined,
   indexInRoom: number,
   totalInRoom: number,
+  stepNumber: number,
 ): { x: number; y: number } {
   if (!room) {
-    // Fallback: grid layout using percentages
+    // Fallback: grid layout
     return {
-      x: 10 + ((step.stepNumber - 1) % 5) * 18,
-      y: 10 + Math.floor((step.stepNumber - 1) / 5) * 20,
+      x: 10 + ((stepNumber - 1) % 5) * 18,
+      y: 10 + Math.floor((stepNumber - 1) / 5) * 20,
     };
   }
 
-  // Check for custom position in floorPlan.stepPositions
-  const customPos = floorPlan.stepPositions?.[step.id];
-  if (customPos) {
-    return {
-      x: room.x + (customPos.x / 100) * room.width,
-      y: room.y + (customPos.y / 100) * room.height,
-    };
-  }
+  // Get room bounds from tiles
+  const bbox = room.tiles && room.tiles.length > 0
+    ? tilesBBox(room.tiles)
+    : { x: room.x, y: room.y, width: room.width, height: room.height };
 
-  // Auto-distribute within room: leave padding for header
-  const padTop = 35; // percent of room height reserved for header
-  const padX = 12;   // percent padding left/right
-  const padY = 10;   // percent padding bottom
+  // Place steps in a column within the room, with padding for header
+  const padTop = 30; // % of room height for header
+  const padX = 15;   // % padding left/right
+  const padBottom = 10;
 
-  const usableW = room.width - (padX * 2 * room.width / 100);
-  const usableH = room.height * (100 - padTop - padY) / 100;
-  const startX = room.x + room.width * padX / 100;
-  const startY = room.y + room.height * padTop / 100;
+  const startX = bbox.x + bbox.width * padX / 100;
+  const usableW = bbox.width * (100 - padX * 2) / 100;
+  const startY = bbox.y + bbox.height * padTop / 100;
+  const usableH = bbox.height * (100 - padTop - padBottom) / 100;
 
-  // Single column layout within room (like the FloorPlan screenshot)
   const rowHeight = totalInRoom > 1 ? usableH / totalInRoom : 0;
   const x = startX + usableW * 0.5;
   const y = startY + rowHeight * indexInRoom + rowHeight * 0.5;
 
+  // Clamp within room bounds
   return {
-    x: Math.max(room.x + 2, Math.min(room.x + room.width - 2, x)),
-    y: Math.max(room.y + 2, Math.min(room.y + room.height - 2, y)),
+    x: Math.max(bbox.x + 1, Math.min(bbox.x + bbox.width - 1, x)),
+    y: Math.max(bbox.y + 1, Math.min(bbox.y + bbox.height - 1, y)),
   };
 }
 
@@ -104,6 +101,7 @@ function buildThemeRooms(
     width: r.width,
     height: r.height,
     stepCount: stepCountByRoom.get(r.roomName) || 0,
+    tiles: r.tiles, // Always pass tiles through
   }));
 }
 
@@ -170,7 +168,7 @@ export function syncFloorPlanToPassMap(
     roomStepIndex.set(gameStep.room, idxInRoom + 1);
     const totalInRoom = roomStepCounts.get(gameStep.room) || 1;
 
-    const pos = computeStepPosition(gameStep, floorPlan, room, idxInRoom, totalInRoom);
+    const pos = computeStepPosition(room, idxInRoom, totalInRoom, gameStep.stepNumber);
 
     return {
       id: `sync-${themeId}-${gameStep.stepNumber}-${Date.now()}`,

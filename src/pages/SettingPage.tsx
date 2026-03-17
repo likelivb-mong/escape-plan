@@ -1,11 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import { generateInitialLayout, reconcileRooms, normalizeFloorPlan } from '../utils/floorPlan';
+import { generateInitialLayout, normalizeFloorPlan } from '../utils/floorPlan';
 import type { FloorPlanData } from '../types/floorPlan';
 import type { ThemeStep, StepDetail, PassMapViewMode, ThemeRoom } from '../features/passmap/types/passmap';
 
-import FloorPlanCanvas from '../components/floor-plan/FloorPlanCanvas';
 import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 import MiniMapCanvas from '../features/passmap/components/MiniMapCanvas';
 import StepListPanel from '../features/passmap/components/StepListPanel';
@@ -25,7 +24,6 @@ import {
 import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
 import { syncFloorPlanToPassMap, findMatchingTheme } from '../features/passmap/utils/floorplan-sync';
 
-type Tab = 'passmap';
 type FloorViewMode = 'map' | 'flow';
 
 export default function SettingPage() {
@@ -45,7 +43,6 @@ export default function SettingPage() {
     saveVersion,
   } = useProject();
 
-  const [activeTab, setActiveTab] = useState<Tab>('passmap');
   const [isEditing, setIsEditing] = useState(false);
   const [floorViewMode, setFloorViewMode] = useState<FloorViewMode>('map');
 
@@ -64,7 +61,6 @@ export default function SettingPage() {
     const applyFromPrev = (location.state as { applyFromPrev?: boolean } | null)?.applyFromPrev;
 
     if (applyFromPrev) {
-      // User chose to apply — regenerate from game flow rooms
       window.history.replaceState({}, '');
       const initial = generateInitialLayout(gameFlowDesign.rooms);
       setFloorPlanData(normalizeFloorPlan(initial));
@@ -80,17 +76,26 @@ export default function SettingPage() {
     }
   }, [gameFlowDesign]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Auto-sync to PassMap when branchCode + floorPlan are ready ──────────────
+  // ── Auto-sync to PassMap ONCE when branchCode + floorPlan are ready ────────
+  const syncDoneRef = useRef(false);
   useEffect(() => {
     if (!branchCode || !gameFlowDesign || !floorPlanData) return;
+
     // Already linked → just load data
     if (passmapLink) {
-      const steps = getStepsByTheme(passmapLink.themeId);
-      setPmSteps(steps);
-      setPmDetails(getDetailsByStepIds(steps.map((s) => s.id)));
+      if (!syncDoneRef.current) {
+        const steps = getStepsByTheme(passmapLink.themeId);
+        setPmSteps(steps);
+        setPmDetails(getDetailsByStepIds(steps.map((s) => s.id)));
+        syncDoneRef.current = true;
+      }
       return;
     }
-    // Auto-sync: check for existing or create new
+
+    // Auto-sync: check for existing or create new (only once)
+    if (syncDoneRef.current) return;
+    syncDoneRef.current = true;
+
     const existing = findMatchingTheme(branchCode, gameFlowDesign.title);
     const result = syncFloorPlanToPassMap(
       gameFlowDesign,
@@ -104,28 +109,37 @@ export default function SettingPage() {
     setPmDetails(getDetailsByStepIds(steps.map((s) => s.id)));
   }, [branchCode, gameFlowDesign, floorPlanData, passmapLink, setPassmapLink]);
 
-  // When linked, default to passmap view
-  useEffect(() => {
-    if (passmapLink) setActiveTab('passmap');
-  }, [passmapLink]);
-
-  const handleUpdateFloorPlan = (data: FloorPlanData) => {
-    // Always validate & normalize before saving
-    setFloorPlanData(normalizeFloorPlan(data));
-  };
-
-  // ── Room update (position & size) ─────────────────────────────────────────
+  // ── Room update (shape/size change via tile editing) ──────────────────────
+  // RULE: When a room changes, all steps in that room stay clamped inside
   const handleUpdateRoom = useCallback((roomName: string, updates: Partial<ThemeRoom>) => {
     if (!passmapLink) return;
     const theme = getThemeById(passmapLink.themeId);
     if (!theme?.rooms) return;
+
     const updatedRooms = theme.rooms.map((r) =>
       r.name === roomName ? { ...r, ...updates } : r
     );
     updateTheme(passmapLink.themeId, { rooms: updatedRooms });
-  }, [passmapLink]);
 
-  // ── Room move (with steps in zone) ────────────────────────────────────────
+    // Clamp steps to new room bounds
+    const updatedRoom = updatedRooms.find(r => r.name === roomName);
+    if (updatedRoom) {
+      const bounds = getRoomBounds(updatedRoom);
+      const pad = 2;
+      const updatedSteps = pmSteps.map(s => {
+        if (s.zone !== roomName) return s;
+        return {
+          ...s,
+          x: Math.max(bounds.x + pad, Math.min(bounds.x + bounds.w - pad, s.x)),
+          y: Math.max(bounds.y + pad, Math.min(bounds.y + bounds.h - pad, s.y)),
+        };
+      });
+      setPmSteps(updatedSteps);
+      saveStepsForTheme(passmapLink.themeId, updatedSteps);
+    }
+  }, [passmapLink, pmSteps]);
+
+  // ── Room move (drag entire room + steps together) ─────────────────────────
   const handleRoomMove = useCallback((roomName: string, deltaX: number, deltaY: number) => {
     if (!passmapLink) return;
     const theme = getThemeById(passmapLink.themeId);
@@ -137,23 +151,19 @@ export default function SettingPage() {
     );
     updateTheme(passmapLink.themeId, { rooms: updatedRooms });
 
-    // Move all steps in that zone
-    const stepsInZone = pmSteps.filter((s) => s.zone === roomName);
-    if (stepsInZone.length > 0) {
-      const updatedSteps = pmSteps.map((s) =>
-        s.zone === roomName ? { ...s, x: s.x + deltaX, y: s.y + deltaY } : s
-      );
-      setPmSteps(updatedSteps);
-      saveStepsForTheme(passmapLink.themeId, updatedSteps);
-    }
+    // Move all steps in that zone by same delta
+    const updatedSteps = pmSteps.map((s) =>
+      s.zone === roomName ? { ...s, x: s.x + deltaX, y: s.y + deltaY } : s
+    );
+    setPmSteps(updatedSteps);
+    saveStepsForTheme(passmapLink.themeId, updatedSteps);
   }, [passmapLink, pmSteps]);
 
   // ── Room rename (propagates to GameFlow, FloorPlan, PassMap) ────────────────
-
   const handleRenameRoom = useCallback((oldName: string, newName: string) => {
     if (!gameFlowDesign) return;
 
-    // 1. Update GameFlowPlan: rooms array + step.room references
+    // 1. Update GameFlowPlan
     const updatedPlan = {
       ...gameFlowDesign,
       rooms: gameFlowDesign.rooms.map((r) => (r === oldName ? newName : r)),
@@ -163,7 +173,7 @@ export default function SettingPage() {
     };
     setGameFlowDesign(updatedPlan);
 
-    // 2. Update FloorPlanData: room layout names
+    // 2. Update FloorPlanData
     if (floorPlanData) {
       setFloorPlanData({
         ...floorPlanData,
@@ -173,16 +183,14 @@ export default function SettingPage() {
       });
     }
 
-    // 3. Update PassMap store: step zones + theme rooms
+    // 3. Update PassMap store
     if (passmapLink) {
-      // Update step zones
       const updatedSteps = pmSteps.map((s) =>
         s.zone === oldName ? { ...s, zone: newName } : s,
       );
       setPmSteps(updatedSteps);
       saveStepsForTheme(passmapLink.themeId, updatedSteps);
 
-      // Update theme rooms
       const theme = getThemeById(passmapLink.themeId);
       if (theme?.rooms) {
         updateTheme(passmapLink.themeId, {
@@ -457,26 +465,21 @@ export default function SettingPage() {
   );
 }
 
-// ── Tab button ────────────────────────────────────────────────────────────────
+// ── Helper ────────────────────────────────────────────────────────────────────
 
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={[
-        'px-3 py-1 rounded-full text-footnote font-medium transition-all duration-150',
-        active ? 'bg-white text-black' : 'text-white/40 hover:text-white/65',
-      ].join(' ')}
-    >
-      {children}
-    </button>
-  );
+function getRoomBounds(room: ThemeRoom) {
+  if (room.tiles && room.tiles.length > 0) {
+    const rows = room.tiles.map(t => t.row);
+    const cols = room.tiles.map(t => t.col);
+    const minRow = Math.min(...rows), maxRow = Math.max(...rows);
+    const minCol = Math.min(...cols), maxCol = Math.max(...cols);
+    const CELL = 5;
+    return {
+      x: minCol * CELL,
+      y: minRow * CELL,
+      w: (maxCol - minCol + 1) * CELL,
+      h: (maxRow - minRow + 1) * CELL,
+    };
+  }
+  return { x: room.x, y: room.y, w: room.width, h: room.height };
 }
