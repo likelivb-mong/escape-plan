@@ -30,9 +30,8 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
     passmap:   !!floorPlanData,
   };
 
-  // A step is accessible if it has been reached during this session
-  // (i.e., current or past steps). Future steps are locked.
-  const isAccessible = (idx: number) => idx <= currentIdx;
+  // A step is accessible if it's current/past in this session, OR if it has saved data (visited before)
+  const isAccessible = (idx: number) => idx <= currentIdx || done[STEPS[idx].key];
 
   const handleNavigate = (path: string, idx: number) => {
     if (!isAccessible(idx)) return;
