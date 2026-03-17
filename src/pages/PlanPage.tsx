@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import type { ProjectBrief, Genre, PlayTime, PuzzleType, ClueFormat } from '../types';
+import { analyzeYoutube } from '../services/aiAnalysis';
+import { fetchYouTubeMetadata } from '../utils/youtubeMetadata';
 import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 
 const GENRE_LABELS: Record<string, string> = {
@@ -38,6 +40,15 @@ export default function PlanPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // YouTube state for editing
+  const [youtubeUrl, setYoutubeUrl] = useState(projectBrief?.videoId ? `https://www.youtube.com/watch?v=${projectBrief.videoId}` : '');
+  const [youtubeLoading, setYoutubeLoading] = useState(false);
+  const [youtubeStep, setYoutubeStep] = useState('');
+  const [youtubeProgress, setYoutubeProgress] = useState(0);
+  const [youtubeError, setYoutubeError] = useState('');
+  const [preview, setPreview] = useState<{ videoId: string; title: string | null; channel: string | null; metaLoading: boolean } | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // ── Local edit state ──────────────────────────────────────────────────────
   const [editName, setEditName]       = useState(projectName);
   const [editSynopsis, setEditSynopsis] = useState(projectBrief?.synopsis ?? '');
@@ -51,6 +62,82 @@ export default function PlanPage() {
     return map;
   });
 
+  // Debounce YouTube URL fetching
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const videoId = extractYouTubeId(youtubeUrl);
+    if (!videoId) {
+      setPreview(null);
+      return;
+    }
+    setPreview({ videoId, title: null, channel: null, metaLoading: true });
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const metadata = await fetchYouTubeMetadata(videoId);
+        setPreview({
+          videoId,
+          title: metadata?.title ?? null,
+          channel: metadata?.channelName ?? null,
+          metaLoading: false,
+        });
+      } catch {
+        setPreview((p) => p ? { ...p, metaLoading: false } : null);
+      }
+    }, 500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [youtubeUrl]);
+
+  const STEP_PROGRESS: Record<string, number> = {
+    '영상 정보 가져오는 중...': 12,
+    '자막 분석 중...': 30,
+    '내용 서사 구조 분석 중...': 58,
+    'AI가 서사 구조 분석 중...': 58,
+    '방탈출 테마 생성 중...': 82,
+  };
+
+  useEffect(() => {
+    if (youtubeStep) setYoutubeProgress(STEP_PROGRESS[youtubeStep] ?? 50);
+  }, [youtubeStep]);
+
+  function extractYouTubeId(url: string): string | null {
+    try {
+      const u = new URL(url.trim());
+      if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
+      if (u.hostname.includes('youtube.com')) {
+        if (u.pathname.startsWith('/shorts/')) return u.pathname.slice(8).split('?')[0];
+        return u.searchParams.get('v');
+      }
+    } catch {}
+    return null;
+  }
+
+  const handleYoutubeAnalyze = async () => {
+    const url = youtubeUrl.trim();
+    if (!url) return;
+    setYoutubeLoading(true);
+    setYoutubeProgress(0);
+    setYoutubeError('');
+    try {
+      const result = await analyzeYoutube(url, setYoutubeStep);
+      setYoutubeProgress(100);
+      // 자동으로 분석 결과를 폼에 반영
+      setEditSynopsis(result.videoSynopsis || editSynopsis);
+      // 기승전결 자동 입력
+      const beatsMap: Record<string, string> = { '기': '', '승': '', '전': '', '반전': '', '결': '' };
+      result.videoBeats?.forEach((beat: any) => {
+        beatsMap[beat.label] = beat.description;
+      });
+      setEditBeats(beatsMap);
+    } catch (err) {
+      setYoutubeError(err instanceof Error ? err.message : 'AI 분석 중 오류가 발생했습니다.');
+    } finally {
+      setYoutubeLoading(false);
+      setYoutubeStep('');
+    }
+  };
+
   const startEdit = () => {
     setEditName(projectName);
     setEditSynopsis(projectBrief?.synopsis ?? '');
@@ -58,6 +145,7 @@ export default function PlanPage() {
     setEditTimes(projectBrief?.playTimes ?? [60]);
     setEditPuzzleTypes(projectBrief?.puzzleTypes ?? []);
     setEditClueFormats(projectBrief?.clueFormats ?? []);
+    setYoutubeUrl(projectBrief?.videoId ? `https://www.youtube.com/watch?v=${projectBrief.videoId}` : '');
     const map: Record<string, string> = { '기': '', '승': '', '전': '', '반전': '', '결': '' };
     projectBrief?.beats.forEach((b) => { map[b.label] = b.description; });
     setEditBeats(map);
@@ -177,6 +265,83 @@ export default function PlanPage() {
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 sm:px-6 lg:px-10 py-8 sm:py-10 max-w-5xl mx-auto space-y-6">
             <p className="text-caption text-white/25 uppercase tracking-widest">테마 설계 편집</p>
+
+            {/* YouTube URL Input */}
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+              <label className="block text-body font-semibold text-white/70 mb-3">
+                📺 YouTube 영상 (선택사항)
+              </label>
+              <input
+                type="text"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=... 또는 https://youtu.be/..."
+                className="w-full px-4 py-3 rounded-lg border border-white/[0.06] bg-white/[0.02] text-white placeholder-white/20 focus:outline-none focus:border-white/[0.12] focus:bg-white/[0.04] transition-colors mb-3"
+              />
+
+              {/* Video preview */}
+              {preview && !preview.metaLoading && preview.title && (
+                <div className="rounded-lg border border-white/[0.08] bg-black/20 overflow-hidden mb-3">
+                  <div className="relative w-full aspect-video bg-black/40">
+                    <img
+                      src={`https://img.youtube.com/vi/${preview.videoId}/mqdefault.jpg`}
+                      alt={preview.title ?? ''}
+                      className="w-full h-full object-cover opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-2 left-3 right-3">
+                      <p className="text-footnote font-semibold text-white leading-snug line-clamp-2">
+                        {preview.title}
+                      </p>
+                      {preview.channel && (
+                        <p className="text-caption text-white/50 mt-0.5">{preview.channel}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {preview && preview.metaLoading && (
+                <div className="h-8 flex items-center gap-2 text-caption text-white/30 mb-3">
+                  <div className="w-3 h-3 border border-white/20 border-t-white/50 rounded-full animate-spin" />
+                  영상 정보 불러오는 중...
+                </div>
+              )}
+
+              {/* YouTube Analysis Progress */}
+              {youtubeLoading && (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-caption text-white/40">{youtubeStep}</p>
+                    <p className="text-caption text-white/30">{youtubeProgress}%</p>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-300"
+                      style={{ width: `${youtubeProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {youtubeError && (
+                <div className="mb-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <p className="text-caption text-red-300/80">{youtubeError}</p>
+                </div>
+              )}
+
+              {/* Analyze button */}
+              {!youtubeLoading && (
+                <button
+                  type="button"
+                  onClick={handleYoutubeAnalyze}
+                  disabled={!preview?.title || youtubeLoading}
+                  className="w-full py-2.5 rounded-lg text-body font-semibold transition-all bg-white/[0.08] text-white/80 hover:bg-white/[0.13] active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  📊 영상 분석하기
+                </button>
+              )}
+            </div>
 
             {/* 프로젝트 이름 */}
             <div>
@@ -390,7 +555,6 @@ export default function PlanPage() {
               <p className="text-subhead text-white/40 leading-relaxed">
                 {nextStage.key === 'story' && '스토리를 생성하고 선택하면 다음 단계로 진행됩니다.'}
                 {nextStage.key === 'mandalart' && '만다라트 차트를 완성하면 다음 단계로 진행됩니다.'}
-                {nextStage.key === 'gameflow' && 'Game Flow를 생성하면 다음 단계로 진행됩니다.'}
               </p>
               <button
                 onClick={() => navigate(nextStage.path)}
