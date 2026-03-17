@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ThemeStep, StepDetail } from '../types/passmap';
 import { STATUS_COLORS, STEP_TYPE_ICONS } from '../types/passmap';
+import { OUTPUT_LABELS } from '../../../utils/gameFlow';
 
 interface StepDetailCardProps {
   step: ThemeStep;
@@ -30,7 +31,7 @@ export default function StepDetailCard({
   const fields: { key: keyof StepDetail; label: string; value: string }[] = [
     { key: 'answer', label: '정답', value: detail?.answer || '' },
     { key: 'input', label: '입력', value: detail?.input || '' },
-    { key: 'output', label: '출력', value: detail?.output || '' },
+    { key: 'output', label: '출력', value: detail?.output ? (OUTPUT_LABELS[detail.output] ?? detail.output) : '' },
     { key: 'resetMethod', label: '리셋', value: detail?.resetMethod || '' },
     { key: 'memo', label: '메모', value: detail?.memo || '' },
   ];
