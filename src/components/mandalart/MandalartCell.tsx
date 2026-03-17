@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MandalartCellData, MandalartTheme } from '../../types/mandalart';
+import { BLOCK_COLORS } from './blockColors';
 
 interface MandalartCellProps {
   cell: MandalartCellData;
@@ -13,6 +14,8 @@ interface MandalartCellProps {
   isDragSource?: boolean;
   /** True when this cell is the current drag target */
   isDragTarget?: boolean;
+  /** Color index (0-7) for position-based coloring. -1 = no block color. */
+  blockColorIndex?: number;
   onSelect: (id: string, multi: boolean) => void;
   onStartEdit: (id: string) => void;
   /** newText = null means "cancel — do not save" */
@@ -48,6 +51,7 @@ export default function MandalartCell({
   isDraggable = false,
   isDragSource = false,
   isDragTarget = false,
+  blockColorIndex = -1,
   onSelect,
   onStartEdit,
   onFinishEdit,
@@ -134,34 +138,50 @@ export default function MandalartCell({
     onDragEnd?.();
   };
 
+  // ── Determine if this cell uses position-based block color ──────────────
+  const hasBlockColor = blockColorIndex >= 0 && blockColorIndex < BLOCK_COLORS.length;
+  const palette = hasBlockColor ? BLOCK_COLORS[blockColorIndex] : null;
+  const isPositionColored = (isSubGoal || isLinked) && palette;
+
   // ── Styles ─────────────────────────────────────────────────────────────
-  const borderClass = theme
-    ? THEME_BORDER[theme]
-    : isCenter
-    ? 'border-purple-400/45'
-    : isLinked
-    ? 'border-purple-400/[0.32]'
-    : isSubGoal
-    ? 'border-purple-400/[0.28]'
-    : 'border-white/[0.09]';
+  // Use inline styles for position-based colors; Tailwind classes for manual themes and defaults
+  const inlineStyle: React.CSSProperties = {};
 
-  const bgClass = theme
-    ? THEME_BG[theme]
-    : isCenter
-    ? 'bg-purple-500/[0.12]'
-    : isLinked
-    ? 'bg-purple-500/[0.07]'
-    : isSubGoal
-    ? 'bg-purple-500/[0.06]'
-    : 'bg-transparent';
+  let borderClass: string;
+  let bgClass: string;
 
-  const ringClass = isDragTarget
-    ? 'ring-[2px] ring-white/60 z-10'
-    : isEditing
-    ? 'ring-[1.5px] ring-white/55 z-10'
-    : isSelected
-    ? `ring-[1.5px] ${theme ? SELECTED_RING[theme] : SELECTED_RING.default}`
-    : '';
+  if (isPositionColored) {
+    // Position-based coloring for sub-goal / linked cells
+    inlineStyle.backgroundColor = palette.bg;
+    inlineStyle.borderColor = palette.border;
+    borderClass = '';
+    bgClass = '';
+  } else if (theme) {
+    borderClass = THEME_BORDER[theme];
+    bgClass = THEME_BG[theme];
+  } else if (isCenter) {
+    borderClass = 'border-purple-400/50';
+    bgClass = 'bg-purple-500/[0.14]';
+  } else {
+    borderClass = 'border-white/[0.09]';
+    bgClass = 'bg-transparent';
+  }
+
+  let ringClass: string;
+  if (isDragTarget) {
+    ringClass = 'ring-[2px] ring-white/60 z-10';
+  } else if (isEditing) {
+    ringClass = 'ring-[1.5px] ring-white/55 z-10';
+  } else if (isSelected) {
+    if (isPositionColored) {
+      inlineStyle.boxShadow = `0 0 0 1.5px ${palette.ring}`;
+      ringClass = 'z-10';
+    } else {
+      ringClass = `ring-[1.5px] ${theme ? SELECTED_RING[theme] : SELECTED_RING.default}`;
+    }
+  } else {
+    ringClass = '';
+  }
 
   const opacityClass = isDragSource ? 'opacity-30' : '';
 
@@ -174,17 +194,28 @@ export default function MandalartCell({
   // ── Font sizes via CSS custom properties (set on the board wrapper in MandalartPage) ──
   // --cell-fs:    action / linked / sub-goal cells (scales with boardSize)
   // --cell-fs-lg: center cell (slightly larger)
-  const textColorClass = isCenter
-    ? 'font-semibold text-white/85'
-    : isLinked
-    ? 'font-semibold text-white/70'
-    : isSubGoal
-    ? 'font-medium text-white/65'
-    : 'text-white/55';
+  let textColorClass: string;
+  if (isCenter) {
+    textColorClass = 'font-semibold text-white/85';
+  } else if (isPositionColored) {
+    // Use the palette text color via inline style
+    textColorClass = 'font-semibold';
+  } else if (isLinked) {
+    textColorClass = 'font-semibold text-white/70';
+  } else if (isSubGoal) {
+    textColorClass = 'font-medium text-white/65';
+  } else {
+    textColorClass = 'text-white/55';
+  }
 
   const textFontSize = isCenter
     ? 'var(--cell-fs-lg, 10px)'
     : 'var(--cell-fs, 9px)';
+
+  // Text color for position-colored cells
+  const textInlineStyle: React.CSSProperties = isPositionColored
+    ? { color: palette.text }
+    : {};
 
   return (
     <div
@@ -196,10 +227,11 @@ export default function MandalartCell({
       onDragEnter={handleDragEnterEvent}
       onDrop={handleDrop}
       onDragEnd={handleDragEndEvent}
+      style={inlineStyle}
       className={[
         'relative overflow-hidden border rounded-[4px] transition-all duration-100',
         cursorClass,
-        !isEditing ? 'hover:border-white/20 hover:bg-white/[0.03]' : '',
+        !isEditing ? 'hover:brightness-125 hover:bg-white/[0.03]' : '',
         borderClass,
         bgClass,
         ringClass,
@@ -217,9 +249,12 @@ export default function MandalartCell({
         </div>
       )}
 
-      {/* Linked indicator dot — expansion block center cell only */}
-      {isLinked && !isEditing && (
-        <div className="absolute top-[3px] right-[3px] w-[4px] h-[4px] rounded-full bg-white/25 pointer-events-none z-10" />
+      {/* Position color indicator — sub-goal & linked cells */}
+      {isPositionColored && !isEditing && (
+        <div
+          className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full pointer-events-none z-10"
+          style={{ backgroundColor: palette.border }}
+        />
       )}
 
       {/* Drag target highlight overlay */}
@@ -261,7 +296,7 @@ export default function MandalartCell({
         >
           {text ? (
             <p
-              style={{ fontSize: textFontSize }}
+              style={{ fontSize: textFontSize, ...textInlineStyle }}
               className={[
                 'text-center leading-tight break-words w-full overflow-hidden',
                 '[display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:4]',

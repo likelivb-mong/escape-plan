@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { MandalartCellData } from '../../types/mandalart';
 import MandalartCell from './MandalartCell';
+import { BLOCK_COLORS, getBlockColorIndex, getSubGoalColorIndex } from './blockColors';
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface MandalartBoardProps {
@@ -88,28 +89,52 @@ export default function MandalartBoard({
   return (
     <div
       onClick={onClearSelection}
-      className="w-full h-full grid grid-cols-3 grid-rows-3 gap-[3px] p-[3px] rounded-xl border border-white/[0.07] bg-white/[0.025] shadow-2xl"
+      className="w-full h-full grid grid-cols-3 grid-rows-3 gap-[5px] p-[4px] rounded-xl border border-white/[0.07] bg-white/[0.025] shadow-2xl"
     >
       {BLOCK_POSITIONS.map(({ br, bc }) => {
         const isCenterBlock = br === 1 && bc === 1;
         const blockCells = blocks[`${br}-${bc}`] ?? [];
+        const colorIndex = getBlockColorIndex(br, bc);
+        const palette = colorIndex >= 0 ? BLOCK_COLORS[colorIndex] : null;
+
         // Center cell of expansion block (sub-goal mirror)
         const linkedCellId = !isCenterBlock
           ? `cell-${br * 3 + 1}-${bc * 3 + 1}`
           : undefined;
 
+        // Block-level styling
+        const blockStyle: React.CSSProperties = isCenterBlock
+          ? {}
+          : palette
+          ? {
+              backgroundColor: palette.blockBg,
+              boxShadow: `inset 0 0 0 1px ${palette.blockBorder}`,
+            }
+          : {};
+
         return (
           <div
             key={`block-${br}-${bc}`}
             className={[
-              'grid grid-cols-3 grid-rows-3 gap-[1px] rounded-[7px] overflow-hidden',
+              'grid grid-cols-3 grid-rows-3 gap-[1px] rounded-lg overflow-hidden',
               isCenterBlock
-                ? 'bg-purple-500/[0.09] ring-[1px] ring-inset ring-purple-400/[0.22]'
-                : 'bg-white/[0.01]',
-            ].join(' ')}
+                ? 'bg-purple-500/[0.08] ring-[1.5px] ring-inset ring-purple-400/[0.25]'
+                : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            style={blockStyle}
           >
             {blockCells.map((cell) => {
               const draggable = isDraggableCell(cell.row, cell.col);
+              // Determine color index for this specific cell
+              let cellColorIndex = -1;
+              if (isCenterBlock && cell.isSubGoal) {
+                cellColorIndex = getSubGoalColorIndex(cell.row, cell.col);
+              } else if (!isCenterBlock && cell.id === linkedCellId) {
+                cellColorIndex = colorIndex;
+              }
+
               return (
                 <MandalartCell
                   key={cell.id}
@@ -124,6 +149,7 @@ export default function MandalartBoard({
                     dragTargetId === cell.id &&
                     dragSourceId !== cell.id
                   }
+                  blockColorIndex={cellColorIndex}
                   onSelect={onSelect}
                   onStartEdit={onStartEdit}
                   onFinishEdit={onFinishEdit}
