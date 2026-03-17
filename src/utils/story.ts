@@ -1,7 +1,35 @@
 import type { StoryProposal, KeywordCategory, KeywordItem } from '../types/story';
 import type { MandalartCellData } from '../types/mandalart';
+import type { ProjectBrief } from '../types';
 import { STORY_VARIANTS } from '../data/mockStories';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// ── Genre labels (shared) ────────────────────────────────────────────────────
+const GENRE_MAP: Record<string, string> = {
+  horror: '공포', mystery: '미스터리', adventure: '어드벤처', thriller: '스릴러',
+  fantasy: '판타지', 'sci-fi': 'SF', romance: '로맨스', comedy: '코미디',
+};
+
+// ── Build context from ProjectBrief ──────────────────────────────────────────
+export function buildBriefContext(brief: ProjectBrief, projectName: string): string {
+  let ctx = `테마 이름: ${projectName}\n`;
+  if (brief.genres.length) ctx += `장르: ${brief.genres.map(g => GENRE_MAP[g] ?? g).join(', ')}\n`;
+  if (brief.playTimes.length) ctx += `플레이 시간: ${brief.playTimes.map(t => `${t}분`).join(', ')}\n`;
+  if (brief.source === 'youtube' && brief.videoTitle) ctx += `원본 YouTube 영상: ${brief.videoTitle}\n`;
+  if (brief.synopsis) ctx += `\n시놉시스:\n${brief.synopsis}\n`;
+  if (brief.beats.length) {
+    ctx += `\n스토리 구조 (기승전반결):\n`;
+    brief.beats.forEach(b => { ctx += `  [${b.label}] ${b.description}\n`; });
+  }
+  const inv = brief.investigation;
+  const parts: string[] = [];
+  if (inv.motives.length) parts.push(`동기: ${inv.motives.join(', ')}`);
+  if (inv.methods.length) parts.push(`수법: ${inv.methods.join(', ')}`);
+  if (inv.clues.length) parts.push(`단서: ${inv.clues.join(', ')}`);
+  if (inv.techniques?.length) parts.push(`기법: ${inv.techniques.join(', ')}`);
+  if (parts.length) ctx += `\n수사 키워드:\n${parts.join('\n')}\n`;
+  return ctx.trim();
+}
 
 // ── Keyword categorisation ────────────────────────────────────────────────────
 
@@ -68,17 +96,23 @@ function buildKeywordContext(keywords: KeywordItem[], themeTitle: string): strin
   return ctx.trim();
 }
 
-function buildStoryPrompt(keywords: KeywordItem[], themeTitle: string, count: number, slotIndex?: number): string {
-  const kwCtx = buildKeywordContext(keywords, themeTitle);
+function buildStoryPrompt(keywords: KeywordItem[], themeTitle: string, count: number, slotIndex?: number, briefCtx?: string): string {
+  const kwCtx = keywords.length > 0 ? buildKeywordContext(keywords, themeTitle) : '';
   const slotSpec = count === 1
     ? `슬롯 ${slotIndex ?? 0}번 스토리 1개를 생성하세요. JSON의 slot 값은 ${slotIndex ?? 0}이어야 합니다.`
     : '서로 완전히 다른 장르와 분위기의 스토리 3개를 생성하세요. slot은 0, 1, 2 순서로.';
 
-  return `당신은 XCAPE 방탈출 테마 기획 전문가입니다. 아래 만다라트 키워드를 반드시 활용하여 오프라인 방탈출 게임 스토리를 생성하세요.
+  const contextSection = briefCtx
+    ? `[기획안 정보]\n${briefCtx}${kwCtx ? `\n\n[만다라트 키워드]\n${kwCtx}` : ''}`
+    : kwCtx
+      ? `[만다라트 키워드]\n${kwCtx}`
+      : `메인 테마: ${themeTitle}`;
 
-${kwCtx}
+  return `당신은 XCAPE 방탈출 테마 기획 전문가입니다. 아래 기획안을 토대로, 실제 방탈출 카페에서 인기 있을 만한 오프라인 방탈출 게임 시나리오 스토리를 제안하세요.
 
-위 키워드들을 스토리 설정, 단서, 공간, 인물에 직접 연결하세요. 키워드를 무시한 일반적인 스토리는 안 됩니다.
+${contextSection}
+
+위 기획안의 세계관, 캐릭터, 사건 설정에서 영감을 받되, 방탈출 게임으로 재구성하여 플레이어가 직접 체험할 수 있는 몰입감 있고 인기 있을 시나리오를 만드세요.
 
 반드시 유효한 JSON으로만 응답하세요. markdown 코드블록 없이 순수 JSON만 출력하세요.
 
@@ -91,8 +125,8 @@ ${slotSpec}
       "title": "스토리 제목",
       "genre": "장르",
       "tone": "분위기 · 감성",
-      "logline": "한 줄 요약 (키워드 직접 반영)",
-      "synopsis": "2-3문장 시놉시스 (키워드 기반 구체적 설정)",
+      "logline": "한 줄 요약",
+      "synopsis": "2-3문장 시놉시스",
       "beats": [
         {"label": "기", "description": "도입"},
         {"label": "승", "description": "전개"},
@@ -121,7 +155,9 @@ ${slotSpec}
 
 규칙:
 - stories 정확히 ${count}개
-- 위 만다라트 키워드들을 직접 활용한 오프라인 방탈출 게임 설정이어야 함
+- 기획안의 세계관과 설정을 활용한 오프라인 방탈출 게임 시나리오여야 함
+- 각 스토리는 서로 다른 관점, 장르 변주, 또는 플레이 컨셉을 시도할 것
+- 실제 방탈출 카페에서 인기 있을 만한 매력적인 스토리일 것
 - twistIntensity: "low", "medium", "high" 중 하나
 - 모든 문자열에 큰따옴표만 사용`;
 }
@@ -131,12 +167,13 @@ async function callGeminiForStories(
   themeTitle: string,
   count: number,
   slotIndex?: number,
+  briefCtx?: string,
 ): Promise<StoryProposal[]> {
   const apiKey = import.meta.env.VITE_GOOGLE_GENERATIVE_AI_KEY as string | undefined;
   if (!apiKey) throw new Error('VITE_GOOGLE_GENERATIVE_AI_KEY가 설정되어 있지 않습니다.');
 
   const genAI  = new GoogleGenerativeAI(apiKey);
-  const prompt = buildStoryPrompt(keywords, themeTitle, count, slotIndex);
+  const prompt = buildStoryPrompt(keywords, themeTitle, count, slotIndex, briefCtx);
 
   let rawText = '';
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -200,10 +237,11 @@ export async function regenerateSingleProposal(
   currentVariantIndex: number,
   keywords: KeywordItem[],
   themeTitle: string,
+  briefCtx?: string,
 ): Promise<{ newVariantIndex: number; proposal: StoryProposal }> {
-  if (keywords.length > 0) {
+  if (keywords.length > 0 || briefCtx) {
     try {
-      const stories  = await callGeminiForStories(keywords, themeTitle, 1, slot);
+      const stories  = await callGeminiForStories(keywords, themeTitle, 1, slot, briefCtx);
       const proposal = stories[0];
       if (proposal) {
         return { newVariantIndex: 0, proposal: { ...proposal, slot } };
@@ -228,14 +266,15 @@ export async function regenerateAllProposals(
   currentVariantIndices: [number, number, number],
   keywords: KeywordItem[],
   themeTitle: string,
+  briefCtx?: string,
 ): Promise<{ newVariantIndices: [number, number, number]; proposals: StoryProposal[] }> {
-  if (keywords.length > 0) {
+  if (keywords.length > 0 || briefCtx) {
     try {
       // Generate each story separately to avoid JSON truncation from large responses
       const [r0, r1, r2] = await Promise.all([
-        callGeminiForStories(keywords, themeTitle, 1, 0),
-        callGeminiForStories(keywords, themeTitle, 1, 1),
-        callGeminiForStories(keywords, themeTitle, 1, 2),
+        callGeminiForStories(keywords, themeTitle, 1, 0, briefCtx),
+        callGeminiForStories(keywords, themeTitle, 1, 1, briefCtx),
+        callGeminiForStories(keywords, themeTitle, 1, 2, briefCtx),
       ]);
       const stories = [r0[0], r1[0], r2[0]].filter(Boolean) as StoryProposal[];
       if (stories.length > 0) {
