@@ -4,6 +4,10 @@ interface MandalartToolbarProps {
   selectedCount: number;
   multiSelectMode: boolean;
   onToggleMultiSelect: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
   onApplyTheme: (theme: NonNullable<MandalartTheme>) => void;
   onClearTheme: () => void;
   onClearSelection: () => void;
@@ -40,6 +44,10 @@ export default function MandalartToolbar({
   selectedCount,
   multiSelectMode,
   onToggleMultiSelect,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   onApplyTheme,
   onClearTheme,
   onClearSelection,
@@ -49,6 +57,26 @@ export default function MandalartToolbar({
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap w-full">
+
+      {/* Undo / Redo */}
+      <button
+        onClick={onUndo}
+        disabled={!canUndo}
+        title="되돌리기 (Ctrl+Z)"
+        className="px-2 py-1.5 rounded-full border border-white/[0.08] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/15 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-150"
+      >
+        ↩
+      </button>
+      <button
+        onClick={onRedo}
+        disabled={!canRedo}
+        title="다시하기 (Ctrl+Shift+Z)"
+        className="px-2 py-1.5 rounded-full border border-white/[0.08] text-footnote font-medium text-white/35 hover:text-white/60 hover:border-white/15 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-150"
+      >
+        ↪
+      </button>
+
+      <div className="h-4 w-px bg-white/10 mx-0.5" />
 
       {/* Color theme buttons */}
       {THEME_BUTTONS.map(({ theme, label, dot, style }) => (
