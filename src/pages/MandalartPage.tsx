@@ -15,6 +15,7 @@ export default function MandalartPage() {
 
   const [selectedCellIds, setSelectedCellIds] = useState<Set<string>>(new Set());
   const [editingCellId, setEditingCellId] = useState<string | null>(null);
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [boardSize, setBoardSize] = useState(600);
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,8 +49,8 @@ export default function MandalartPage() {
   // ── Selection ──────────────────────────────────────────────────────────────
   const handleSelect = useCallback((id: string, multi: boolean) => {
     setSelectedCellIds((prev) => {
-      if (multi) {
-        // Cmd/Ctrl+Click: toggle individual cell
+      if (multi || multiSelectMode) {
+        // Cmd/Ctrl+Click or multi-select mode: toggle individual cell
         const next = new Set(prev);
         if (next.has(id)) next.delete(id);
         else next.add(id);
@@ -59,7 +60,7 @@ export default function MandalartPage() {
       if (prev.has(id)) return new Set();
       return new Set([id]);
     });
-  }, []);
+  }, [multiSelectMode]);
 
   const handleClearSelection = useCallback(() => {
     (document.activeElement as HTMLElement)?.blur();
@@ -326,6 +327,8 @@ export default function MandalartPage() {
           <div className="flex-shrink-0 flex items-center gap-2 flex-wrap w-full">
             <MandalartToolbar
               selectedCount={selectedCellIds.size}
+              multiSelectMode={multiSelectMode}
+              onToggleMultiSelect={() => setMultiSelectMode((v) => !v)}
               onApplyTheme={handleApplyTheme}
               onClearTheme={handleClearTheme}
               onClearSelection={handleClearSelection}
