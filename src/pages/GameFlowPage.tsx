@@ -88,74 +88,71 @@ export default function GameFlowPage() {
   // ── Empty state ───────────────────────────────────────────────────────────
   if (!selectedStory) {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 px-6">
-        <div className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-title2">
+      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-5 px-6">
+        <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-2xl">
           🎮
         </div>
         <div className="text-center">
-          <p className="text-body font-semibold text-white/70 mb-1">스토리가 선택되지 않았습니다.</p>
-          <p className="text-subhead text-white/35 leading-relaxed">
-            만다라트를 먼저 완성한 후 와주세요.
+          <p className="text-lg font-semibold text-white/80 mb-1.5">스토리가 선택되지 않았습니다</p>
+          <p className="text-sm text-white/35 leading-relaxed max-w-xs">
+            만다라트를 먼저 완성한 후 Game Flow를 생성할 수 있습니다.
           </p>
         </div>
         <button
           onClick={() => navigate('/mandalart')}
-          className="mt-2 px-4 py-2 rounded-full border border-white/[0.12] text-subhead text-white/50 hover:border-white/25 hover:text-white/70 transition-all"
+          className="mt-1 px-5 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-sm text-white/60 hover:bg-white/[0.10] hover:text-white/80 transition-all"
         >
-          ← 만다라트로
+          ← 만다라트로 이동
         </button>
       </div>
     );
   }
 
-  const SUB_TABS: { key: SubTab; label: string }[] = [
-    { key: 'chart', label: 'Chart' },
-    { key: 'steps', label: 'Steps' },
-    { key: 'summary', label: 'Summary' },
+  const SUB_TABS: { key: SubTab; label: string; icon: string }[] = [
+    { key: 'chart', label: 'Chart', icon: '◫' },
+    { key: 'steps', label: 'Steps', icon: '☰' },
+    { key: 'summary', label: 'Summary', icon: '◉' },
   ];
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {/* ── Page header ── */}
-      <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b border-white/[0.07] flex-shrink-0 gap-2">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 border-b border-white/[0.06] flex-shrink-0 gap-3">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <button
             onClick={() => navigate('/mandalart')}
-            className="text-white/30 hover:text-white/60 transition-colors text-subhead flex-shrink-0"
+            className="text-white/30 hover:text-white/60 transition-colors text-sm flex-shrink-0"
           >
-            <span className="hidden sm:inline">← Mandala Chart</span>
-            <span className="sm:hidden">← Mandala</span>
+            <span className="hidden sm:inline">← Mandala</span>
+            <span className="sm:hidden">←</span>
           </button>
-          <span className="h-3.5 w-px bg-white/10 flex-shrink-0" />
-          <h1 className="text-body font-semibold text-white/85 truncate">{projectName}</h1>
-          <span className="hidden sm:block h-3.5 w-px bg-white/10 flex-shrink-0" />
-          <span className="hidden sm:block text-footnote text-white/35 font-medium tracking-wide flex-shrink-0">
+          <span className="h-3.5 w-px bg-white/[0.08] flex-shrink-0" />
+          <h1 className="text-[15px] font-semibold text-white/90 truncate">{projectName}</h1>
+          <span className="hidden sm:inline text-xs text-white/25 font-medium tracking-wide flex-shrink-0">
             Game Flow
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={handleSave}
             disabled={!hasChanges}
-            className={[
-              'px-3 py-1.5 rounded-lg text-footnote font-medium transition-all duration-200 border',
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
               saved
-                ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300/80'
+                ? 'bg-emerald-500/15 text-emerald-400/90 border border-emerald-500/25'
                 : hasChanges
-                ? 'border-white/[0.10] text-white/45 hover:border-white/20 hover:text-white/70'
-                : 'border-white/[0.08] text-white/25 cursor-not-allowed',
-            ].join(' ')}
+                ? 'bg-white/[0.06] text-white/60 border border-white/[0.10] hover:bg-white/[0.10] hover:text-white/80'
+                : 'bg-white/[0.03] text-white/20 border border-white/[0.06] cursor-not-allowed'
+            }`}
           >
-            {saved ? '✓ 저장됨' : hasChanges ? '저장' : '저장됨'}
+            {saved ? '✓ Saved' : hasChanges ? 'Save' : 'Saved'}
           </button>
 
           <button
             onClick={handleGoToSetting}
-            className="px-3 sm:px-4 py-1.5 rounded-lg bg-white text-black text-footnote font-semibold hover:bg-white/90 transition-colors"
+            className="px-4 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors"
           >
-            <span className="hidden sm:inline">Pass Map →</span>
-            <span className="sm:hidden">PassMap →</span>
+            Pass Map →
           </button>
         </div>
       </div>
@@ -165,35 +162,40 @@ export default function GameFlowPage() {
 
       {/* ── Sub-tab bar ── */}
       {gamePlan && !isGenerating && (
-        <div className="flex items-center gap-0.5 px-4 sm:px-6 py-2 border-b border-white/[0.05] flex-shrink-0">
-          <div className="flex items-center gap-0.5 p-0.5 rounded-full border border-white/[0.08] bg-white/[0.02]">
+        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2.5 border-b border-white/[0.05] flex-shrink-0">
+          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
             {SUB_TABS.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={[
-                  'px-4 py-1.5 rounded-full text-caption font-medium transition-all duration-150',
+                className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 ${
                   activeTab === tab.key
-                    ? 'bg-white text-black'
-                    : 'text-white/40 hover:text-white/65',
-                ].join(' ')}
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-white/40 hover:text-white/60'
+                }`}
               >
+                <span className="hidden sm:inline text-[10px] opacity-60">{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
           </div>
-          <span className="ml-3 text-caption text-white/20">
-            {gamePlan.steps.length}스텝 · {gamePlan.rooms.length}공간
-          </span>
+          <div className="flex items-center gap-3 text-xs text-white/25">
+            <span>{gamePlan.steps.length} steps</span>
+            <span className="w-px h-3 bg-white/[0.08]" />
+            <span>{gamePlan.rooms.length} rooms</span>
+          </div>
         </div>
       )}
 
       {/* ── Content ── */}
       {isGenerating ? (
         <div className="flex flex-1 items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-            <p className="text-footnote text-white/35">Game Flow를 AI로 생성 중...</p>
+          <div className="flex flex-col items-center gap-5">
+            <div className="w-10 h-10 border-2 border-white/15 border-t-white/50 rounded-full animate-spin" />
+            <div className="text-center">
+              <p className="text-sm text-white/50 mb-1">Game Flow 생성 중</p>
+              <p className="text-xs text-white/25">AI가 스토리를 분석하고 있습니다...</p>
+            </div>
           </div>
         </div>
       ) : gamePlan ? (
