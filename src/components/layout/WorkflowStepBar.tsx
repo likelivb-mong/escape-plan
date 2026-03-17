@@ -66,12 +66,12 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
               <button
                 onClick={() => handleNavigate(step.path, idx)}
                 disabled={!accessible || isActive}
-                title={isFuture ? '이전 단계를 먼저 완료하세요' : step.label}
+                title={isFuture && !isDone ? '이전 단계를 먼저 완료하세요' : step.label}
                 className={[
                   'flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg transition-all duration-150 flex-shrink-0 group',
                   isActive
                     ? 'bg-white/[0.10] text-white font-semibold cursor-default'
-                    : isPast
+                    : accessible
                       ? 'text-white/40 hover:text-white/75 hover:bg-white/[0.06] cursor-pointer font-medium'
                       : 'text-white/15 cursor-not-allowed font-medium',
                 ].join(' ')}
@@ -82,15 +82,15 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
                     'w-[18px] h-[18px] rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 transition-all',
                     isActive
                       ? 'bg-white text-black shadow-[0_0_8px_rgba(255,255,255,0.3)]'
-                      : isDone && isPast
+                      : isDone && !isActive
                         ? 'bg-emerald-500/25 text-emerald-300/90 ring-1 ring-emerald-400/40'
-                        : isPast
+                        : accessible
                           ? 'bg-white/[0.10] text-white/40'
                           : 'bg-white/[0.04] text-white/15',
                   ].join(' ')}
                 >
-                  {isFuture ? (
-                    // Lock icon for future steps
+                  {isFuture && !isDone ? (
+                    // Lock only if truly not done yet
                     <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
                     </svg>
