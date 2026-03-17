@@ -240,14 +240,6 @@ export default function MandalartCell({
         .filter(Boolean)
         .join(' ')}
     >
-      {/* Main Theme badge — center cell only */}
-      {isCenter && (
-        <div className="absolute top-[3px] left-0 right-0 flex justify-center pointer-events-none z-10">
-          <span className="text-micro font-bold tracking-[0.18em] uppercase text-white/30 select-none">
-            메인 테마
-          </span>
-        </div>
-      )}
 
       {/* Position color indicator — sub-goal & linked cells */}
       {isPositionColored && !isEditing && (
@@ -273,14 +265,14 @@ export default function MandalartCell({
           onClick={(e) => e.stopPropagation()}
           onDoubleClick={(e) => e.stopPropagation()}
           spellCheck={false}
-          placeholder={isCenter ? '메인 테마 입력' : ''}
+          placeholder=""
           style={{ fontSize: textFontSize }}
           className={[
             'absolute inset-0 w-full h-full resize-none bg-transparent',
             'border-none outline-none text-center leading-tight overflow-hidden',
             'placeholder:text-white/[0.15] cursor-text',
             isCenter
-              ? 'font-semibold text-white/95 pt-4 px-1 pb-1'
+              ? 'font-semibold text-white/95 p-[5px]'
               : 'text-white/75 p-[5px]',
           ]
             .filter(Boolean)
@@ -291,7 +283,7 @@ export default function MandalartCell({
         <div
           className={[
             'absolute inset-0 flex items-center justify-center px-[5px] pb-[5px] select-none',
-            isCenter ? 'pt-[14px]' : 'pt-[5px]',
+            'pt-[5px]',
           ].join(' ')}
         >
           {text ? (
