@@ -51,8 +51,8 @@ export default function StoryPage() {
   );
 
   // ── Source story from projectBrief (for selection only, not as a proposal) ──
-  const sourceStoryData: StoryProposal | null = useMemo(() => {
-    if (!projectBrief || (!projectBrief.synopsis && projectBrief.beats.length === 0)) return null;
+  const sourceStoryData: StoryProposal | undefined = useMemo(() => {
+    if (!projectBrief || (!projectBrief.synopsis && projectBrief.beats.length === 0)) return undefined;
     const isYoutube = projectBrief.source === 'youtube';
     return {
       id: 'source-story',
@@ -314,11 +314,11 @@ export default function StoryPage() {
                   <div className="px-5 pt-5 pb-4 border-b border-white/[0.05]">
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <span className={`px-2.5 py-0.5 rounded-full border text-micro font-medium ${
-                        projectBrief.source === 'youtube'
+                        projectBrief?.source === 'youtube'
                           ? 'bg-red-500/[0.12] border-red-500/20 text-red-400/70'
                           : 'bg-sky-500/[0.12] border-sky-500/20 text-sky-400/70'
                       }`}>
-                        {projectBrief.source === 'youtube' ? 'YouTube 원작' : '직접 작성'}
+                        {projectBrief?.source === 'youtube' ? 'YouTube 원작' : '직접 작성'}
                       </span>
                       <span className="px-2 py-0.5 rounded-md border border-white/[0.10] text-micro text-white/40 bg-white/[0.03]">
                         {sourceStoryData.genre}
