@@ -1,4 +1,9 @@
 import type { ThemeStep, StepDetail } from '../types/passmap';
+import { OUTPUT_LABELS } from '../../../utils/gameFlow';
+
+function localizeOutput(val: string): string {
+  return OUTPUT_LABELS[val] ?? val;
+}
 
 interface StepPinProps {
   step: ThemeStep;
@@ -59,7 +64,7 @@ export default function StepPin({ step, isSelected, onClick, draggable, onDragSt
         <div className="flex items-center gap-0.5 px-1.5 pt-0.5 pb-1 text-[8px] text-white/30 leading-none">
           {detail.input && <span className="truncate">{detail.input}</span>}
           {detail.input && detail.output && <span className="text-white/20">▸</span>}
-          {detail.output && <span className="truncate">{detail.output}</span>}
+          {detail.output && <span className="truncate">{localizeOutput(detail.output)}</span>}
         </div>
       )}
 
