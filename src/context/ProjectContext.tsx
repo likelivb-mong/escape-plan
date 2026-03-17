@@ -16,7 +16,7 @@ import {
   deriveCompletionLevel,
   type SavedProject,
 } from '../utils/projectStorage';
-import { saveHistorySnapshot } from '../utils/projectHistory';
+import { saveHistorySnapshot, type HistoryPage } from '../utils/projectHistory';
 
 // ── Context value type ────────────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ interface ProjectContextValue {
   // Persistence helpers
   resetForNewProject: () => void; // clear currentProjectId so next save creates a NEW project
   forkAsNewProject: () => void;   // nullify currentProjectId only (keep all other state) so next save creates a NEW project
-  saveCurrentProject: () => string; // returns saved project id
+  saveCurrentProject: (page?: HistoryPage) => string; // returns saved project id
   loadProject: (id: string) => boolean;
   deleteProject: (id: string) => void;
   moveToTrash: (id: string) => void;
@@ -117,7 +117,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setProjectName('Untitled Theme Project');
   }, []);
 
-  const saveCurrentProject = useCallback((): string => {
+  const saveCurrentProject = useCallback((page?: HistoryPage): string => {
     const id = currentProjectId ?? crypto.randomUUID();
     const now = new Date().toISOString();
     const existing = currentProjectId ? loadProjectById(currentProjectId) : null;
@@ -147,8 +147,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     };
 
     upsertProject(project);
-    // Save history snapshot for version tracking
-    saveHistorySnapshot(project);
+    // Save history snapshot for version tracking (tagged by page)
+    if (page) saveHistorySnapshot(project, page);
     setCurrentProjectId(id);
     return id;
   }, [

@@ -201,7 +201,7 @@ export default function ThemeDesignPage() {
       }
 
       await new Promise((resolve) => setTimeout(resolve, 300));
-      saveCurrentProject();
+      saveCurrentProject('plan');
       setSaved(true);
       setTimeout(() => navigate('/plan'), 800);
     } catch (error) {
