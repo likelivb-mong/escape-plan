@@ -126,6 +126,49 @@ function projectToRow(project: SavedProject) {
   };
 }
 
+// ── Migrate localStorage projects to Supabase (one-time sync) ────────────────
+
+const MIGRATION_KEY = 'xcape-projects-migrated';
+
+/**
+ * Push any localStorage-only projects to Supabase.
+ * Runs once per browser; skips projects that already exist remotely.
+ */
+export async function migrateLocalToSupabase(): Promise<void> {
+  if (!supabase) return;
+  if (localStorage.getItem(MIGRATION_KEY)) return; // already done
+
+  const localProjects = readLocalProjects();
+  if (localProjects.length === 0) {
+    localStorage.setItem(MIGRATION_KEY, 'true');
+    return;
+  }
+
+  try {
+    // Fetch existing IDs from Supabase
+    const { data } = await supabase
+      .from('projects')
+      .select('id');
+
+    const existingIds = new Set((data ?? []).map((r: { id: string }) => r.id));
+    const toUpload = localProjects.filter((p) => !existingIds.has(p.id));
+
+    if (toUpload.length > 0) {
+      const rows = toUpload.map(projectToRow);
+      const { error } = await supabase.from('projects').upsert(rows);
+      if (error) {
+        console.error('Migration upsert failed:', error);
+        return; // don't mark as done so it retries
+      }
+      console.log(`[migration] Synced ${toUpload.length} local project(s) to Supabase`);
+    }
+
+    localStorage.setItem(MIGRATION_KEY, 'true');
+  } catch (err) {
+    console.error('Migration failed:', err);
+  }
+}
+
 // ── List projects (Supabase-first, localStorage fallback) ────────────────────
 
 /** Instant list from localStorage cache */

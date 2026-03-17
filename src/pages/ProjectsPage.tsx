@@ -8,6 +8,7 @@ import {
   restoreFromTrash,
   permanentlyDelete,
   emptyTrash,
+  migrateLocalToSupabase,
   type SavedProject,
   type TrashedProject,
   type CompletionLevel,
@@ -239,10 +240,10 @@ export default function ProjectsPage() {
     }
   }, []);
 
-  // Load: show localStorage cache instantly, then replace with Supabase data
+  // Load: migrate local data to Supabase, then refresh
   useEffect(() => {
     setProjects(listSavedProjects()); // instant cache
-    refreshFromSupabase();
+    migrateLocalToSupabase().then(() => refreshFromSupabase()).catch(() => refreshFromSupabase());
   }, [refreshFromSupabase]);
 
   useEffect(() => { refreshFromSupabase(); }, [refreshKey, refreshFromSupabase]);
