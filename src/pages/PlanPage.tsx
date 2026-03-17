@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
-import type { ProjectBrief, Genre, PlayTime } from '../types';
+import type { ProjectBrief, Genre, PlayTime, PuzzleType, ClueFormat } from '../types';
 import WorkflowStepBar from '../components/layout/WorkflowStepBar';
 
 const GENRE_LABELS: Record<string, string> = {
@@ -10,6 +10,8 @@ const GENRE_LABELS: Record<string, string> = {
 };
 const ALL_GENRES: Genre[] = ['horror', 'mystery', 'adventure', 'thriller', 'fantasy', 'sci-fi', 'romance', 'comedy'];
 const ALL_PLAY_TIMES: PlayTime[] = [60, 70, 80, 90];
+const ALL_PUZZLE_TYPES: PuzzleType[] = ['추리', '관찰', '수리', '협동', '활동', '오감'];
+const ALL_CLUE_FORMATS: ClueFormat[] = ['평면', '입체', '공간', '감각'];
 const BEAT_LABELS: ('기' | '승' | '전' | '반전' | '결')[] = ['기', '승', '전', '반전', '결'];
 
 const STAGES = [
@@ -41,6 +43,8 @@ export default function PlanPage() {
   const [editSynopsis, setEditSynopsis] = useState(projectBrief?.synopsis ?? '');
   const [editGenres, setEditGenres]   = useState<Genre[]>(projectBrief?.genres ?? []);
   const [editTimes, setEditTimes]     = useState<PlayTime[]>(projectBrief?.playTimes ?? [60]);
+  const [editPuzzleTypes, setEditPuzzleTypes] = useState<PuzzleType[]>(projectBrief?.puzzleTypes ?? []);
+  const [editClueFormats, setEditClueFormats] = useState<ClueFormat[]>(projectBrief?.clueFormats ?? []);
   const [editBeats, setEditBeats]     = useState<Record<string, string>>(() => {
     const map: Record<string, string> = { '기': '', '승': '', '전': '', '반전': '', '결': '' };
     projectBrief?.beats.forEach((b) => { map[b.label] = b.description; });
@@ -52,6 +56,8 @@ export default function PlanPage() {
     setEditSynopsis(projectBrief?.synopsis ?? '');
     setEditGenres(projectBrief?.genres ?? []);
     setEditTimes(projectBrief?.playTimes ?? [60]);
+    setEditPuzzleTypes(projectBrief?.puzzleTypes ?? []);
+    setEditClueFormats(projectBrief?.clueFormats ?? []);
     const map: Record<string, string> = { '기': '', '승': '', '전': '', '반전': '', '결': '' };
     projectBrief?.beats.forEach((b) => { map[b.label] = b.description; });
     setEditBeats(map);
@@ -69,6 +75,8 @@ export default function PlanPage() {
       synopsis: editSynopsis,
       genres: editGenres.length > 0 ? editGenres : (projectBrief?.genres ?? []),
       playTimes: editTimes.length > 0 ? editTimes : (projectBrief?.playTimes ?? [60]),
+      puzzleTypes: editPuzzleTypes.length > 0 ? editPuzzleTypes : undefined,
+      clueFormats: editClueFormats.length > 0 ? editClueFormats : undefined,
       beats: BEAT_LABELS
         .filter((l) => editBeats[l]?.trim())
         .map((l) => ({ label: l, description: editBeats[l].trim() })),
@@ -167,7 +175,7 @@ export default function PlanPage() {
       <div className="flex flex-col min-h-[calc(100vh-4rem)]">
         {header}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-2xl space-y-6">
+          <div className="px-4 sm:px-6 lg:px-10 py-8 sm:py-10 max-w-5xl mx-auto space-y-6">
             <p className="text-caption text-white/25 uppercase tracking-widest">테마 설계 편집</p>
 
             {/* 프로젝트 이름 */}
@@ -181,49 +189,52 @@ export default function PlanPage() {
               />
             </div>
 
-            {/* 장르 */}
-            <div>
-              <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">장르</label>
-              <div className="flex flex-wrap gap-1.5">
-                {ALL_GENRES.map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setEditGenres((prev) =>
-                      prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
-                    )}
-                    className={`px-3 py-1.5 rounded-full text-subhead font-medium border transition-all ${
-                      editGenres.includes(g)
-                        ? 'bg-white text-black border-white'
-                        : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
-                    }`}
-                  >
-                    {GENRE_LABELS[g]}
-                  </button>
-                ))}
+            {/* 기본정보 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 장르 */}
+              <div>
+                <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">장르</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_GENRES.map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setEditGenres((prev) =>
+                        prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
+                      )}
+                      className={`px-3 py-1.5 rounded-full text-subhead font-medium border transition-all ${
+                        editGenres.includes(g)
+                          ? 'bg-violet-400/20 text-violet-300 border-violet-400/40'
+                          : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                      }`}
+                    >
+                      {GENRE_LABELS[g]}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* 플레이 시간 */}
-            <div>
-              <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">플레이 시간</label>
-              <div className="flex gap-2">
-                {ALL_PLAY_TIMES.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setEditTimes((prev) =>
-                      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
-                    )}
-                    className={`flex-1 py-2.5 rounded-xl text-body font-medium border transition-all ${
-                      editTimes.includes(t)
-                        ? 'bg-white text-black border-white'
-                        : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
-                    }`}
-                  >
-                    {t}분
-                  </button>
-                ))}
+              {/* 플레이 시간 */}
+              <div>
+                <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">플레이 시간</label>
+                <div className="flex gap-2">
+                  {ALL_PLAY_TIMES.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setEditTimes((prev) =>
+                        prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+                      )}
+                      className={`flex-1 py-2.5 rounded-xl text-body font-medium border transition-all ${
+                        editTimes.includes(t)
+                          ? 'bg-emerald-400/20 text-emerald-300 border-emerald-400/40'
+                          : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                      }`}
+                    >
+                      {t}분
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -239,17 +250,64 @@ export default function PlanPage() {
               />
             </div>
 
+            {/* 문제 유형 & 힌트 포맷 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">문제 유형</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_PUZZLE_TYPES.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setEditPuzzleTypes((prev) =>
+                        prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+                      )}
+                      className={`px-3 py-1.5 rounded-full text-subhead font-medium border transition-all ${
+                        editPuzzleTypes.includes(t)
+                          ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'
+                          : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">힌트 포맷</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_CLUE_FORMATS.map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setEditClueFormats((prev) =>
+                        prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]
+                      )}
+                      className={`px-3 py-1.5 rounded-full text-subhead font-medium border transition-all ${
+                        editClueFormats.includes(f)
+                          ? 'bg-cyan-400/20 text-cyan-300 border-cyan-400/40'
+                          : 'text-white/40 border-white/10 hover:border-white/25 hover:text-white/60'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* 기승전반결 */}
             <div>
               <label className="text-subhead text-white/40 font-medium uppercase tracking-wide block mb-2">기승전반결</label>
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 {BEAT_LABELS.map((label) => (
                   <div key={label}>
-                    <p className="text-caption font-bold text-white/30 mb-1">{label}</p>
+                    <p className="text-caption font-bold text-white/30 mb-2">{label}</p>
                     <textarea
                       value={editBeats[label] ?? ''}
                       onChange={(e) => setEditBeats((prev) => ({ ...prev, [label]: e.target.value }))}
-                      rows={4}
+                      rows={5}
                       placeholder={`${label} 단계...`}
                       className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-footnote text-white placeholder:text-white/15 outline-none focus:border-white/20 transition-all resize-none"
                     />
@@ -258,10 +316,10 @@ export default function PlanPage() {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-4">
               <button
                 onClick={handleSave}
-                className="flex-1 py-3 rounded-xl bg-white text-black text-body font-semibold hover:bg-white/90 transition-colors"
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-body font-semibold hover:from-violet-600 hover:to-indigo-600 transition-all"
               >
                 저장하고 닫기
               </button>
@@ -283,41 +341,32 @@ export default function PlanPage() {
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {header}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-3xl">
+        <div className="px-4 sm:px-6 lg:px-10 py-8 sm:py-10 max-w-5xl mx-auto">
 
           {/* Theme Brief */}
           {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
 
           {/* Progress tracker */}
-          <div className="mt-8 mb-6">
+          <div className="mt-12 mb-8">
             <p className="text-caption text-white/25 uppercase tracking-widest mb-4">진행 현황</p>
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 -mx-1 px-1">
-              {STAGES.map((stage, i) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              {STAGES.map((stage) => {
                 const done = stageStatus[stage.key];
                 const isCurrent = stage.key === 'plan';
                 return (
-                  <div key={stage.key} className="flex items-center gap-1 flex-1 min-w-0">
-                    <button
-                      onClick={() => navigate(stage.path)}
-                      className={`flex-1 min-w-[56px] py-2 sm:py-2.5 rounded-lg text-center transition-all border ${
-                        isCurrent
-                          ? 'border-white/25 bg-white/[0.08] text-white/80'
-                          : done
-                          ? 'border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-300/70 hover:border-emerald-500/30'
-                          : 'border-white/[0.06] bg-white/[0.02] text-white/30 hover:border-white/12 hover:text-white/50'
-                      }`}
-                    >
-                      <span className="hidden sm:inline text-caption font-medium">
-                        {done && !isCurrent ? '✓ ' : ''}{stage.label}
-                      </span>
-                      <span className="sm:hidden text-[10px] font-medium leading-tight">
-                        {done && !isCurrent ? '✓' : ''}{stage.shortLabel}
-                      </span>
-                    </button>
-                    {i < STAGES.length - 1 && (
-                      <div className={`w-2 sm:w-3 h-px flex-shrink-0 ${done ? 'bg-emerald-500/30' : 'bg-white/[0.08]'}`} />
-                    )}
-                  </div>
+                  <button
+                    key={stage.key}
+                    onClick={() => navigate(stage.path)}
+                    className={`py-3 px-2 rounded-lg text-center transition-all border font-medium text-sm ${
+                      isCurrent
+                        ? 'border-white/25 bg-white/[0.08] text-white/80'
+                        : done
+                        ? 'border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-300/70 hover:border-emerald-500/30'
+                        : 'border-white/[0.06] bg-white/[0.02] text-white/30 hover:border-white/12 hover:text-white/50'
+                    }`}
+                  >
+                    {done && !isCurrent && '✓ '}{stage.label}
+                  </button>
                 );
               })}
             </div>
@@ -374,77 +423,111 @@ function ThemeBriefSection({
 }) {
   return (
     <div className="mb-8">
-      <p className="text-caption text-white/25 uppercase tracking-widest mb-4">테마 설계 기획서</p>
-      <div className="flex flex-wrap gap-1.5 mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-caption text-white/25 uppercase tracking-widest">테마 설계 기획서</p>
+      </div>
+
+      {/* 기본 정보 태그 */}
+      <div className="flex flex-wrap gap-2 mb-6">
         {brief.genres.map((g) => (
-          <span key={g} className="px-2.5 py-1 rounded-full text-subhead bg-white/[0.06] text-white/55 border border-white/[0.06]">
+          <span key={g} className="px-3 py-1.5 rounded-full text-subhead bg-violet-500/10 text-violet-300 border border-violet-500/20 font-medium">
             {GENRE_LABELS[g] ?? g}
           </span>
         ))}
         {brief.playTimes.map((t) => (
-          <span key={t} className="px-2.5 py-1 rounded-full text-subhead bg-white/[0.06] text-white/55 border border-white/[0.06]">
+          <span key={t} className="px-3 py-1.5 rounded-full text-subhead bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium">
             {t}분
           </span>
         ))}
+        {brief.puzzleTypes && brief.puzzleTypes.length > 0 && brief.puzzleTypes.map((t) => (
+          <span key={t} className="px-3 py-1.5 rounded-full text-subhead bg-amber-500/10 text-amber-300 border border-amber-500/20 font-medium">
+            {t}
+          </span>
+        ))}
+        {brief.clueFormats && brief.clueFormats.length > 0 && brief.clueFormats.map((f) => (
+          <span key={f} className="px-3 py-1.5 rounded-full text-subhead bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-medium">
+            {f}
+          </span>
+        ))}
         {branchCode && (
-          <span className="px-2.5 py-1 rounded-full text-subhead bg-white/[0.06] text-white/55 border border-white/[0.06] font-mono">
+          <span className="px-3 py-1.5 rounded-full text-subhead bg-white/[0.06] text-white/55 border border-white/[0.06] font-mono">
             {branchCode}
           </span>
         )}
         {brief.source === 'youtube' && brief.videoTitle && (
-          <span className="px-2.5 py-1 rounded-full text-subhead bg-white/[0.06] text-white/55 border border-white/[0.06]">
+          <span className="px-3 py-1.5 rounded-full text-subhead bg-red-500/10 text-red-300 border border-red-500/20 font-medium">
             📺 {brief.videoTitle}
           </span>
         )}
       </div>
+
+      {/* 시놉시스 */}
       {brief.synopsis && (
-        <div className="mb-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-          <p className="text-caption text-white/25 uppercase tracking-widest mb-2">시놉시스</p>
-          <p className="text-body text-white/65 leading-relaxed">{brief.synopsis}</p>
+        <div className="mb-6 p-5 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+          <p className="text-caption text-white/25 uppercase tracking-widest font-semibold mb-2">시놉시스</p>
+          <p className="text-body text-white/70 leading-relaxed">{brief.synopsis}</p>
         </div>
       )}
+
+      {/* 기승전반결 */}
       {brief.beats.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-          {brief.beats.map((beat) => (
-            <div key={beat.label} className="p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-              <p className="text-caption font-bold text-white/30 mb-1">{beat.label}</p>
-              <p className="text-footnote text-white/55 leading-relaxed">{beat.description}</p>
-            </div>
-          ))}
+        <div className="mb-6">
+          <p className="text-caption text-white/25 uppercase tracking-widest font-semibold mb-3">스토리 구조</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {brief.beats.map((beat) => (
+              <div key={beat.label} className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                <p className="text-caption font-bold text-white/40 mb-2 uppercase">{beat.label}</p>
+                <p className="text-footnote text-white/65 leading-relaxed">{beat.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
+
+      {/* 사건 요소 */}
       {(brief.investigation.motives.length > 0 ||
         brief.investigation.methods.length > 0 ||
-        brief.investigation.clues.length > 0) && (
-        <div className="mt-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-          <p className="text-caption text-white/25 uppercase tracking-widest mb-3">사건 요소</p>
-          <div className="grid grid-cols-2 gap-3">
+        brief.investigation.clues.length > 0 ||
+        brief.investigation.techniques.length > 0) && (
+        <div className="p-5 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+          <p className="text-caption text-white/25 uppercase tracking-widest font-semibold mb-4">사건 요소</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {brief.investigation.motives.length > 0 && (
               <div>
-                <p className="text-caption text-white/25 mb-1">동기</p>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-caption text-white/30 font-semibold mb-2">동기</p>
+                <div className="flex flex-wrap gap-1.5">
                   {brief.investigation.motives.map((m) => (
-                    <span key={m} className="px-2 py-0.5 rounded text-caption bg-white/[0.04] text-white/45">{m}</span>
+                    <span key={m} className="px-2.5 py-1 rounded-full text-caption bg-white/[0.06] text-white/60 border border-white/[0.08]">{m}</span>
                   ))}
                 </div>
               </div>
             )}
             {brief.investigation.methods.length > 0 && (
               <div>
-                <p className="text-caption text-white/25 mb-1">수법</p>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-caption text-white/30 font-semibold mb-2">수법</p>
+                <div className="flex flex-wrap gap-1.5">
                   {brief.investigation.methods.map((m) => (
-                    <span key={m} className="px-2 py-0.5 rounded text-caption bg-white/[0.04] text-white/45">{m}</span>
+                    <span key={m} className="px-2.5 py-1 rounded-full text-caption bg-white/[0.06] text-white/60 border border-white/[0.08]">{m}</span>
                   ))}
                 </div>
               </div>
             )}
             {brief.investigation.clues.length > 0 && (
               <div>
-                <p className="text-caption text-white/25 mb-1">단서</p>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-caption text-white/30 font-semibold mb-2">단서</p>
+                <div className="flex flex-wrap gap-1.5">
                   {brief.investigation.clues.map((c) => (
-                    <span key={c} className="px-2 py-0.5 rounded text-caption bg-white/[0.04] text-white/45">{c}</span>
+                    <span key={c} className="px-2.5 py-1 rounded-full text-caption bg-white/[0.06] text-white/60 border border-white/[0.08]">{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {brief.investigation.techniques.length > 0 && (
+              <div>
+                <p className="text-caption text-white/30 font-semibold mb-2">기법</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {brief.investigation.techniques.map((t) => (
+                    <span key={t} className="px-2.5 py-1 rounded-full text-caption bg-white/[0.06] text-white/60 border border-white/[0.08]">{t}</span>
                   ))}
                 </div>
               </div>
