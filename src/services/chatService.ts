@@ -1,18 +1,18 @@
 import { supabase } from './supabase';
 import type { ChatRoom, ChatMessage, ChatMember, ChatUser } from '../types/chat';
+import { isAdminRole } from '../types/chat';
 
 const CHAT_USER_KEY = 'xcape-chat-user';
 
 // ── Branch room setup ────────────────────────────────────────────────────────
 
+// 실제 지점 목록 (MOCK_BRANCHES 기준)
 const BRANCH_LIST = [
-  { name: '강남점', color: '#6366f1' },
-  { name: '건대점', color: '#ec4899' },
-  { name: '신촌점', color: '#14b8a6' },
-  { name: '홍대점', color: '#f59e0b' },
-  { name: '수원점', color: '#ef4444' },
-  { name: '대구점', color: '#8b5cf6' },
-  { name: '부산점', color: '#06b6d4' },
+  { code: 'GDXC', name: '엑스케이프 건대1호점', color: '#6366f1' },
+  { code: 'GDXR', name: '엑스크라임 건대2호점', color: '#ec4899' },
+  { code: 'NWXC', name: '뉴케이스 건대3호점',  color: '#14b8a6' },
+  { code: 'GNXC', name: '엑스케이프 강남점',   color: '#f59e0b' },
+  { code: 'SWXC', name: '엑스케이프 수원점',   color: '#ef4444' },
 ];
 
 /** 지점별 그룹 채팅방이 없으면 생성, 전체 목록 반환 */
@@ -27,12 +27,12 @@ export async function ensureBranchRooms(): Promise<ChatRoom[]> {
   const existingCodes = new Set((existing ?? []).map((r: ChatRoom) => r.branch_code));
 
   for (const branch of BRANCH_LIST) {
-    if (!existingCodes.has(branch.name)) {
+    if (!existingCodes.has(branch.code)) {
       await supabase.from('chat_rooms').insert({
         name: branch.name,
         type: 'group',
         avatar_color: branch.color,
-        branch_code: branch.name,
+        branch_code: branch.code,
       });
     }
   }
@@ -45,11 +45,12 @@ export async function ensureBranchRooms(): Promise<ChatRoom[]> {
   return (data ?? []) as ChatRoom[];
 }
 
-/** 유저를 해당 지점 채팅방에 자동 참여시킴 (admin은 전체) */
+/** 유저를 해당 지점 채팅방에 자동 참여시킴 (관리자 직급은 전체) */
 export async function joinBranchRooms(user: ChatUser, branchRooms: ChatRoom[]): Promise<void> {
   if (!supabase) return;
 
-  const roomsToJoin = user.role === 'admin'
+  // 관리자 직급(마스터 관리자, 지점별 관리자)은 모든 지점 채팅방 참여
+  const roomsToJoin = isAdminRole(user.role)
     ? branchRooms
     : branchRooms.filter((r) => r.branch_code === user.branchCode);
 
@@ -68,8 +69,8 @@ export async function joinBranchRooms(user: ChatUser, branchRooms: ChatRoom[]): 
 export async function fetchRoomsForUser(user: ChatUser): Promise<ChatRoom[]> {
   if (!supabase) return [];
 
-  if (user.role === 'admin') {
-    // 관리자: 모든 채팅방
+  if (isAdminRole(user.role)) {
+    // 관리자 직급: 모든 채팅방
     const { data } = await supabase
       .from('chat_rooms')
       .select('*')
@@ -77,7 +78,7 @@ export async function fetchRoomsForUser(user: ChatUser): Promise<ChatRoom[]> {
     return (data ?? []) as ChatRoom[];
   }
 
-  // 매니저/크루: 자신이 멤버인 채팅방만
+  // 크루/크루장: 자신이 멤버인 채팅방만 (자기 지점 그룹 + 1:1)
   const { data: memberships } = await supabase
     .from('chat_members')
     .select('room_id')

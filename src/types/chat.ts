@@ -1,7 +1,47 @@
+// 직급 체계: 크루 < 크루장 < 마스터 관리자 / 지점별 관리자
+export type ChatRole =
+  | 'crew'          // 크루
+  | 'crew-leader'   // 크루장
+  | 'master-admin'  // 마스터 관리자 (본사)
+  | 'gdxc-admin'    // GDXC-관리자
+  | 'gdxr-admin'    // GDXR-관리자
+  | 'nwxc-admin'    // NWXC-관리자
+  | 'gnxc-admin'    // GNXC-관리자
+  | 'swxc-admin';   // SWXC-관리자
+
+/** 관리자 직급 여부 (모든 지점 채팅방 접근 가능) */
+export function isAdminRole(role: ChatRole): boolean {
+  return role !== 'crew' && role !== 'crew-leader';
+}
+
+/** 역할 표시 이름 */
+export const ROLE_LABELS: Record<ChatRole, string> = {
+  'crew': '크루',
+  'crew-leader': '크루장',
+  'master-admin': '마스터 관리자',
+  'gdxc-admin': 'GDXC-관리자',
+  'gdxr-admin': 'GDXR-관리자',
+  'nwxc-admin': 'NWXC-관리자',
+  'gnxc-admin': 'GNXC-관리자',
+  'swxc-admin': 'SWXC-관리자',
+};
+
+/** 지점별 관리자 역할에서 지점코드 추출 */
+export function getBranchCodeFromAdminRole(role: ChatRole): string | null {
+  const map: Partial<Record<ChatRole, string>> = {
+    'gdxc-admin': 'GDXC',
+    'gdxr-admin': 'GDXR',
+    'nwxc-admin': 'NWXC',
+    'gnxc-admin': 'GNXC',
+    'swxc-admin': 'SWXC',
+  };
+  return map[role] ?? null;
+}
+
 export interface ChatUser {
   id: string;
   name: string;
-  role: 'admin' | 'manager' | 'crew';
+  role: ChatRole;
   branchCode?: string;
 }
 
@@ -24,7 +64,7 @@ export interface ChatMember {
   room_id: string;
   user_id: string;
   user_name: string;
-  user_role: 'admin' | 'manager' | 'crew';
+  user_role: ChatRole;
   branch_code?: string;
   joined_at: string;
 }
