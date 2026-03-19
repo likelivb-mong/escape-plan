@@ -10,6 +10,7 @@ export interface ChatRoom {
   name: string;
   type: 'group' | '1on1';
   avatar_color: string;
+  branch_code?: string;
   created_at: string;
   updated_at: string;
   // Computed client-side

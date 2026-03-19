@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import type { ChatRoom, ChatUser } from '../../types/chat';
 
+const BRANCH_CODE_COLORS: Record<string, string> = {
+  '강남점': '#6366f1', '건대점': '#ec4899', '신촌점': '#14b8a6',
+  '홍대점': '#f59e0b', '수원점': '#ef4444', '대구점': '#8b5cf6', '부산점': '#06b6d4',
+};
+
 const AVATAR_COLORS = [
   '#6366f1', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444',
   '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#3b82f6',
@@ -32,6 +37,21 @@ export default function ChatRoomList({
     onCreateRoom(newRoomName.trim(), newRoomType);
     setNewRoomName('');
     setShowCreate(false);
+  };
+
+  const canCreateRoom = currentUser.role !== 'crew';
+
+  const getBranchBadge = (room: ChatRoom) => {
+    if (!room.branch_code) return null;
+    const color = BRANCH_CODE_COLORS[room.branch_code] ?? '#6366f1';
+    return (
+      <span
+        className="text-[9px] font-medium px-1.5 py-0.5 rounded-full ml-1"
+        style={{ backgroundColor: color + '20', color }}
+      >
+        지점
+      </span>
+    );
   };
 
   const formatTime = (dateStr?: string) => {
@@ -125,8 +145,9 @@ export default function ChatRoomList({
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-white/80 truncate">
+                  <span className="text-sm font-medium text-white/80 truncate flex items-center">
                     {room.name}
+                    {getBranchBadge(room)}
                     {room.memberCount != null && (
                       <span className="text-white/25 ml-1">{room.memberCount}</span>
                     )}
@@ -153,7 +174,11 @@ export default function ChatRoomList({
 
       {/* Create room button */}
       <div className="p-3 border-t border-white/[0.06]">
-        {showCreate ? (
+        {!canCreateRoom ? (
+          <div className="text-center text-[10px] text-white/20 py-1">
+            채팅방 생성은 매니저 이상만 가능합니다
+          </div>
+        ) : showCreate ? (
           <div className="flex flex-col gap-2">
             <input
               type="text"
@@ -214,6 +239,7 @@ export default function ChatRoomList({
           </button>
         )}
       </div>
+
     </div>
   );
 }

@@ -3,6 +3,98 @@ import type { ChatRoom, ChatMessage, ChatMember, ChatUser } from '../types/chat'
 
 const CHAT_USER_KEY = 'xcape-chat-user';
 
+// ── Branch room setup ────────────────────────────────────────────────────────
+
+const BRANCH_LIST = [
+  { name: '강남점', color: '#6366f1' },
+  { name: '건대점', color: '#ec4899' },
+  { name: '신촌점', color: '#14b8a6' },
+  { name: '홍대점', color: '#f59e0b' },
+  { name: '수원점', color: '#ef4444' },
+  { name: '대구점', color: '#8b5cf6' },
+  { name: '부산점', color: '#06b6d4' },
+];
+
+/** 지점별 그룹 채팅방이 없으면 생성, 전체 목록 반환 */
+export async function ensureBranchRooms(): Promise<ChatRoom[]> {
+  if (!supabase) return [];
+
+  const { data: existing } = await supabase
+    .from('chat_rooms')
+    .select('*')
+    .not('branch_code', 'is', null);
+
+  const existingCodes = new Set((existing ?? []).map((r: ChatRoom) => r.branch_code));
+
+  for (const branch of BRANCH_LIST) {
+    if (!existingCodes.has(branch.name)) {
+      await supabase.from('chat_rooms').insert({
+        name: branch.name,
+        type: 'group',
+        avatar_color: branch.color,
+        branch_code: branch.name,
+      });
+    }
+  }
+
+  const { data } = await supabase
+    .from('chat_rooms')
+    .select('*')
+    .not('branch_code', 'is', null);
+
+  return (data ?? []) as ChatRoom[];
+}
+
+/** 유저를 해당 지점 채팅방에 자동 참여시킴 (admin은 전체) */
+export async function joinBranchRooms(user: ChatUser, branchRooms: ChatRoom[]): Promise<void> {
+  if (!supabase) return;
+
+  const roomsToJoin = user.role === 'admin'
+    ? branchRooms
+    : branchRooms.filter((r) => r.branch_code === user.branchCode);
+
+  for (const room of roomsToJoin) {
+    await supabase.from('chat_members').upsert({
+      room_id: room.id,
+      user_id: user.id,
+      user_name: user.name,
+      user_role: user.role,
+      branch_code: user.branchCode,
+    }, { onConflict: 'room_id,user_id' });
+  }
+}
+
+/** 역할 기반으로 표시할 채팅방 목록 반환 */
+export async function fetchRoomsForUser(user: ChatUser): Promise<ChatRoom[]> {
+  if (!supabase) return [];
+
+  if (user.role === 'admin') {
+    // 관리자: 모든 채팅방
+    const { data } = await supabase
+      .from('chat_rooms')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    return (data ?? []) as ChatRoom[];
+  }
+
+  // 매니저/크루: 자신이 멤버인 채팅방만
+  const { data: memberships } = await supabase
+    .from('chat_members')
+    .select('room_id')
+    .eq('user_id', user.id);
+
+  if (!memberships || memberships.length === 0) return [];
+
+  const roomIds = memberships.map((m: { room_id: string }) => m.room_id);
+  const { data } = await supabase
+    .from('chat_rooms')
+    .select('*')
+    .in('id', roomIds)
+    .order('updated_at', { ascending: false });
+
+  return (data ?? []) as ChatRoom[];
+}
+
 // ── User profile (localStorage) ─────────────────────────────────────────────
 
 export function getChatUser(): ChatUser | null {
