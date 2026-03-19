@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
-import type { ChatRoom, ChatMessage, ChatMember, ChatUser } from '../types/chat';
-import { isAdminRole } from '../types/chat';
+import type { ChatRoom, ChatMessage, ChatMember, ChatUser, WorkStatus, ShiftType } from '../types/chat';
+import { isAdminRole, SYSTEM_SENDER_ID } from '../types/chat';
 
 const CHAT_USER_KEY = 'xcape-chat-user';
 
@@ -94,6 +94,80 @@ export async function fetchRoomsForUser(user: ChatUser): Promise<ChatRoom[]> {
     .order('updated_at', { ascending: false });
 
   return (data ?? []) as ChatRoom[];
+}
+
+// ── Work status (localStorage) ──────────────────────────────────────────────
+
+const WORK_STATUS_KEY = 'xcape-work-status';
+
+export function getWorkStatus(): WorkStatus | null {
+  const raw = localStorage.getItem(WORK_STATUS_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+export function saveWorkStatus(status: WorkStatus): void {
+  localStorage.setItem(WORK_STATUS_KEY, JSON.stringify(status));
+}
+
+export function clearWorkStatus(): void {
+  localStorage.removeItem(WORK_STATUS_KEY);
+}
+
+// ── Clock in / out ───────────────────────────────────────────────────────────
+
+function formatClockDate(): string {
+  const d = new Date();
+  return d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+}
+
+async function sendSystemMessage(roomId: string, content: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from('chat_messages').insert({
+    room_id: roomId,
+    sender_id: SYSTEM_SENDER_ID,
+    sender_name: '시스템',
+    sender_role: 'system',
+    content,
+    read_by: [],
+  });
+  await supabase.from('chat_rooms')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', roomId);
+}
+
+export async function clockIn(user: ChatUser, branchRoom: ChatRoom, shiftType: ShiftType): Promise<void> {
+  // 채팅방 참여
+  await supabase!.from('chat_members').upsert({
+    room_id: branchRoom.id,
+    user_id: user.id,
+    user_name: user.name,
+    user_role: user.role,
+    branch_code: user.branchCode,
+  }, { onConflict: 'room_id,user_id' });
+
+  // 출근 알림 메시지
+  const dateStr = formatClockDate();
+  await sendSystemMessage(
+    branchRoom.id,
+    `${dateStr} [${shiftType}]크루 ${user.name} 출근했습니다.`,
+  );
+}
+
+export async function clockOut(user: ChatUser, branchRoom: ChatRoom, shiftType: ShiftType): Promise<void> {
+  // 퇴근 알림 메시지
+  const dateStr = formatClockDate();
+  await sendSystemMessage(
+    branchRoom.id,
+    `${dateStr} [${shiftType}]크루 ${user.name} 퇴근했습니다.`,
+  );
+
+  // 채팅방에서 나감
+  if (supabase) {
+    await supabase.from('chat_members').delete()
+      .eq('room_id', branchRoom.id)
+      .eq('user_id', user.id);
+  }
 }
 
 // ── User profile (localStorage) ─────────────────────────────────────────────
