@@ -26,6 +26,7 @@ import ChatProfileSetup from '../components/chat/ChatProfileSetup';
 import ChatRoomList from '../components/chat/ChatRoomList';
 import ChatMessageArea from '../components/chat/ChatMessageArea';
 import ChatInput from '../components/chat/ChatInput';
+import ChatPreview from '../components/chat/ChatPreview';
 
 const AVATAR_COLORS = [
   '#6366f1', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444',
@@ -41,6 +42,7 @@ export default function ChatPage() {
   const [filter, setFilter] = useState<'all' | '1on1' | 'group'>('all');
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [workStatus, setWorkStatus] = useState<WorkStatus | null>(getWorkStatus());
+  const [showPreview, setShowPreview] = useState(false);
 
   // Initialize branch rooms and auto-join on first load
   useEffect(() => {
@@ -211,7 +213,18 @@ export default function ChatPage() {
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
 
   if (!user) {
-    return <ChatProfileSetup onComplete={setUser} />;
+    return (
+      <>
+        <ChatProfileSetup onComplete={setUser} />
+        {showPreview && <ChatPreview onClose={() => setShowPreview(false)} />}
+        <button
+          onClick={() => setShowPreview(true)}
+          className="fixed bottom-4 right-4 px-3 py-2 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-medium hover:bg-indigo-500/30 transition-all z-40"
+        >
+          채팅 미리보기
+        </button>
+      </>
+    );
   }
 
   // 현재 선택된 방이 지점 채팅방인지 확인
@@ -223,6 +236,8 @@ export default function ChatPage() {
   const canSendMessage = !isLocked;
 
   return (
+    <>
+    {showPreview && <ChatPreview onClose={() => setShowPreview(false)} />}
     <div className="h-[calc(100vh-48px)] flex">
       {/* Left: Room list */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-white/[0.06] flex-shrink-0 ${
@@ -253,15 +268,23 @@ export default function ChatPage() {
               <div className="text-[10px] text-white/30">{user.branchCode ?? ''} · {ROLE_LABELS[user.role]}</div>
             </div>
           </div>
-          <button
-            onClick={() => {
-              localStorage.removeItem('xcape-chat-user');
-              setUser(null);
-            }}
-            className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
-          >
-            프로필 변경
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowPreview(true)}
+              className="text-[10px] text-indigo-400/50 hover:text-indigo-400 transition-colors"
+            >
+              미리보기
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem('xcape-chat-user');
+                setUser(null);
+              }}
+              className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
+            >
+              프로필 변경
+            </button>
+          </div>
         </div>
 
         <ChatRoomList
@@ -348,5 +371,6 @@ export default function ChatPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
