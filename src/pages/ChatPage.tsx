@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ChatUser, ChatRoom, ChatMessage, ChatMember } from '../types/chat';
+import { ROLE_LABELS } from '../types/chat';
 import {
   getChatUser,
   fetchRoomsForUser,
@@ -199,9 +200,7 @@ export default function ChatPage() {
             </div>
             <div>
               <div className="text-xs font-medium text-white/70">{user.name}</div>
-              <div className="text-[10px] text-white/30">{user.branchCode ?? ''} · {
-                user.role === 'admin' ? '관리자' : user.role === 'manager' ? '매니저' : '크루'
-              }</div>
+              <div className="text-[10px] text-white/30">{user.branchCode ?? ''} · {ROLE_LABELS[user.role]}</div>
             </div>
           </div>
           <button

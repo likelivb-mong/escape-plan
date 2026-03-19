@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { ChatRoom, ChatUser } from '../../types/chat';
+import { isAdminRole } from '../../types/chat';
 
 const BRANCH_CODE_COLORS: Record<string, string> = {
-  '강남점': '#6366f1', '건대점': '#ec4899', '신촌점': '#14b8a6',
-  '홍대점': '#f59e0b', '수원점': '#ef4444', '대구점': '#8b5cf6', '부산점': '#06b6d4',
+  'GDXC': '#6366f1', 'GDXR': '#ec4899', 'NWXC': '#14b8a6',
+  'GNXC': '#f59e0b', 'SWXC': '#ef4444',
 };
 
 const AVATAR_COLORS = [
@@ -39,7 +40,8 @@ export default function ChatRoomList({
     setShowCreate(false);
   };
 
-  const canCreateRoom = currentUser.role !== 'crew';
+  // 관리자 직급만 새 채팅방 생성 가능
+  const canCreateRoom = isAdminRole(currentUser.role);
 
   const getBranchBadge = (room: ChatRoom) => {
     if (!room.branch_code) return null;
