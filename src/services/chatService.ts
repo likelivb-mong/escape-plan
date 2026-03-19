@@ -155,19 +155,13 @@ export async function clockIn(user: ChatUser, branchRoom: ChatRoom, shiftType: S
 }
 
 export async function clockOut(user: ChatUser, branchRoom: ChatRoom, shiftType: ShiftType): Promise<void> {
-  // 퇴근 알림 메시지
+  // 퇴근 알림 메시지만 전송 — chat_members는 유지 (재출근 시 이전 메시지 전부 확인 가능)
   const dateStr = formatClockDate();
   await sendSystemMessage(
     branchRoom.id,
     `${dateStr} [${shiftType}]크루 ${user.name} 퇴근했습니다.`,
   );
-
-  // 채팅방에서 나감
-  if (supabase) {
-    await supabase.from('chat_members').delete()
-      .eq('room_id', branchRoom.id)
-      .eq('user_id', user.id);
-  }
+  // 채팅방 잠금은 localStorage workStatus 제거로만 처리 (UI 레벨)
 }
 
 // ── User profile (localStorage) ─────────────────────────────────────────────
