@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { ChatRoom, ChatMessage, ChatMember, ChatUser, WorkStatus, ShiftType } from '../types/chat';
+import type { ChatRoom, ChatMessage, ChatMember, ChatUser, WorkStatus } from '../types/chat';
 import { isAdminRole, SYSTEM_SENDER_ID } from '../types/chat';
 
 const CHAT_USER_KEY = 'xcape-chat-user';
@@ -116,9 +116,11 @@ export function clearWorkStatus(): void {
 
 // ── Clock in / out ───────────────────────────────────────────────────────────
 
-function formatClockDate(): string {
+function formatClockDateTime(): string {
   const d = new Date();
-  return d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+  const date = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+  const time = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return `${date} ${time}`;
 }
 
 async function sendSystemMessage(roomId: string, content: string): Promise<void> {
@@ -136,8 +138,7 @@ async function sendSystemMessage(roomId: string, content: string): Promise<void>
     .eq('id', roomId);
 }
 
-export async function clockIn(user: ChatUser, branchRoom: ChatRoom, shiftType: ShiftType): Promise<void> {
-  // 채팅방 참여
+export async function clockIn(user: ChatUser, branchRoom: ChatRoom): Promise<void> {
   await supabase!.from('chat_members').upsert({
     room_id: branchRoom.id,
     user_id: user.id,
@@ -146,22 +147,17 @@ export async function clockIn(user: ChatUser, branchRoom: ChatRoom, shiftType: S
     branch_code: user.branchCode,
   }, { onConflict: 'room_id,user_id' });
 
-  // 출근 알림 메시지
-  const dateStr = formatClockDate();
   await sendSystemMessage(
     branchRoom.id,
-    `${dateStr} [${shiftType}]크루 ${user.name} 출근했습니다.`,
+    `${formatClockDateTime()} ${user.name} 출근했습니다.`,
   );
 }
 
-export async function clockOut(user: ChatUser, branchRoom: ChatRoom, shiftType: ShiftType): Promise<void> {
-  // 퇴근 알림 메시지만 전송 — chat_members는 유지 (재출근 시 이전 메시지 전부 확인 가능)
-  const dateStr = formatClockDate();
+export async function clockOut(user: ChatUser, branchRoom: ChatRoom): Promise<void> {
   await sendSystemMessage(
     branchRoom.id,
-    `${dateStr} [${shiftType}]크루 ${user.name} 퇴근했습니다.`,
+    `${formatClockDateTime()} ${user.name} 퇴근했습니다.`,
   );
-  // 채팅방 잠금은 localStorage workStatus 제거로만 처리 (UI 레벨)
 }
 
 // ── User profile (localStorage) ─────────────────────────────────────────────

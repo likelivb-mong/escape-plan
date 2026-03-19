@@ -1,16 +1,16 @@
 import { useRef, useEffect } from 'react';
-import type { ChatMessage, ChatUser, ChatMember, WorkStatus, ShiftType } from '../../types/chat';
-import { SYSTEM_SENDER_ID, ROLE_LABELS, isAdminRole, SHIFT_TYPES } from '../../types/chat';
+import type { ChatMessage, ChatUser, ChatMember, WorkStatus } from '../../types/chat';
+import { SYSTEM_SENDER_ID, ROLE_LABELS, isAdminRole } from '../../types/chat';
 
 interface Props {
   messages: ChatMessage[];
   currentUser: ChatUser;
   roomName: string;
   members: ChatMember[];
-  branchCode?: string;         // 지점 채팅방인 경우
+  branchCode?: string;
   workStatus: WorkStatus | null;
   branchRoomId?: string;
-  onClockIn: (shiftType: ShiftType) => void;
+  onClockIn: () => void;
   onClockOut: () => void;
 }
 
@@ -78,17 +78,12 @@ export default function ChatMessageArea({
                 퇴근하기
               </button>
             ) : (
-              <div className="flex gap-1">
-                {SHIFT_TYPES.map((shift) => (
-                  <button
-                    key={shift}
-                    onClick={() => onClockIn(shift)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all"
-                  >
-                    {shift} 출근
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={onClockIn}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all"
+              >
+                출근하기
+              </button>
             )
           )}
 
@@ -107,9 +102,7 @@ export default function ChatMessageArea({
             <svg className="w-12 h-12 mb-3 text-white/10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            {canClockInOut && !isClockedIn
-              ? '출근하기 버튼을 눌러 채팅에 참여하세요'
-              : '첫 메시지를 보내보세요!'}
+            {canClockInOut && !isClockedIn ? '출근하기 버튼을 눌러 채팅에 참여하세요' : '첫 메시지를 보내보세요!'}
           </div>
         )}
 

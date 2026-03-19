@@ -83,14 +83,9 @@ export interface ChatMessage {
 // 시스템 메시지 sender_id 상수
 export const SYSTEM_SENDER_ID = 'system';
 
-// 근무 타입
-export type ShiftType = '오픈' | '마감' | '미들';
-export const SHIFT_TYPES: ShiftType[] = ['오픈', '마감', '미들'];
-
 // 출근 상태 (localStorage 저장)
 export interface WorkStatus {
   userId: string;
   branchCode: string;
   branchRoomId: string;
-  shiftType: ShiftType;
 }

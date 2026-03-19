@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { ChatUser, ChatRoom, ChatMessage, ChatMember, WorkStatus, ShiftType } from '../types/chat';
+import type { ChatUser, ChatRoom, ChatMessage, ChatMember, WorkStatus } from '../types/chat';
 import { ROLE_LABELS, isAdminRole } from '../types/chat';
 import {
   getChatUser,
@@ -172,18 +172,17 @@ export default function ChatPage() {
   };
 
   // ── 출근하기 ──────────────────────────────────────────────────────────────
-  const handleClockIn = async (shiftType: ShiftType) => {
+  const handleClockIn = async () => {
     if (!user || !selectedRoomId) return;
     const branchRoom = rooms.find((r) => r.id === selectedRoomId);
     if (!branchRoom?.branch_code) return;
 
-    await clockIn(user, branchRoom, shiftType);
+    await clockIn(user, branchRoom);
 
     const status: WorkStatus = {
       userId: user.id,
       branchCode: branchRoom.branch_code,
       branchRoomId: branchRoom.id,
-      shiftType,
     };
     saveWorkStatus(status);
     setWorkStatus(status);
@@ -202,7 +201,7 @@ export default function ChatPage() {
     const branchRoom = rooms.find((r) => r.id === workStatus.branchRoomId);
     if (!branchRoom) return;
 
-    await clockOut(user, branchRoom, workStatus.shiftType);
+    await clockOut(user, branchRoom);
     clearWorkStatus();
     setWorkStatus(null);
     // 채팅방은 잠금 상태로 유지 — 방을 닫거나 나가지 않음
@@ -247,7 +246,7 @@ export default function ChatPage() {
                 {user.name}
                 {workStatus && (
                   <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
-                    {workStatus.shiftType} 근무중
+                    근무중
                   </span>
                 )}
               </div>
@@ -324,17 +323,12 @@ export default function ChatPage() {
                       <p className="text-sm font-semibold text-white/60">퇴근 상태입니다</p>
                       <p className="text-xs text-white/30 mt-1">출근하기를 눌러 채팅에 참여하세요</p>
                     </div>
-                    <div className="flex gap-2 mt-1">
-                      {(['오픈', '마감', '미들'] as const).map((shift) => (
-                        <button
-                          key={shift}
-                          onClick={() => handleClockIn(shift)}
-                          className="px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all"
-                        >
-                          {shift} 출근
-                        </button>
-                      ))}
-                    </div>
+                    <button
+                      onClick={handleClockIn}
+                      className="mt-1 px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all"
+                    >
+                      출근하기
+                    </button>
                   </div>
                 </div>
               )}
