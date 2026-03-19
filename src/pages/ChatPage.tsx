@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { ChatUser, ChatRoom, ChatMessage, ChatMember } from '../types/chat';
-import { ROLE_LABELS } from '../types/chat';
+import type { ChatUser, ChatRoom, ChatMessage, ChatMember, WorkStatus, ShiftType } from '../types/chat';
+import { ROLE_LABELS, isAdminRole } from '../types/chat';
 import {
   getChatUser,
   fetchRoomsForUser,
@@ -16,6 +16,11 @@ import {
   getUnreadCounts,
   subscribeToMessages,
   subscribeToRoomUpdates,
+  clockIn,
+  clockOut,
+  getWorkStatus,
+  saveWorkStatus,
+  clearWorkStatus,
 } from '../services/chatService';
 import ChatProfileSetup from '../components/chat/ChatProfileSetup';
 import ChatRoomList from '../components/chat/ChatRoomList';
@@ -35,13 +40,18 @@ export default function ChatPage() {
   const [members, setMembers] = useState<ChatMember[]>([]);
   const [filter, setFilter] = useState<'all' | '1on1' | 'group'>('all');
   const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [workStatus, setWorkStatus] = useState<WorkStatus | null>(getWorkStatus());
 
   // Initialize branch rooms and auto-join on first load
   useEffect(() => {
     if (!user) return;
     (async () => {
       const branchRooms = await ensureBranchRooms();
-      await joinBranchRooms(user, branchRooms);
+      // 관리자는 항상 모든 지점 채팅방 참여
+      if (isAdminRole(user.role)) {
+        await joinBranchRooms(user, branchRooms);
+      }
+      // 크루/크루장는 출근 시에만 참여 (clockIn에서 처리)
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
@@ -51,7 +61,6 @@ export default function ChatPage() {
     if (!user) return;
     const allRooms = await fetchRoomsForUser(user);
 
-    // Fetch last messages + unread counts
     const roomIds = allRooms.map((r) => r.id);
     const [lastMsgs, unreads] = await Promise.all([
       getLastMessages(roomIds),
@@ -64,8 +73,10 @@ export default function ChatPage() {
       unreadCount: unreads[r.id] ?? 0,
     }));
 
-    // Sort by last activity
     enriched.sort((a, b) => {
+      // 지점 목록은 항상 위에
+      if (a.branch_code && !b.branch_code) return -1;
+      if (!a.branch_code && b.branch_code) return 1;
       const aTime = a.lastMessage?.created_at ?? a.updated_at;
       const bTime = b.lastMessage?.created_at ?? b.updated_at;
       return new Date(bTime).getTime() - new Date(aTime).getTime();
@@ -81,9 +92,7 @@ export default function ChatPage() {
   // Subscribe to room updates
   useEffect(() => {
     if (!user) return;
-    const sub = subscribeToRoomUpdates(() => {
-      loadRooms();
-    });
+    const sub = subscribeToRoomUpdates(() => { loadRooms(); });
     return () => sub.unsubscribe();
   }, [user, loadRooms]);
 
@@ -103,9 +112,12 @@ export default function ChatPage() {
       setMessages(msgs);
       setMembers(mems);
 
-      // Auto-join room if not a member
+      // 관리자는 자동 참여, 크루는 출근 상태일 때만 참여 (혹은 이미 멤버)
       const isMember = mems.some((m) => m.user_id === user.id);
-      if (!isMember) {
+      const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
+      const isBranchRoom = !!selectedRoom?.branch_code;
+
+      if (!isMember && (!isBranchRoom || isAdminRole(user.role))) {
         await joinRoom(selectedRoomId, user);
         const updatedMembers = await fetchMembers(selectedRoomId);
         if (!cancelled) setMembers(updatedMembers);
@@ -120,7 +132,7 @@ export default function ChatPage() {
     })();
 
     return () => { cancelled = true; };
-  }, [selectedRoomId, user]);
+  }, [selectedRoomId, user, rooms]);
 
   // Subscribe to new messages in selected room
   useEffect(() => {
@@ -128,17 +140,12 @@ export default function ChatPage() {
 
     const sub = subscribeToMessages(selectedRoomId, (newMsg) => {
       setMessages((prev) => {
-        // Avoid duplicates
         if (prev.some((m) => m.id === newMsg.id)) return prev;
         return [...prev, newMsg];
       });
-
-      // Mark as read
       if (newMsg.sender_id !== user.id) {
         markAsRead(newMsg.id, user.id);
       }
-
-      // Refresh rooms to update last message
       loadRooms();
     });
 
@@ -166,19 +173,61 @@ export default function ChatPage() {
     }
   };
 
-  const handleJoinRoom = async (roomId: string) => {
-    if (!user) return;
-    await joinRoom(roomId, user);
-    setSelectedRoomId(roomId);
-    setMobileShowChat(true);
+  // ── 출근하기 ──────────────────────────────────────────────────────────────
+  const handleClockIn = async (shiftType: ShiftType) => {
+    if (!user || !selectedRoomId) return;
+    const branchRoom = rooms.find((r) => r.id === selectedRoomId);
+    if (!branchRoom?.branch_code) return;
+
+    await clockIn(user, branchRoom, shiftType);
+
+    const status: WorkStatus = {
+      userId: user.id,
+      branchCode: branchRoom.branch_code,
+      branchRoomId: branchRoom.id,
+      shiftType,
+    };
+    saveWorkStatus(status);
+    setWorkStatus(status);
+
+    // 메시지 새로고침
+    const msgs = await fetchMessages(selectedRoomId);
+    setMessages(msgs);
+    const mems = await fetchMembers(selectedRoomId);
+    setMembers(mems);
+    loadRooms();
+  };
+
+  // ── 퇴근하기 ──────────────────────────────────────────────────────────────
+  const handleClockOut = async () => {
+    if (!user || !workStatus) return;
+    const branchRoom = rooms.find((r) => r.id === workStatus.branchRoomId);
+    if (!branchRoom) return;
+
+    await clockOut(user, branchRoom, workStatus.shiftType);
+    clearWorkStatus();
+    setWorkStatus(null);
+
+    // 채팅방 나간 후 다른 방으로 이동하거나 목록으로
+    await loadRooms();
+    if (selectedRoomId === branchRoom.id) {
+      setSelectedRoomId(null);
+      setMobileShowChat(false);
+    }
   };
 
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
 
-  // Profile not set
   if (!user) {
     return <ChatProfileSetup onComplete={setUser} />;
   }
+
+  // 현재 선택된 방이 지점 채팅방인지 확인
+  const selectedBranchCode = selectedRoom?.branch_code;
+  // 크루는 출근 중인 방만 채팅 입력 가능
+  const canSendMessage = isAdminRole(user.role) ||
+    !selectedBranchCode ||
+    workStatus?.branchRoomId === selectedRoomId;
 
   return (
     <div className="h-[calc(100vh-48px)] flex">
@@ -190,16 +239,24 @@ export default function ChatPage() {
         <div className="px-3 py-2 border-b border-white/[0.06] flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-2">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
-              style={{
-                backgroundColor: '#6366f130',
-                color: '#6366f1',
-              }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold relative"
+              style={{ backgroundColor: '#6366f130', color: '#6366f1' }}
             >
               {user.name.slice(0, 2)}
+              {/* 출근 중 상태 표시 */}
+              {workStatus && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#1a1a2e]" />
+              )}
             </div>
             <div>
-              <div className="text-xs font-medium text-white/70">{user.name}</div>
+              <div className="text-xs font-medium text-white/70 flex items-center gap-1">
+                {user.name}
+                {workStatus && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
+                    {workStatus.shiftType} 근무중
+                  </span>
+                )}
+              </div>
               <div className="text-[10px] text-white/30">{user.branchCode ?? ''} · {ROLE_LABELS[user.role]}</div>
             </div>
           </div>
@@ -218,9 +275,9 @@ export default function ChatPage() {
           rooms={rooms}
           selectedRoomId={selectedRoomId}
           currentUser={user}
+          workStatus={workStatus}
           onSelectRoom={handleSelectRoom}
           onCreateRoom={handleCreateRoom}
-          onJoinRoom={handleJoinRoom}
           filter={filter}
           onFilterChange={setFilter}
         />
@@ -252,9 +309,19 @@ export default function ChatPage() {
                   currentUser={user}
                   roomName={selectedRoom.name}
                   members={members}
+                  branchCode={selectedBranchCode}
+                  workStatus={workStatus}
+                  branchRoomId={selectedRoomId ?? undefined}
+                  onClockIn={handleClockIn}
+                  onClockOut={handleClockOut}
                 />
               </div>
-              <ChatInput onSend={handleSendMessage} />
+              {canSendMessage && <ChatInput onSend={handleSendMessage} />}
+              {!canSendMessage && (
+                <div className="px-4 py-3 border-t border-white/[0.06] text-center text-xs text-white/25">
+                  출근하기 버튼을 눌러 채팅에 참여하세요
+                </div>
+              )}
             </div>
           </>
         ) : (

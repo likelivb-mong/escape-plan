@@ -1,27 +1,39 @@
 import { useRef, useEffect } from 'react';
-import type { ChatMessage, ChatUser, ChatMember } from '../../types/chat';
+import type { ChatMessage, ChatUser, ChatMember, WorkStatus, ShiftType } from '../../types/chat';
+import { SYSTEM_SENDER_ID, ROLE_LABELS, isAdminRole, SHIFT_TYPES } from '../../types/chat';
 
 interface Props {
   messages: ChatMessage[];
   currentUser: ChatUser;
   roomName: string;
   members: ChatMember[];
+  branchCode?: string;         // 지점 채팅방인 경우
+  workStatus: WorkStatus | null;
+  branchRoomId?: string;
+  onClockIn: (shiftType: ShiftType) => void;
+  onClockOut: () => void;
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  admin: '#ef4444',
-  manager: '#f59e0b',
-  crew: '#6366f1',
+  'crew': '#6366f1',
+  'crew-leader': '#14b8a6',
+  'master-admin': '#ec4899',
+  'gdxc-admin': '#6366f1',
+  'gdxr-admin': '#ec4899',
+  'nwxc-admin': '#14b8a6',
+  'gnxc-admin': '#f59e0b',
+  'swxc-admin': '#ef4444',
+  'system': '#ffffff',
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: '관리자',
-  manager: '매니저',
-  crew: '크루',
-};
-
-export default function ChatMessageArea({ messages, currentUser, roomName, members }: Props) {
+export default function ChatMessageArea({
+  messages, currentUser, roomName, members,
+  branchCode, workStatus, branchRoomId, onClockIn, onClockOut,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const isBranchRoom = !!branchCode;
+  const isClockedIn = workStatus?.branchRoomId === branchRoomId;
+  const canClockInOut = isBranchRoom && !isAdminRole(currentUser.role);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,7 +56,6 @@ export default function ChatMessageArea({ messages, currentUser, roomName, membe
     return unread > 0 ? unread : 0;
   };
 
-  // Group messages by date
   let lastDate = '';
 
   return (
@@ -55,13 +66,33 @@ export default function ChatMessageArea({ messages, currentUser, roomName, membe
           <h2 className="text-sm font-bold text-white/85">{roomName}</h2>
           <span className="text-xs text-white/30">멤버 {members.length}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <button className="p-2 rounded-md text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-all" title="검색">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-          <button className="p-2 rounded-md text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-all" title="멤버">
+
+        <div className="flex items-center gap-2">
+          {/* 출근/퇴근 버튼 (크루/크루장, 지점 채팅방에서만) */}
+          {canClockInOut && (
+            isClockedIn ? (
+              <button
+                onClick={onClockOut}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500/25 transition-all"
+              >
+                퇴근하기
+              </button>
+            ) : (
+              <div className="flex gap-1">
+                {SHIFT_TYPES.map((shift) => (
+                  <button
+                    key={shift}
+                    onClick={() => onClockIn(shift)}
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all"
+                  >
+                    {shift} 출근
+                  </button>
+                ))}
+              </div>
+            )
+          )}
+
+          <button className="p-2 rounded-md text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-all">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -76,24 +107,49 @@ export default function ChatMessageArea({ messages, currentUser, roomName, membe
             <svg className="w-12 h-12 mb-3 text-white/10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            첫 메시지를 보내보세요!
+            {canClockInOut && !isClockedIn
+              ? '출근하기 버튼을 눌러 채팅에 참여하세요'
+              : '첫 메시지를 보내보세요!'}
           </div>
         )}
 
         {messages.map((msg, idx) => {
+          const isSystem = msg.sender_id === SYSTEM_SENDER_ID;
           const isMine = msg.sender_id === currentUser.id;
           const msgDate = new Date(msg.created_at).toDateString();
           const showDateSep = msgDate !== lastDate;
           lastDate = msgDate;
 
-          // Check if previous message is same sender (for grouping)
+          // 시스템 메시지: 중앙 알림 스타일
+          if (isSystem) {
+            return (
+              <div key={msg.id}>
+                {showDateSep && (
+                  <div className="flex items-center justify-center my-4">
+                    <span className="px-4 py-1 rounded-full bg-white/[0.06] text-[11px] text-white/30">
+                      {formatDateSeparator(msg.created_at)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-center my-2">
+                  <span className="px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.07] text-[11px] text-white/40 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/70 flex-shrink-0" />
+                    {msg.content}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          // 일반 메시지
           const prevMsg = idx > 0 ? messages[idx - 1] : null;
-          const sameSender = prevMsg && prevMsg.sender_id === msg.sender_id && !showDateSep;
+          const prevIsSystem = prevMsg?.sender_id === SYSTEM_SENDER_ID;
+          const sameSender = prevMsg && prevMsg.sender_id === msg.sender_id && !showDateSep && !prevIsSystem;
           const readCount = getReadCount(msg);
+          const roleColor = ROLE_COLORS[msg.sender_role] ?? '#6366f1';
 
           return (
             <div key={msg.id}>
-              {/* Date separator */}
               {showDateSep && (
                 <div className="flex items-center justify-center my-4">
                   <span className="px-4 py-1 rounded-full bg-white/[0.06] text-[11px] text-white/30">
@@ -102,17 +158,13 @@ export default function ChatMessageArea({ messages, currentUser, roomName, membe
                 </div>
               )}
 
-              {/* Message */}
               <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${sameSender ? 'mt-0.5' : 'mt-3'}`}>
                 {!isMine && (
                   <div className="flex-shrink-0 mr-2" style={{ width: 36 }}>
                     {!sameSender && (
                       <div
                         className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-xs"
-                        style={{
-                          backgroundColor: (ROLE_COLORS[msg.sender_role] ?? '#6366f1') + '25',
-                          color: ROLE_COLORS[msg.sender_role] ?? '#6366f1',
-                        }}
+                        style={{ backgroundColor: roleColor + '25', color: roleColor }}
                       >
                         {msg.sender_name.slice(0, 2)}
                       </div>
@@ -121,24 +173,19 @@ export default function ChatMessageArea({ messages, currentUser, roomName, membe
                 )}
 
                 <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[70%]`}>
-                  {/* Sender name + role */}
                   {!isMine && !sameSender && (
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-xs font-medium text-white/60">{msg.sender_name}</span>
                       <span
                         className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                        style={{
-                          backgroundColor: (ROLE_COLORS[msg.sender_role] ?? '#6366f1') + '15',
-                          color: ROLE_COLORS[msg.sender_role] ?? '#6366f1',
-                        }}
+                        style={{ backgroundColor: roleColor + '15', color: roleColor }}
                       >
-                        {ROLE_LABELS[msg.sender_role] ?? msg.sender_role}
+                        {ROLE_LABELS[msg.sender_role as keyof typeof ROLE_LABELS] ?? msg.sender_role}
                       </span>
                     </div>
                   )}
 
                   <div className={`flex items-end gap-1.5 ${isMine ? 'flex-row-reverse' : ''}`}>
-                    {/* Bubble */}
                     <div
                       className={`px-3 py-2 rounded-xl text-sm leading-relaxed break-words whitespace-pre-wrap ${
                         isMine
@@ -149,7 +196,6 @@ export default function ChatMessageArea({ messages, currentUser, roomName, membe
                       {msg.content}
                     </div>
 
-                    {/* Meta: read count + time */}
                     <div className={`flex flex-col gap-0 flex-shrink-0 ${isMine ? 'items-end' : 'items-start'}`}>
                       {readCount > 0 && (
                         <span className="text-[10px] text-indigo-400/70">{readCount}</span>
