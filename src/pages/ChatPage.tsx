@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import type { ChatUser, ChatRoom, ChatMessage, ChatMember } from '../types/chat';
 import {
   getChatUser,
-  fetchAllRooms,
+  fetchRoomsForUser,
+  ensureBranchRooms,
+  joinBranchRooms,
   fetchMessages,
   fetchMembers,
   sendMessage,
@@ -33,10 +35,20 @@ export default function ChatPage() {
   const [filter, setFilter] = useState<'all' | '1on1' | 'group'>('all');
   const [mobileShowChat, setMobileShowChat] = useState(false);
 
+  // Initialize branch rooms and auto-join on first load
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const branchRooms = await ensureBranchRooms();
+      await joinBranchRooms(user, branchRooms);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   // Load rooms
   const loadRooms = useCallback(async () => {
     if (!user) return;
-    const allRooms = await fetchAllRooms();
+    const allRooms = await fetchRoomsForUser(user);
 
     // Fetch last messages + unread counts
     const roomIds = allRooms.map((r) => r.id);
