@@ -47,11 +47,9 @@ export default function ChatPage() {
     if (!user) return;
     (async () => {
       const branchRooms = await ensureBranchRooms();
-      // 관리자는 항상 모든 지점 채팅방 참여
-      if (isAdminRole(user.role)) {
-        await joinBranchRooms(user, branchRooms);
-      }
-      // 크루/크루장는 출근 시에만 참여 (clockIn에서 처리)
+      // 모든 역할: 자신의 지점 채팅방에 멤버로 등록 (관리자는 전체, 크루는 자기 지점)
+      // 멤버십은 항상 유지 — 잠금은 UI(workStatus)로만 제어
+      await joinBranchRooms(user, branchRooms);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
@@ -207,13 +205,8 @@ export default function ChatPage() {
     await clockOut(user, branchRoom, workStatus.shiftType);
     clearWorkStatus();
     setWorkStatus(null);
-
-    // 채팅방 나간 후 다른 방으로 이동하거나 목록으로
+    // 채팅방은 잠금 상태로 유지 — 방을 닫거나 나가지 않음
     await loadRooms();
-    if (selectedRoomId === branchRoom.id) {
-      setSelectedRoomId(null);
-      setMobileShowChat(false);
-    }
   };
 
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
@@ -224,10 +217,11 @@ export default function ChatPage() {
 
   // 현재 선택된 방이 지점 채팅방인지 확인
   const selectedBranchCode = selectedRoom?.branch_code;
-  // 크루는 출근 중인 방만 채팅 입력 가능
-  const canSendMessage = isAdminRole(user.role) ||
-    !selectedBranchCode ||
-    workStatus?.branchRoomId === selectedRoomId;
+  // 크루/크루장이 지점 채팅방에서 퇴근 상태이면 잠금
+  const isLocked = !isAdminRole(user.role) &&
+    !!selectedBranchCode &&
+    workStatus?.branchRoomId !== selectedRoomId;
+  const canSendMessage = !isLocked;
 
   return (
     <div className="h-[calc(100vh-48px)] flex">
@@ -302,7 +296,7 @@ export default function ChatPage() {
               <span className="text-sm font-medium text-white/70 ml-1">{selectedRoom.name}</span>
             </div>
 
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0 relative">
               <div className="flex-1 overflow-hidden">
                 <ChatMessageArea
                   messages={messages}
@@ -316,12 +310,36 @@ export default function ChatPage() {
                   onClockOut={handleClockOut}
                 />
               </div>
-              {canSendMessage && <ChatInput onSend={handleSendMessage} />}
-              {!canSendMessage && (
-                <div className="px-4 py-3 border-t border-white/[0.06] text-center text-xs text-white/25">
-                  출근하기 버튼을 눌러 채팅에 참여하세요
+
+              {/* 퇴근 상태 잠금 오버레이 */}
+              {isLocked && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+                  <div className="flex flex-col items-center gap-4 text-center px-8">
+                    <div className="w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.10] flex items-center justify-center">
+                      <svg className="w-7 h-7 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white/60">퇴근 상태입니다</p>
+                      <p className="text-xs text-white/30 mt-1">출근하기를 눌러 채팅에 참여하세요</p>
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      {(['오픈', '마감', '미들'] as const).map((shift) => (
+                        <button
+                          key={shift}
+                          onClick={() => handleClockIn(shift)}
+                          className="px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all"
+                        >
+                          {shift} 출근
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
+
+              {!isLocked && canSendMessage && <ChatInput onSend={handleSendMessage} />}
             </div>
           </>
         ) : (
