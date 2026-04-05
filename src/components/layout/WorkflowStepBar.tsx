@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useProject } from '../../context/ProjectContext';
 
 const STEPS = [
@@ -17,6 +17,8 @@ interface WorkflowStepBarProps {
 }
 
 export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarProps) {
+  const [searchParams] = useSearchParams();
+  const isEmbed = searchParams.get('embed') === 'true';
   const location = useLocation();
   const navigate = useNavigate();
   const { projectBrief, selectedStory, cells, gameFlowDesign, floorPlanData, persistProject } = useProject();
@@ -52,6 +54,8 @@ export default function WorkflowStepBar({ onBeforeNavigate }: WorkflowStepBarPro
     persistProject();
     navigate(path);
   };
+
+  if (isEmbed) return null;
 
   return (
     <div className="flex items-center gap-0 px-3 sm:px-6 py-2.5 border-b border-white/[0.04] bg-white/[0.012] overflow-x-auto flex-shrink-0">

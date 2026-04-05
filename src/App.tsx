@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProjectProvider } from './context/ProjectContext';
 import Layout from './components/layout/Layout';
 import PasswordGate from './components/PasswordGate';
+import EmbedProjectLoader from './components/EmbedProjectLoader';
 import HomePage from './pages/HomePage';
 import ThemeDesignPage from './pages/ThemeDesignPage';
 import MandalartPage from './pages/MandalartPage';
@@ -20,6 +21,7 @@ export default function App() {
     <PasswordGate>
     <ProjectProvider>
       <BrowserRouter>
+        <EmbedProjectLoader />
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />

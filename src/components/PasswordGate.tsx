@@ -10,6 +10,12 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
   const [remember, setRemember] = useState(false);
 
   useEffect(() => {
+    // Bypass password gate in embed mode (iframe from agent-office)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('embed') === 'true') {
+      setUnlocked(true);
+      return;
+    }
     if (
       localStorage.getItem(SESSION_KEY) === 'ok' ||
       sessionStorage.getItem(SESSION_KEY) === 'ok'
