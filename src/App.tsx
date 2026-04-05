@@ -13,7 +13,7 @@ import ScenarioPage from './pages/ScenarioPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDashboardPage from './pages/ProjectDashboardPage';
 import PassMapThemePage from './features/passmap/pages/PassMapThemePage';
-import ChatPage from './pages/ChatPage';
+
 
 export default function App() {
   return (
@@ -32,7 +32,7 @@ export default function App() {
             <Route path="/setting" element={<SettingPage />} />
             <Route path="/plan" element={<PlanPage />} />
             <Route path="/scenario" element={<ScenarioPage />} />
-            <Route path="/chat" element={<ChatPage />} />
+
             {/* PassMap theme deep link (accessed from projects) */}
             <Route path="/passmap/:branchCode/:themeId" element={<PassMapThemePage />} />
           </Route>
