@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import type { ProjectBrief, Genre, PlayTime, PuzzleType, ClueFormat } from '../types';
@@ -33,6 +34,7 @@ export default function PlanPage() {
     cells,
     floorPlanData,
     projectBrief, setProjectBrief,
+    optionalSections,
     branchCode,
     persistProject,
     saveVersion,
@@ -575,6 +577,26 @@ export default function PlanPage() {
 
           {/* Theme Brief */}
           {projectBrief && <ThemeBriefSection brief={projectBrief} branchCode={branchCode} />}
+
+          {Object.values(optionalSections).length > 0 && (
+            <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-caption text-white/25 uppercase tracking-widest font-semibold">선택 추가 페이지</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Object.values(optionalSections).map((section) => (
+                  <Link
+                    key={section.key}
+                    to={`/supplemental/${section.key}`}
+                    className="rounded-lg border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] px-4 py-3 transition-colors"
+                  >
+                    <p className="text-subhead font-semibold text-white/75 mb-1">{section.title}</p>
+                    <p className="text-caption text-white/35 line-clamp-3">{section.summary}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

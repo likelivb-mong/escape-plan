@@ -98,6 +98,14 @@ const ACCENT_CLASSES: Record<string, { border: string; text: string; bg: string;
   indigo:  { border: 'border-white/[0.06]',   text: 'text-indigo-400',  bg: 'bg-white/[0.03]',   dot: 'bg-indigo-400' },
 };
 
+const OPTIONAL_LABELS: Record<string, string> = {
+  schedule: 'Schedule',
+  budget: 'Budget',
+  operations: 'Ops',
+  executiveReport: 'Report',
+  externalReview: 'Review',
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ProjectDashboardPage() {
@@ -154,6 +162,7 @@ export default function ProjectDashboardPage() {
     ? MOCK_BRANCHES.find((b) => b.code === project.branchCode)?.name
     : null;
   const progressPct = ((LEVEL_ORDER.indexOf(project.completionLevel) + 1) / LEVEL_ORDER.length) * 100;
+  const optionalSections = Object.values(project.optionalSections ?? {});
 
   return (
     <div className="min-h-[calc(100vh-3rem)] px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
@@ -271,6 +280,36 @@ export default function ProjectDashboardPage() {
             );
           })}
         </div>
+
+        {optionalSections.length > 0 && (
+          <>
+            <div className="flex items-center gap-3 mt-8 mb-4">
+              <h2 className="text-body font-semibold text-white/60 flex-shrink-0">선택 추가 페이지</h2>
+              <div className="h-px flex-1 bg-white/[0.05]" />
+              <span className="hidden sm:block text-caption text-white/20 flex-shrink-0">
+                문서에서 감지된 보조 섹션
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {optionalSections.map((section) => (
+                <button
+                  key={section.key}
+                  onClick={() => navigate(`/supplemental/${section.key}`)}
+                  className="group text-left rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12] p-4 transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-body font-semibold text-white/80 group-hover:text-white">
+                      {OPTIONAL_LABELS[section.key] ?? section.title}
+                    </h3>
+                    <span className="text-white/15 group-hover:text-white/40 transition-colors text-caption">→</span>
+                  </div>
+                  <p className="text-caption text-white/35 line-clamp-3">{section.summary}</p>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* ── Designer tip ── */}
         <div className="mt-8 px-4 py-3 rounded-xl border border-white/[0.04] bg-white/[0.02]">

@@ -13,6 +13,7 @@ import { generateStoryProposalsFromScenario } from '../utils/storyFromScenario';
 import ScenarioForm from '../components/scenario/ScenarioForm';
 import StoryBeatsInput from '../components/home/StoryBeatsInput';
 import { MOCK_BRANCHES } from '../features/passmap/mock/branches';
+import { importProjectFromMarkdown } from '../services/markdownImport';
 
 // ── YouTube URL 파싱 ──────────────────────────────────────────────────────────
 
@@ -61,7 +62,13 @@ export default function HomePage() {
     setProjectName: setCtxProjectName,
     setCells,
     setAiStoryProposals,
+    setSelectedStory,
+    setPuzzleFlowPlan,
+    setGameFlowDesign,
+    setFloorPlanData,
     setProjectBrief,
+    setOptionalSections,
+    setImportMeta,
     setBranchCode: setCtxBranchCode,
     persistProject,
     projectBrief,
@@ -70,6 +77,8 @@ export default function HomePage() {
 
   const [shouldNavigateAfterSave, setShouldNavigateAfterSave] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<string>(MOCK_BRANCHES[0].code);
+  const [markdownImporting, setMarkdownImporting] = useState(false);
+  const [markdownError, setMarkdownError] = useState('');
 
   // ── YouTube state (선택사항) ─────────────────────────────────────────────
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -341,6 +350,54 @@ export default function HomePage() {
     setShouldNavigateAfterSave(true);
   };
 
+  const handleMarkdownImport = useCallback(async (file: File) => {
+    setMarkdownImporting(true);
+    setMarkdownError('');
+
+    try {
+      const content = await file.text();
+      const imported = importProjectFromMarkdown(content, file.name);
+
+      resetForNewProject();
+      setCtxProjectName(imported.projectName);
+      setCtxBranchCode(selectedBranch);
+      setProjectBrief(imported.projectBrief);
+      setAiStoryProposals(imported.aiStoryProposals);
+      setSelectedStory(imported.selectedStory);
+      setCells(imported.cells);
+      setPuzzleFlowPlan(imported.puzzleFlowPlan);
+      setGameFlowDesign(imported.gameFlowDesign);
+      setFloorPlanData(imported.floorPlanData);
+      setOptionalSections(imported.optionalSections);
+      setImportMeta(imported.importMeta);
+
+      setTimeout(() => {
+        persistProject();
+        navigate('/plan');
+      }, 0);
+    } catch (error) {
+      setMarkdownError(error instanceof Error ? error.message : '마크다운 가져오기에 실패했습니다.');
+    } finally {
+      setMarkdownImporting(false);
+    }
+  }, [
+    navigate,
+    persistProject,
+    resetForNewProject,
+    selectedBranch,
+    setAiStoryProposals,
+    setCells,
+    setCtxBranchCode,
+    setCtxProjectName,
+    setFloorPlanData,
+    setGameFlowDesign,
+    setImportMeta,
+    setOptionalSections,
+    setProjectBrief,
+    setPuzzleFlowPlan,
+    setSelectedStory,
+  ]);
+
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -389,6 +446,9 @@ export default function HomePage() {
           analyzeFromYoutube={analyzeFromYoutube}
           setAnalyzeFromYoutube={setAnalyzeFromYoutube}
           youtubeAnalysisResult={youtubeAnalysisResult}
+          onMarkdownImport={handleMarkdownImport}
+          markdownImporting={markdownImporting}
+          markdownError={markdownError}
         />
       </div>
     </div>
@@ -429,6 +489,9 @@ interface BuildTabProps {
   analyzeFromYoutube: boolean;
   setAnalyzeFromYoutube: (v: boolean) => void;
   youtubeAnalysisResult: any;
+  onMarkdownImport: (file: File) => void;
+  markdownImporting: boolean;
+  markdownError: string;
 }
 
 function BuildTab({
@@ -448,8 +511,12 @@ function BuildTab({
   onAnalyzeYoutube,
   analyzeFromYoutube, setAnalyzeFromYoutube,
   youtubeAnalysisResult,
+  onMarkdownImport,
+  markdownImporting,
+  markdownError,
 }: BuildTabProps) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ basic: true });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // When YouTube analysis completes, open all sections to show auto-filled data
   const prevAnalysisRef = useRef(youtubeAnalysisResult);
@@ -465,6 +532,52 @@ function BuildTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <SectionHeader
+        title="Markdown 업로드"
+        subtitle="기획 문서를 바로 프로젝트 파이프라인으로 변환"
+        open={openSections['markdown'] ?? true}
+        onToggle={() => toggle('markdown')}
+      />
+      {(openSections['markdown'] ?? true) && (
+        <div className="flex flex-col gap-3 pl-1">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".md,text/markdown,text/plain"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onMarkdownImport(file);
+              e.currentTarget.value = '';
+            }}
+          />
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-body font-semibold text-white/82">기획용 `.md` 파일 업로드</p>
+                <p className="text-footnote text-white/35 leading-relaxed mt-1">
+                  문서의 핵심 내용으로 Plan, Story, Mandalart, Game Flow, Pass Map을 자동 생성하고,
+                  일정/예산/리뷰 같은 부가 항목은 선택 추가 페이지로 붙입니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={markdownImporting}
+                className="px-4 py-2.5 rounded-xl bg-white text-black text-subhead font-semibold hover:bg-white/90 transition-all disabled:opacity-40"
+              >
+                {markdownImporting ? '가져오는 중...' : 'Markdown 업로드'}
+              </button>
+            </div>
+          </div>
+          {markdownError && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-footnote">
+              {markdownError}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Section 0: 참고 자료 (YouTube) ── */}
       <SectionHeader
         title="📺 참고 자료 (선택사항)"

@@ -25,3 +25,6 @@ dist-ssr
 
 # Supabase CLI temp
 supabase/.temp/
+package-lock.json
+package-lock.json
+src/components/EmbedProjectLoader.tsx

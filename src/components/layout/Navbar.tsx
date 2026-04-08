@@ -11,7 +11,7 @@ const WORKFLOW_STEPS = [
   { path: '/setting',    label: 'Pass Map',     mobileLabel: 'PassMap' },
 ];
 
-const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/setting', '/plan'];
+const PROJECT_PATHS = ['/story', '/mandalart', '/scenario', '/game-flow', '/setting', '/plan', '/supplemental'];
 
 export default function Navbar() {
   const location = useLocation();

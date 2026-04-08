@@ -6,6 +6,7 @@ import type { PuzzleFlowPlan } from '../types/puzzleFlow';
 import type { PuzzleRecommendationGroup } from '../types/puzzleRecommendation';
 import type { GameFlowPlan } from '../types/gameFlow';
 import type { FloorPlanData } from '../types/floorPlan';
+import type { MarkdownImportMeta, OptionalSectionsMap } from '../types/optionalSections';
 import { createInitialCells } from '../data/mockMandalart';
 import { normalizeFloorPlan } from '../utils/floorPlan';
 import {
@@ -68,6 +69,10 @@ interface ProjectContextValue {
   // Project brief (set from YouTube or manual flow)
   projectBrief: ProjectBrief | null;
   setProjectBrief: (brief: ProjectBrief | null) => void;
+  optionalSections: OptionalSectionsMap;
+  setOptionalSections: (sections: OptionalSectionsMap) => void;
+  importMeta: MarkdownImportMeta | null;
+  setImportMeta: (meta: MarkdownImportMeta | null) => void;
 
   // Persistence helpers
   resetForNewProject: () => void;
@@ -99,6 +104,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [branchCode, setBranchCode] = useState<string | null>(null);
   const [passmapLink, setPassmapLink] = useState<{ branchCode: string; themeId: string } | null>(null);
   const [projectBrief, setProjectBrief] = useState<ProjectBrief | null>(null);
+  const [optionalSections, setOptionalSections] = useState<OptionalSectionsMap>({});
+  const [importMeta, setImportMeta] = useState<MarkdownImportMeta | null>(null);
 
   const forkAsNewProject = useCallback(() => {
     setCurrentProjectId(null);
@@ -115,6 +122,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setPassmapLink(null);
     setAiStoryProposals(null);
     setProjectBrief(null);
+    setOptionalSections({});
+    setImportMeta(null);
     setCells(createInitialCells());
     setProjectName('Untitled Theme Project');
   }, []);
@@ -145,10 +154,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       gameFlowDesign,
       floorPlanData: validatedFloorPlan,
       passmapLink,
+      optionalSections,
+      importMeta,
     };
   }, [
     currentProjectId, projectName, selectedStory, puzzleFlowPlan,
     gameFlowDesign, projectBrief, cells, puzzleRecommendationGroups, floorPlanData, branchCode, passmapLink,
+    optionalSections, importMeta,
   ]);
 
   /** Silent persist — saves to localStorage but does NOT create a version in history */
@@ -180,6 +192,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setBranchCode(saved.branchCode ?? null);
     setPassmapLink(saved.passmapLink ?? null);
     setProjectBrief(saved.projectBrief);
+    setOptionalSections(saved.optionalSections ?? {});
+    setImportMeta(saved.importMeta ?? null);
   }, []);
 
   const loadProject = useCallback((id: string): boolean => {
@@ -229,6 +243,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         branchCode, setBranchCode,
         passmapLink, setPassmapLink,
         projectBrief, setProjectBrief,
+        optionalSections, setOptionalSections,
+        importMeta, setImportMeta,
         resetForNewProject,
         forkAsNewProject,
         persistProject,

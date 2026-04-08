@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ProjectProvider } from './context/ProjectContext';
 import Layout from './components/layout/Layout';
 import PasswordGate from './components/PasswordGate';
-import EmbedProjectLoader from './components/EmbedProjectLoader';
 import HomePage from './pages/HomePage';
 import ThemeDesignPage from './pages/ThemeDesignPage';
 import MandalartPage from './pages/MandalartPage';
@@ -13,15 +12,14 @@ import PlanPage from './pages/PlanPage';
 import ScenarioPage from './pages/ScenarioPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDashboardPage from './pages/ProjectDashboardPage';
+import OptionalSectionPage from './pages/OptionalSectionPage';
 import PassMapThemePage from './features/passmap/pages/PassMapThemePage';
 
 
 export default function App() {
   return (
-    <PasswordGate>
     <ProjectProvider>
       <BrowserRouter>
-        <EmbedProjectLoader />
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
@@ -34,6 +32,7 @@ export default function App() {
             <Route path="/setting" element={<SettingPage />} />
             <Route path="/plan" element={<PlanPage />} />
             <Route path="/scenario" element={<ScenarioPage />} />
+            <Route path="/supplemental/:sectionKey" element={<OptionalSectionPage />} />
 
             {/* PassMap theme deep link (accessed from projects) */}
             <Route path="/passmap/:branchCode/:themeId" element={<PassMapThemePage />} />
@@ -41,6 +40,5 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ProjectProvider>
-    </PasswordGate>
   );
 }

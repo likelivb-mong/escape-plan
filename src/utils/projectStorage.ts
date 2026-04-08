@@ -5,6 +5,7 @@ import type { PuzzleFlowPlan } from '../types/puzzleFlow';
 import type { PuzzleRecommendationGroup } from '../types/puzzleRecommendation';
 import type { GameFlowPlan } from '../types/gameFlow';
 import type { FloorPlanData } from '../types/floorPlan';
+import type { MarkdownImportMeta, OptionalSectionsMap } from '../types/optionalSections';
 import { normalizeFloorPlan } from './floorPlan';
 import { supabase } from '../services/supabase';
 
@@ -33,6 +34,8 @@ export interface SavedProject {
   gameFlowDesign: GameFlowPlan | null;
   floorPlanData: FloorPlanData | null;
   passmapLink?: { branchCode: string; themeId: string } | null;
+  optionalSections?: OptionalSectionsMap;
+  importMeta?: MarkdownImportMeta | null;
 }
 
 export interface TrashedProject extends SavedProject {
@@ -93,6 +96,8 @@ function mapRowToProject(row: any): SavedProject {
     gameFlowDesign: row.game_flow_design,
     floorPlanData: row.floor_plan_data ? normalizeFloorPlan(row.floor_plan_data) : null,
     passmapLink: row.passmap_link,
+    optionalSections: row.optional_sections ?? {},
+    importMeta: row.import_meta ?? null,
   };
 }
 
@@ -123,6 +128,8 @@ function projectToRow(project: SavedProject) {
     game_flow_design: project.gameFlowDesign,
     floor_plan_data: project.floorPlanData,
     passmap_link: project.passmapLink,
+    optional_sections: project.optionalSections ?? {},
+    import_meta: project.importMeta ?? null,
   };
 }
 

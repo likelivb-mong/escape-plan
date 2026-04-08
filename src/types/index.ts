@@ -8,7 +8,7 @@ export interface InvestigationSelection {
 
 // Unified project brief (YouTube or manual)
 export interface ProjectBrief {
-  source: 'youtube' | 'manual' | 'scenario';
+  source: 'youtube' | 'manual' | 'scenario' | 'markdown';
   // YouTube only
   videoId: string | null;
   videoTitle: string | null;
