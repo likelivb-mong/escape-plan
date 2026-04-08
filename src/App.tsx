@@ -7,7 +7,9 @@ import ThemeDesignPage from './pages/ThemeDesignPage';
 import MandalartPage from './pages/MandalartPage';
 import StoryPage from './pages/StoryPage';
 import GameFlowPage from './pages/GameFlowPage';
+import FlowManualPage from './pages/FlowManualPage';
 import SettingPage from './pages/SettingPage';
+import PassMapManualPage from './pages/PassMapManualPage';
 import PlanPage from './pages/PlanPage';
 import ScenarioPage from './pages/ScenarioPage';
 import ProjectsPage from './pages/ProjectsPage';
@@ -29,7 +31,9 @@ export default function App() {
             <Route path="/story" element={<StoryPage />} />
             <Route path="/mandalart" element={<MandalartPage />} />
             <Route path="/game-flow" element={<GameFlowPage />} />
+            <Route path="/flow-manual" element={<FlowManualPage />} />
             <Route path="/setting" element={<SettingPage />} />
+            <Route path="/passmap-manual" element={<PassMapManualPage />} />
             <Route path="/plan" element={<PlanPage />} />
             <Route path="/scenario" element={<ScenarioPage />} />
             <Route path="/supplemental/:sectionKey" element={<OptionalSectionPage />} />

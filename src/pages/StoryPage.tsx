@@ -169,6 +169,28 @@ export default function StoryPage() {
     }
   };
 
+  const handleUpdateProposal = (updated: StoryProposal) => {
+    if (updated.id === 'source-story') return;
+
+    setAiProposals((prev) => {
+      const next = prev.map((proposal) => (proposal.id === updated.id ? updated : proposal));
+      setAiStoryProposals(next);
+      return next;
+    });
+
+    if (selectedStory?.id === updated.id) {
+      setSelectedStory(updated);
+      setProjectName(updated.title);
+      setCells(populateMandalartFromStory(updated));
+    }
+
+    if (selectedId === updated.id) {
+      setSelectedId(updated.id);
+    }
+
+    setTimeout(() => persistProject(), 0);
+  };
+
   // ── Continue to Mandalart ─────────────────────────────────────────────────
   const handleContinue = () => {
     let proposal: StoryProposal | undefined;
@@ -459,6 +481,7 @@ export default function StoryPage() {
                 handleSelect(viewingId);
               }
             }}
+            onUpdate={viewingId === 'source-story' ? undefined : handleUpdateProposal}
             onClose={() => setViewingId(null)}
           />
         );

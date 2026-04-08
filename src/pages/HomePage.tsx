@@ -533,7 +533,7 @@ function BuildTab({
   return (
     <div className="flex flex-col gap-4">
       <SectionHeader
-        title="Markdown 업로드"
+        title="Markdown 업로드 (선택사항)"
         subtitle="기획 문서를 바로 프로젝트 파이프라인으로 변환"
         open={openSections['markdown'] ?? true}
         onToggle={() => toggle('markdown')}
@@ -556,6 +556,7 @@ function BuildTab({
               <div>
                 <p className="text-body font-semibold text-white/82">기획용 `.md` 파일 업로드</p>
                 <p className="text-footnote text-white/35 leading-relaxed mt-1">
+                  YouTube처럼 선택해서 사용할 수 있는 시작 방식입니다.
                   문서의 핵심 내용으로 Plan, Story, Mandalart, Game Flow, Pass Map을 자동 생성하고,
                   일정/예산/리뷰 같은 부가 항목은 선택 추가 페이지로 붙입니다.
                 </p>

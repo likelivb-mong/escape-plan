@@ -310,6 +310,12 @@ export default function SettingPage() {
 
         {/* ── Right actions ── */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/passmap-manual')}
+            className="px-3 py-1.5 rounded-full border border-white/[0.12] text-footnote font-medium text-white/45 hover:border-white/25 hover:text-white/70 transition-all duration-150"
+          >
+            Manual
+          </button>
           {passmapLink && floorViewMode === 'map' && (
             <button
               onClick={() => setIsEditing(prev => !prev)}

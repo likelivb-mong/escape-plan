@@ -155,6 +155,13 @@ export default function GameFlowPage() {
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
+            onClick={() => navigate('/flow-manual')}
+            disabled={!gamePlan}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-medium border border-white/[0.10] text-white/50 hover:border-white/[0.18] hover:text-white/75 transition-all disabled:opacity-30"
+          >
+            Flow Manual
+          </button>
+          <button
             onClick={handleSave}
             disabled={!hasChanges && !savedLabel}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
