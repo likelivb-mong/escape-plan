@@ -222,6 +222,7 @@ export default function ProjectsPage() {
   const [showTrash, setShowTrash] = useState(false);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'xcape' | 'agent-office'>('all');
   const [refreshKey, setRefreshKey] = useState(0);
   const refreshFromSupabase = useCallback(async () => {
     try {
@@ -270,11 +271,14 @@ export default function ProjectsPage() {
     return themes.filter((t) => !linkedThemeIds.has(t.id));
   }, [branchFilter, projects, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Filter projects by branch
+  // Filter projects by source and branch
   const filteredProjects = useMemo(() => {
-    if (!branchFilter) return projects;
-    return projects.filter((p) => p.branchCode === branchFilter);
-  }, [projects, branchFilter]);
+    let result = projects;
+    if (sourceFilter === 'xcape') result = result.filter((p) => !p.id.startsWith('agent_'));
+    else if (sourceFilter === 'agent-office') result = result.filter((p) => p.id.startsWith('agent_'));
+    if (branchFilter) result = result.filter((p) => p.branchCode === branchFilter);
+    return result;
+  }, [projects, branchFilter, sourceFilter]);
 
   // Count projects per branch
   const branchCounts = useMemo(() => {
@@ -346,6 +350,25 @@ export default function ProjectsPage() {
               새 테마
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Source Filter Tabs */}
+      <div className="max-w-5xl mx-auto mb-3">
+        <div className="flex items-center gap-1 border-b border-white/[0.07] pb-3 mb-1">
+          {([ ['all', '전체'], ['xcape', 'XCAPE'], ['agent-office', 'AGENT-OFFICE'] ] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setSourceFilter(val)}
+              className={`px-3 py-1.5 rounded-lg text-caption font-medium transition-all ${
+                sourceFilter === val
+                  ? 'bg-white/[0.10] text-white'
+                  : 'text-white/30 hover:text-white/55 hover:bg-white/[0.04]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
